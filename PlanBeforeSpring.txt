@@ -1,0 +1,7 @@
+Check-in system
+Name
+Waiver
+Etc.
+Number times attended
+Current dues
+Log output of who paid and how much each night (csv is fine)
