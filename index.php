@@ -14,6 +14,8 @@
     <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap theme -->
     <link href="bootstrap/css/bootstrap-theme.min.css" rel="stylesheet">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 
     <!-- Custom styles for this template -->
     <link href="starter-template.css" rel="stylesheet">
@@ -59,8 +61,8 @@
       </p>
     </div><!-- /.container -->
 
-    <!-- New mebmer modal -->
-    <div class="modal fade" id="newMemberModal" tabindex="-1" role="dialog" aria-labelledby="newMemberModalLabel" aria-hidden="true">
+    <!-- New member modal -->
+    <div class="modal fade" id="newMemberModal" role="dialog" aria-labelledby="newMemberModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -68,11 +70,36 @@
             <h4 class="modal-title" id="newMemberModalLabel">Add a new member</h4>
           </div>
           <div class="modal-body">
-            ...
+            <form>
+              <div class="form-group">
+                <label for="inputFirstName">First name</label>
+                <input type="text" class="form-control" id="inputFirstName" placeholder="First name">
+              </div>
+              <div class="form-group">
+                <label for="inputLastName">Last name</label>
+                <input type="text" class="form-control" id="inputLastName" placeholder="Last name">
+              </div>
+              <div class="form-group">
+                <label for="inputNickname">Nickname</label>
+                <input type="text" class="form-control" id="inputNickname" placeholder="Nickname">
+              </div>
+              <div class="form-group">
+                <label for="inputEmail">Email</label>
+                <input type="email" class="form-control" id="inputEmail" placeholder="Email">
+              </div>
+              <div class="form-group">
+                <label for="inputReferredBy">Referred by</label>
+                <select class="form-control">
+                  <option></option>
+                  <option value="1">One</option>
+                  <option value="2">Two</option>
+                </select>
+              </div>
+            </form>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary">Add</button>
+            <button id="addMemberButton" type="button" class="btn btn-primary">Add</button>
           </div>
         </div>
       </div>
@@ -81,7 +108,6 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="bootstrap/js/bootstrap.min.js"></script>
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <script src="bootstrap/js/ie10-viewport-bug-workaround.js"></script>
