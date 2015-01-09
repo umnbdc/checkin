@@ -28,7 +28,7 @@ CREATE TABLE member (
   nick_name varchar(255) DEFAULT NULL,
   last_name varchar(255) NOT NULL,  
   email varchar(255) NOT NULL,  
-  join_date timestamp NOT NULL,
+  join_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   referred_by varchar(255) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1400 DEFAULT CHARSET=utf8;
