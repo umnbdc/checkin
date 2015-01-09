@@ -31,7 +31,7 @@ CREATE TABLE member (
   join_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   referred_by varchar(255) DEFAULT NULL,
   PRIMARY KEY (id)
-) ENGINE=InnoDB AUTO_INCREMENT=1400 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 
@@ -50,7 +50,7 @@ CREATE TABLE membership (
   INDEX (member_id),
   FOREIGN KEY (member_id) 
     REFERENCES member(id)
-) ENGINE=InnoDB AUTO_INCREMENT=1400 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -68,7 +68,7 @@ CREATE TABLE debit_credit (
   INDEX (member_id),
   FOREIGN KEY (member_id) 
     REFERENCES member(id)
-) ENGINE=InnoDB AUTO_INCREMENT=1400 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -86,7 +86,7 @@ CREATE TABLE fee_status (
   INDEX (member_id),
   FOREIGN KEY (member_id) 
     REFERENCES member(id)
-) ENGINE=InnoDB AUTO_INCREMENT=1400 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -104,7 +104,7 @@ CREATE TABLE waiver_status (
   INDEX (member_id),
   FOREIGN KEY (member_id) 
     REFERENCES member(id)
-) ENGINE=InnoDB AUTO_INCREMENT=1400 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -121,5 +121,5 @@ CREATE TABLE checkin (
   INDEX (member_id),
   FOREIGN KEY (member_id) 
     REFERENCES member(id)
-) ENGINE=InnoDB AUTO_INCREMENT=1400 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
