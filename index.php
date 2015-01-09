@@ -16,6 +16,8 @@
     <link href="bootstrap/css/bootstrap-theme.min.css" rel="stylesheet">
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    
+    <script src="js/member.js"></script>
 
     <!-- Custom styles for this template -->
     <link href="starter-template.css" rel="stylesheet">
@@ -89,7 +91,7 @@
               </div>
               <div class="form-group">
                 <label for="inputReferredBy">Referred by</label>
-                <select class="form-control">
+                <select class="form-control" id="inputReferredBy">
                   <option></option>
                   <option value="1">One</option>
                   <option value="2">Two</option>
@@ -99,7 +101,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-            <button id="addMemberButton" type="button" class="btn btn-primary">Add</button>
+            <button id="addMemberButton" onclick="addNewMember()" type="button" class="btn btn-primary">Add</button>
           </div>
         </div>
       </div>
