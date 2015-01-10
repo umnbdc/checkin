@@ -76,6 +76,7 @@
             <th>Nickname</th>
             <th>Email</th>
             <th>Membership</th>
+            <th>Fee Status</th>
             <th>Waiver</th>
             <th>Balance</th>
           </tr>

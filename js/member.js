@@ -95,6 +95,7 @@ function showMember(id) {
   var member = memberData.member;
   var memberships = memberData.memberships;
   var waiverStatus = memberData.waiverStatus;
+  var feeStatus = memberData.feeStatus;
   var debitCredits = memberData.debitCredits;
   var checkIns = memberData.checkIns;
   
@@ -119,6 +120,8 @@ function showMember(id) {
   infoRow.append($("<td>", {html: member.email}));
   var currentMembership = getElementOfTerm(memberships,CURRENT_TERM);
   infoRow.append($("<td>", {html: currentMembership ? currentMembership.kind : 'None'}));
+  var currentFeeStatus = getElementOfTerm(feeStatus,CURRENT_TERM);
+  infoRow.append($("<td>", {html: currentFeeStatus ? currentFeeStatus.kind : 'None'}));
   var currentWaiverStatus = getElementOfTerm(waiverStatus,CURRENT_TERM);
   infoRow.append($("<td>", {html: currentWaiverStatus && currentWaiverStatus.completed != 0 ? 'Yes' : 'No'}));
   infoRow.append($("<td>", {html: formatAmount(calculateBalance(debitCredits))}));
