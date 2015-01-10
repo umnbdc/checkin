@@ -73,7 +73,7 @@ if ( $_POST['type'] == "newMember" ) {
     $data['memberships'] = resultToArray($result);
   }
   
-  $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $id . "'";
+  $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $id . "' ORDER BY `date_time`";
   $result = $link->query($checkinSelectQuery);
   if ( !$result ) {
     die("Failed to getMemberInfo checkin");
@@ -81,7 +81,7 @@ if ( $_POST['type'] == "newMember" ) {
     $data['checkIns'] = resultToArray($result);
   }
   
-  $debitCreditSelectQuery = "SELECT * FROM `debit_credit` WHERE `member_id`='" . $id . "'";
+  $debitCreditSelectQuery = "SELECT * FROM `debit_credit` WHERE `member_id`='" . $id . "' ORDER BY `date_time`";
   $result = $link->query($debitCreditSelectQuery);
   if ( !$result ) {
     die("Failed to getMemberInfo debit/credit");

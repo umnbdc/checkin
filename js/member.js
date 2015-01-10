@@ -1,5 +1,7 @@
 var apiURL = "data.php";
 
+var CURRENT_TERM = "Spring2015";
+
 function addNewMember() {
   var memberObject = {
     firstName: $('#inputFirstName').val(),
@@ -45,6 +47,39 @@ function runSearch() {
   }
 }
 
+function getElementOfTerm(elements, term) {
+  var element = null;
+  elements.forEach(function(e) {
+    if ( e.term = term ) {
+      element = e;
+    }
+  });
+  return element;
+}
+
+function calculateBalance(transactions) {
+  // we'll want to handle the kind matching later, but for now...
+  var balance = 0;
+  transactions.forEach(function(t) {
+    balance += parseInt(t.amount);
+  });
+  return balance;
+}
+
+function formatAmount(amount) {
+  var negString = ""
+  if ( amount < 0 ) {
+    negString = "-";
+    amount = -1 * amount;
+  }
+  var cents = amount % 100;
+  var dollars = amount / 100;
+  var centString = cents == 0 ? "00" : cents;
+  var dollarString = dollars == 0 ? "0" : dollars;
+  
+  return negString + "$" + dollarString + "." + centString;
+}
+
 function showMember(id) {
   var memberData = getMember(id);
   if ( typeof memberData === 'undefined' ) {
@@ -52,6 +87,35 @@ function showMember(id) {
     return;
   }
   console.log("SHOW MEMBER: ", memberData);
+  
+  var member = memberData.member;
+  var memberships = memberData.memberships;
+  var waiverStatus = memberData.waiverStatus;
+  var debitCredits = memberData.debitCredits;
+  
+  // Clear member info tables
+  $("#memberInfoTable tbody").empty();
+  $("#memberCreditDebitTable tbody").empty();
+  $("#memberHistoryTable tbody").empty();
+  
+  $("#memberContainer h2 .firstName").html(member.first_name);
+  $("#memberContainer h2 .lastName").html(member.last_name);
+  
+  // fill info table
+  var infoRow = $("<tr>");
+  infoRow.append($("<td>", {html: member.first_name}));
+  infoRow.append($("<td>", {html: member.last_name}));
+  infoRow.append($("<td>", {html: member.nick_name}));
+  infoRow.append($("<td>", {html: member.email}));
+  var currentMembership = getElementOfTerm(memberships,CURRENT_TERM);
+  infoRow.append($("<td>", {html: currentMembership ? currentMembership.kind : 'None'}));
+  var currentWaiverStatus = getElementOfTerm(waiverStatus,CURRENT_TERM);
+  infoRow.append($("<td>", {html: currentWaiverStatus && currentWaiverStatus.completed != 0 ? 'Yes' : 'No'}));
+  infoRow.append($("<td>", {html: formatAmount(calculateBalance(debitCredits))}));
+  $("#memberInfoTable tbody").append(infoRow);
+  
+  $("#memberListContainer").hide();
+  $("#memberContainer").show();
 }
 
 function getMember(id) {

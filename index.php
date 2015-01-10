@@ -65,10 +65,10 @@
     
     <div class="container" id="memberContainer" style="display: none">
       <h2>
-        <span class="firstName">Kevin</span>
-        <span class="lastName">Viratyosin</span>
+        <span class="firstName"></span>
+        <span class="lastName"></span>
       </h2>
-      <table class="table table-condensed">
+      <table id="memberInfoTable" class="table table-condensed">
         <thead>
           <tr>
             <th>First</th>
@@ -77,30 +77,21 @@
             <th>Email</th>
             <th>Membership</th>
             <th>Waiver</th>
-            <th>Outstanding</th>
+            <th>Balance</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Kevin</td>
-            <td>Viratyosin</td>
-            <td></td>
-            <td>virat001@umn.edu</td>
-            <td>Competition Team</td>
-            <td>No</td>
-            <td>$140.00</td>
-          </tr>
         </tbody>
       </table>
       <p>
         <div class="btn-group">
-          <button type="button" class="btn btn-primary">Check in</button>
-          <button type="button" class="btn btn-default">Pay</button>
-          <button type="button" class="btn btn-default">Membership</button>
+          <button type="button" id="memberInfoCheckinButton" class="btn btn-primary">Check in</button>
+          <button type="button" id="memberInfoPayButton" class="btn btn-default">Pay</button>
+          <button type="button" id="memberInfoMembershipButton" class="btn btn-default">Membership</button>
         </div>
       </p>
       <h3>Outstanding credits and debits</h3>
-      <table class="table table-condensed">
+      <table id="memberCreditDebitTable" class="table table-condensed">
         <thead>
           <tr>
             <th>Credit/Debit</th>
@@ -111,24 +102,10 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Debit</td>
-            <td>$50</td>
-            <td>Membership</td>
-            <td>2/4/2015</td>
-            <td>Competition team 1</td>
-          </tr>
-          <tr>
-            <td>Credit</td>
-            <td>$10</td>
-            <td>Membership</td>
-            <td>1/31/2015</td>
-            <td>Cash</td>
-          </tr>
         </tbody>
       </table>
       <h3>History</h3>
-      <table class="table table-condensed">
+      <table id="memberHistoryTable" class="table table-condensed">
         <thead>
           <tr>
             <th>What</th>
@@ -136,18 +113,6 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Check in</td>
-            <td>5:45pm 1/12/2015</td>
-          </tr>
-          <tr>
-            <td>Check in</td>
-            <td>5:55pm 1/14/2015</td>
-          </tr>
-          <tr>
-            <td>Check in</td>
-            <td>5:47pm 1/15/2015</td>
-          </tr>
         </tbody>
       </table>
     </div>
