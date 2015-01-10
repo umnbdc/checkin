@@ -98,6 +98,11 @@ function showMember(id) {
   $("#memberInfoTable tbody").empty();
   $("#memberCreditDebitTable tbody").empty();
   $("#memberHistoryTable tbody").empty();
+  // Clear button event listeners
+  $("#memberInfoCheckinButton").off();
+  $("#memberInfoEditButton").off();
+  $("#memberInfoPayButton").off();
+  $("#memberInfoMembershipButton").off();
   
   $("#memberContainer h2 .firstName").html(member.first_name);
   $("#memberContainer h2 .lastName").html(member.last_name);
@@ -132,6 +137,13 @@ function showMember(id) {
     $("#memberHistoryTable tbody").append(row);
   });
   
+  // assign buttons functions
+  var checkInButton = $("#memberInfoCheckinButton");
+  checkInButton.click(function() {checkInMember(member.id, checkInButton)});
+  $("#memberInfoEditButton").click(function() {});
+  $("#memberInfoPayButton").off();
+  $("#memberInfoMembershipButton").off();
+  
   $("#memberListContainer").hide();
   $("#memberContainer").show();
 }
@@ -162,8 +174,28 @@ function getMember(id) {
   return responseData;
 }
 
-function checkInMember(id) {
-  alert("Check in member " + id);
+function checkInMember(id, button) {
+  function checkInMemberSuccess(data, textStatus, jqXHR) {
+    console.log("Member checkin successful: ", data, textStatus, jqXHR);
+    if ( data.wasAlreadyCheckedIn ) {
+      alert("Member was already checked in today.");
+    }
+    button.prop('disabled', true);
+  }
+  
+  function checkInMemberError(data, textStatus, jqXHR) {
+    console.log("Member checkin failed: ", data, textStatus, jqXHR);
+    alert("There was an issue checking in member with id " + id + ". Please try again.");
+  }
+  
+  $.ajax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "checkInMember", id: id},
+    success: checkInMemberSuccess,
+    error: checkInMemberError,
+    dataType: 'json'
+  });
 }
 
 function showMemberList(members) {
@@ -187,7 +219,7 @@ function showMemberList(members) {
     row.append($("<td>", {html: member.email}));
     
     button.click(function(e) {
-      checkInMember(member.id);
+      checkInMember(member.id, button);
       e.stopPropagation();
     });
     row.click(function() {

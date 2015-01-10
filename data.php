@@ -104,8 +104,27 @@ if ( $_POST['type'] == "newMember" ) {
   } else {
     $data['waiverStatus'] = resultToArray($result);
   }
+} else if ( $_POST['type'] == "checkInMember" ) {
+  $id = mysql_escape_string($_POST['id']);
   
-  // Get all objects related to member id
+  $selectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $id . "' AND DATE(`date_time`) = DATE(NOW())";
+  $result = $link->query($selectQuery);
+  if ( !$result ) {
+    die("Failed to select from checkin");
+  } else {
+    $checkins = resultToArray($result);
+  }
+  
+  if ( $checkins == [] ) {
+    $insertQuery = "INSERT INTO `checkin`(`member_id`, `date_time`) VALUES ('" . $id . "',CURRENT_TIMESTAMP)";
+    $result = $link->query($insertQuery);
+    if ( !$result ) {
+      die("Failed to insert new checkin");
+    }
+    $data['wasAlreadyCheckedIn'] = false;
+  } else {
+    $data['wasAlreadyCheckedIn'] = true;
+  }
 }
 
 $link->close();

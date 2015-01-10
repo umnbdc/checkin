@@ -86,6 +86,7 @@
       <p>
         <div class="btn-group">
           <button type="button" id="memberInfoCheckinButton" class="btn btn-primary">Check in</button>
+          <button type="button" id="memberInfoEditButton" class="btn btn-default">Edit info</button>
           <button type="button" id="memberInfoPayButton" class="btn btn-default">Pay</button>
           <button type="button" id="memberInfoMembershipButton" class="btn btn-default">Membership</button>
         </div>
