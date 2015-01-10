@@ -231,6 +231,16 @@
           $("#memberSearchGoButton").click();
         }
       });
+
+      // clear the new member form every time it's shown
+      $('#newMemberModal').on('shown.bs.modal', function() {
+          $('#inputFirstName').val("");
+          $('#inputLastName').val("");
+          $('#inputNickname').val("");
+          $('#inputEmail').val("");
+          $('#referSearch').val("");
+          $("#newMemberReferForm").empty();
+      });
     </script>
   </body>
 </html>
