@@ -64,6 +64,7 @@ CREATE TABLE debit_credit (
   member_id smallint(10) NOT NULL,
   amount int(255) NOT NULL,
   kind varchar(255) NOT NULL,
+  date_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   INDEX (member_id),
   FOREIGN KEY (member_id) 

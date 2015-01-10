@@ -1,5 +1,13 @@
 <?php
 
+function resultToArray($result) {
+  $rows = array();
+  while($r = mysqli_fetch_assoc($result)) {
+      $rows[] = $r;
+  }
+  return $rows;
+}
+
 // Create connection
 $servername = "localhost";
 $username = "adminPmvkzYa";
@@ -32,11 +40,7 @@ if ( $_POST['type'] == "newMember" ) {
   if ( !$result ) {
     die("Failed to fetch the new member");
   } else {
-    $rows = array();
-    while($r = mysqli_fetch_assoc($result)) {
-        $rows[] = $r;
-    }
-    $data = $rows[0];
+    $data = resultToArray($result);
   }
 } else if ( $_POST['type'] == "getMembers" ) {
   $query = "%" . mysql_escape_string($_POST['query']) . "%";
@@ -46,16 +50,62 @@ if ( $_POST['type'] == "newMember" ) {
   if ( !$result ) {
     die("Failed to search members");
   } else {
-    $rows = array();
-    while($r = mysqli_fetch_assoc($result)) {
-        $rows[] = $r;
-    }
-    $data = $rows;
+    $data = resultToArray($result);
   }
 } else if ( $_POST['type'] == "getMemberInfo" ) {
   $id = mysql_escape_string($_POST['id']);
   
-  // Get all object related to member id
+  $data = [];
+  
+  $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $id . "'";
+  $result = $link->query($memberSelectQuery);
+  if ( !$result ) {
+    die("Failed to getMemberInfo member");
+  } else {
+    $data['member'] = resultToArray($result)[0];
+  }
+  
+  $membershipSelectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $id . "'";
+  $result = $link->query($membershipSelectQuery);
+  if ( !$result ) {
+    die("Failed to getMemberInfo membership");
+  } else {
+    $data['memberships'] = resultToArray($result);
+  }
+  
+  $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $id . "'";
+  $result = $link->query($checkinSelectQuery);
+  if ( !$result ) {
+    die("Failed to getMemberInfo checkin");
+  } else {
+    $data['checkIns'] = resultToArray($result);
+  }
+  
+  $debitCreditSelectQuery = "SELECT * FROM `debit_credit` WHERE `member_id`='" . $id . "'";
+  $result = $link->query($debitCreditSelectQuery);
+  if ( !$result ) {
+    die("Failed to getMemberInfo debit/credit");
+  } else {
+    $data['debitCredits'] = resultToArray($result);
+  }
+  
+  $feeStatusSelectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $id . "'";
+  $result = $link->query($feeStatusSelectQuery);
+  if ( !$result ) {
+    die("Failed to getMemberInfo fee status");
+  } else {
+    $data['feeStatus'] = resultToArray($result);
+  }
+  
+  $waiverStatusSelectQuery = "SELECT * FROM `waiver_status` WHERE `member_id`='" . $id . "'";
+  $result = $link->query($waiverStatusSelectQuery);
+  if ( !$result ) {
+    die("Failed to getMemberInfo waiver status");
+  } else {
+    $data['waiverStatus'] = resultToArray($result);
+  }
+  
+  // Get all objects related to member id
 }
 
 $link->close();
