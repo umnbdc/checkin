@@ -35,14 +35,22 @@ function addNewMember() {
   }); 
 }
 
+function runSearch() {
+  var query = $("#memberSearch").val();
+  console.log("runSearch: ", getMembers(query));
+}
+
 function getMembers(query) {
   var members = [];
+  var toReturn = {};
   
   function getMembersSuccess(data, textStatus, jqXHR) {
-    members = data.members;
+    console.log(data, textStatus, jqXHR);
+    toReturn = data;
   }
 
   function getMembersError(data, textStatus, jqXHR) {
+    console.log(data, textStatus, jqXHR);
   }
   
   $.ajax({
@@ -54,4 +62,6 @@ function getMembers(query) {
     error: getMembersError,
     dataType: 'json'
   });
+  
+  return toReturn;
 }

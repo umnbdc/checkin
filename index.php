@@ -50,9 +50,9 @@
       <h1>UMN BDC Check-in</h1>
       <p>
         <div class="input-group">
-          <input type="text" class="form-control" placeholder="Search for member...">
+          <input type="text" class="form-control" id="memberSearch" placeholder="Search for member...">
           <span class="input-group-btn">
-            <button class="btn btn-default" type="button">Go!</button>
+            <button class="btn btn-default" type="button" onclick="runSearch()">Go!</button>
           </span>
         </div>
       </p>
@@ -63,7 +63,7 @@
       </p>
     </div><!-- /.container -->
     
-    <div class="container" id="memberContainer">
+    <div class="container" id="memberContainer" style="display: none">
       <h2>
         <span class="firstName">Kevin</span>
         <span class="lastName">Viratyosin</span>

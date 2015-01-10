@@ -30,13 +30,27 @@ if ( $_POST['type'] == "newMember" ) {
   $selectQuery = sprintf("SELECT * FROM `member` WHERE `email`='%s'", $member['email']);
   $result = $link->query($selectQuery);
   if ( !$result ) {
-    die("Failed to insert new member");
+    die("Failed to fetch the new member");
   } else {
     $rows = array();
     while($r = mysqli_fetch_assoc($result)) {
         $rows[] = $r;
     }
     $data = $rows[0];
+  }
+} else if ( $_POST['type'] == "getMembers" ) {
+  $query = "%" . mysql_real_escape_string($_POST['query']) . "%";
+  
+  $selectQuery = "SELECT * FROM `member` WHERE `first_name` LIKE '" . $query . "' OR `last_name` LIKE '" . $query . "' OR `nick_name` LIKE '" . $query . "'";
+  $result = $link->query($selectQuery);
+  if ( !$result ) {
+    die("Failed to search members");
+  } else {
+    $rows = array();
+    while($r = mysqli_fetch_assoc($result)) {
+        $rows[] = $r;
+    }
+    $data = $rows;
   }
 }
 
