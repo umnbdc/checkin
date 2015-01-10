@@ -52,7 +52,7 @@
         <div class="input-group">
           <input type="text" class="form-control" id="memberSearch" placeholder="Search for member...">
           <span class="input-group-btn">
-            <button class="btn btn-default" type="button" onclick="runSearch()">Go!</button>
+            <button class="btn btn-default" id="memberSearchGoButton" type="button" onclick="runSearch()">Go!</button>
           </span>
         </div>
       </p>
@@ -215,5 +215,15 @@
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="bootstrap/js/bootstrap.min.js"></script>
+    
+    <script type="text/javascript">
+      // submits member search on enter
+      $("#memberSearch").keypress(function(e) {
+        if(e.which == 13) {
+          this.blur();
+          $("#memberSearchGoButton").click();
+        }
+      });
+    </script>
   </body>
 </html>
