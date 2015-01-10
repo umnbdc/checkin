@@ -90,7 +90,7 @@
           <button type="button" id="memberInfoMembershipButton" class="btn btn-default">Membership</button>
         </div>
       </p>
-      <h3>Outstanding credits and debits</h3>
+      <h3>Credits and debits</h3>
       <table id="memberCreditDebitTable" class="table table-condensed">
         <thead>
           <tr>
@@ -98,17 +98,15 @@
             <th>Amount</th>
             <th>Kind</th>
             <th>Due/Paid</th>
-            <th>Description</th>
           </tr>
         </thead>
         <tbody>
         </tbody>
       </table>
-      <h3>History</h3>
+      <h3>Check In History</h3>
       <table id="memberHistoryTable" class="table table-condensed">
         <thead>
           <tr>
-            <th>What</th>
             <th>When</th>
           </tr>
         </thead>
@@ -183,6 +181,8 @@
     <script src="bootstrap/js/bootstrap.min.js"></script>
     
     <script type="text/javascript">
+      $("#memberSearch").focus();
+      
       // submits member search on enter
       $("#memberSearch").keypress(function(e) {
         if(e.which == 13) {

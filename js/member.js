@@ -92,6 +92,7 @@ function showMember(id) {
   var memberships = memberData.memberships;
   var waiverStatus = memberData.waiverStatus;
   var debitCredits = memberData.debitCredits;
+  var checkIns = memberData.checkIns;
   
   // Clear member info tables
   $("#memberInfoTable tbody").empty();
@@ -113,6 +114,23 @@ function showMember(id) {
   infoRow.append($("<td>", {html: currentWaiverStatus && currentWaiverStatus.completed != 0 ? 'Yes' : 'No'}));
   infoRow.append($("<td>", {html: formatAmount(calculateBalance(debitCredits))}));
   $("#memberInfoTable tbody").append(infoRow);
+  
+  // fill credits and debits table
+  debitCredits.forEach(function(t) {
+    var row = $("<tr>");
+    row.append($("<td>", {html: parseInt(t.amount) > 0 ? "Credit" : "Debit"}));
+    row.append($("<td>", {html: formatAmount(parseInt(t.amount))}));
+    row.append($("<td>", {html: t.kind}));
+    row.append($("<td>", {html: t.date_time}));
+    $("#memberCreditDebitTable tbody").append(row);
+  });
+  
+  // fill check in history table
+  checkIns.forEach(function(c) {
+    var row = $("<tr>");
+    row.append($("<td>", {html: c.date_time}));
+    $("#memberHistoryTable tbody").append(row);
+  });
   
   $("#memberListContainer").hide();
   $("#memberContainer").show();
