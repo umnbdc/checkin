@@ -52,6 +52,7 @@ if ( $_POST['type'] == "newMember" ) {
     }
     $data = $rows;
   }
+  $data = $selectQuery;
 } else if ( $_POST['type'] == "getMemberInfo" ) {
   $id = mysql_real_escape_string($_POST['id']);
   
