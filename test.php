@@ -39,7 +39,8 @@ if ( $_POST['type'] == "newMember" ) {
     $data = $rows[0];
   }
 } else if ( $_POST['type'] == "getMembers" ) {
-  $query = "%" . mysql_real_escape_string($_POST['query']) . "%";
+//   $query = "%" . mysql_real_escape_string($_POST['query']) . "%";
+  $query = "%" . $_POST['query'] . "%";
   
   $selectQuery = "SELECT * FROM `member` WHERE `first_name` LIKE '" . $query . "' OR `last_name` LIKE '" . $query . "' OR `nick_name` LIKE '" . $query . "' ORDER BY `last_name`";
   $result = $link->query($selectQuery);
