@@ -1,14 +1,47 @@
 <?php
+
+// Create connection
 $servername = "localhost";
 $username = "adminPmvkzYa";
 $password = "qRK-zD3sIbU9";
+$dbname = "php";
+$link = new mysqli($servername, $username, $password, $dbname);
+if ($link->connect_error) {
+    die("Connection failed: " . $link->connect_error);
+}
 
-// Create connection
-$conn = new mysqli($servername, $username, $password);
+$data = $_POST;
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-} 
-echo "Connected successfully";
+if ( $_POST['type'] == "newMember" ) {
+  $member = $_POST['member'];
+  
+  $insertQuery = sprintf("INSERT INTO `member`(`first_name`, `last_name`, `nick_name`, `email`, `join_date`, `referred_by`) VALUES (%s,%s,%s,%s,CURRENT_TIMESTAMP,%s)",
+      "'" . mysql_real_escape_string($member['firstName']) . "'",
+      "'" . mysql_real_escape_string($member['lastName']) . "'",
+      $member['nickname'] ? "'" . mysql_real_escape_string($member['nickname']) . "'" : 'NULL',
+      "'" . mysql_real_escape_string($member['email']) . "'",
+      $member['referredBy'] ? mysql_real_escape_string($member['referredBy']) : 'NULL');
+      
+  $result = $link->query($insertQuery);
+  if ( !$result ) {
+    die("Failed to insert new member");
+  }
+  
+  $selectQuery = sprintf("SELECT * FROM `member` WHERE `email`='%s'", $member['email']);
+  $result = $link->query($selectQuery);
+  if ( !$result ) {
+    die("Failed to insert new member");
+  } else {
+    $rows = array();
+    while($r = mysqli_fetch_assoc($result)) {
+        $rows[] = $r;
+    }
+    $data = $rows[0];
+  }
+}
+
+$link->close();
+
+header('Content-Type: application/json');
+exit(json_encode($data));
 ?>

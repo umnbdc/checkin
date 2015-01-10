@@ -1,11 +1,12 @@
+var apiURL = "test.php";
+
 function addNewMember() {
   var memberObject = {
     firstName: $('#inputFirstName').val(),
     lastName: $('#inputLastName').val(),
     nickname: $('#inputNickname').val(),
     email: $('#inputEmail').val(),
-    referredBy: $('#inputReferredBy').val(),
-    joinDate: Date.now()
+    referredBy: $('#inputReferredBy').val()
   }
   
   console.log(memberObject);
@@ -13,6 +14,7 @@ function addNewMember() {
   function addNewMemberSuccess(data, textStatus, jqXHR) {
     console.log("New member submission successful: ", data, textStatus, jqXHR);
     $('#newMemberModal').modal('hide');
+    // show member page
   }
   
   function addNewMemberError(data, textStatus, jqXHR) {
@@ -25,7 +27,7 @@ function addNewMember() {
   $.ajax({
     async: false,
     type: "POST",
-    url: "send.php",
+    url: apiURL,
     data: data,
     success: addNewMemberSuccess,
     error: addNewMemberError,
@@ -46,7 +48,7 @@ function getMembers(query) {
   $.ajax({
     async: false,
     type: "POST",
-    url: "send.php",
+    url: apiURL,
     data: {type: "getMembers", query: query},
     success: getMembersSuccess,
     error: getMembersError,
