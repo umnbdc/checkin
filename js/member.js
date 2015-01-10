@@ -1,4 +1,4 @@
-var apiURL = "test.php";
+var apiURL = "data.php";
 
 function addNewMember() {
   var memberObject = {
