@@ -41,7 +41,7 @@ if ( $_POST['type'] == "newMember" ) {
 } else if ( $_POST['type'] == "getMembers" ) {
   $query = "%" . mysql_real_escape_string($_POST['query']) . "%";
   
-  $selectQuery = "SELECT * FROM `member` WHERE `first_name` LIKE '" . $query . "' OR `last_name` LIKE '" . $query . "' OR `nick_name` LIKE '" . $query . "'";
+  $selectQuery = "SELECT * FROM `member` WHERE `first_name` LIKE '" . $query . "' OR `last_name` LIKE '" . $query . "' OR `nick_name` LIKE '" . $query . "' ORDER BY `last_name`";
   $result = $link->query($selectQuery);
   if ( !$result ) {
     die("Failed to search members");
@@ -52,6 +52,10 @@ if ( $_POST['type'] == "newMember" ) {
     }
     $data = $rows;
   }
+} else if ( $_POST['type'] == "getMemberInfo" ) {
+  $id = mysql_real_escape_string($_POST['id']);
+  
+  // Get all object related to member id
 }
 
 $link->close();

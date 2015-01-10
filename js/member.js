@@ -19,7 +19,7 @@ function addNewMember() {
   
   function addNewMemberError(data, textStatus, jqXHR) {
     console.log("New member submission failed: ", data, textStatus, jqXHR);
-    alert("There was an issued adding this member. Please try again.");
+    alert("There was an issue adding this member. Please try again.");
   }
   
   var data = {type: "newMember", member: memberObject};
@@ -37,20 +37,48 @@ function addNewMember() {
 
 function runSearch() {
   var query = $("#memberSearch").val();
-  console.log("runSearch: ", getMembers(query));
+  showMemberList(getMembers(query));
+}
+
+function showMember(id) {
+  alert("Show member " + id);
+}
+
+function showMemberList(members) {
+  $("#memberContainer").hide();
+  
+  // First clear member table
+  var tableBody = $("#memberListTable tbody");
+  tableBody.empty();
+  
+  function addRow(member) {
+    var row = $("<tr>");
+    row.append($("<td>", {html: member.first_name}));
+    row.append($("<td>", {html: member.last_name}));
+    row.append($("<td>", {html: member.email}));
+    
+    row.click(function() {
+      showMember(member.id);
+    });
+    
+    tableBody.append(row);
+  }
+  members.forEach(addRow);
+  
+  $("#memberListContainer").show();
 }
 
 function getMembers(query) {
-  var members = [];
-  var toReturn = {};
+  var responseData = {};
   
   function getMembersSuccess(data, textStatus, jqXHR) {
-    console.log(data, textStatus, jqXHR);
-    toReturn = data;
+    console.log("Members retrieval successful: ", data, textStatus, jqXHR);
+    responseData = data;
   }
 
   function getMembersError(data, textStatus, jqXHR) {
     console.log(data, textStatus, jqXHR);
+    alert("There was an issue retrieving members. Please try again.");
   }
   
   $.ajax({
@@ -63,5 +91,5 @@ function getMembers(query) {
     dataType: 'json'
   });
   
-  return toReturn;
+  return responseData;
 }

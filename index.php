@@ -154,28 +154,15 @@
     
     <div class="container" id="memberListContainer" style="display: none">
       <h2>Member Search Results</h2>
-      <table class="table table-condensed table-hover">
+      <table id="memberListTable" class="table table-condensed table-hover">
         <thead>
           <tr>
             <th>First</th>
             <th>Last</th>
             <th>Email</th>
-            <th>Membership</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Kevin</td>
-            <td>Viratyosin</td>
-            <td>virat001@umn.edu</td>
-            <td>Competition Team</td>
-          </tr>
-          <tr>
-            <td>John</td>
-            <td>O'Leary</td>
-            <td>olear123@umn.edu</td>
-            <td>Competition Team</td>
-          </tr>
         </tbody>
       </table>
     </div>
