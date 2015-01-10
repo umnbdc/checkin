@@ -88,8 +88,8 @@
         <div class="btn-group">
           <button type="button" id="memberInfoCheckinButton" class="btn btn-primary">Check in</button>
           <button type="button" id="memberInfoEditButton" class="btn btn-default">Edit info</button>
-          <button type="button" id="memberInfoPayButton" class="btn btn-default">Pay</button>
-          <button type="button" id="memberInfoMembershipButton" class="btn btn-default">Membership</button>
+          <button type="button" id="memberInfoPayButton" class="btn btn-default">Pay and Charge</button>
+          <button type="button" id="memberInfoMembershipButton" class="btn btn-default">Membership and Fee Status</button>
         </div>
       </p>
       <h3>Credits and debits</h3>
@@ -142,32 +142,66 @@
             <h4 class="modal-title" id="newMemberModalLabel">Add a new member</h4>
           </div>
           <div class="modal-body">
-            <form  >
-              <div class="form-group">
-                <label for="inputFirstName">First name</label>
-                <input type="text" class="form-control" id="inputFirstName" placeholder="First name">
+            <div class="form-group">
+              <label for="inputFirstName">First name</label>
+              <input type="text" class="form-control" id="inputFirstName" placeholder="First name">
+            </div>
+            <div class="form-group">
+              <label for="inputLastName">Last name</label>
+              <input type="text" class="form-control" id="inputLastName" placeholder="Last name">
+            </div>
+            <div class="form-group">
+              <label for="inputNickname">Nickname</label>
+              <input type="text" class="form-control" id="inputNickname" placeholder="Nickname">
+            </div>
+            <div class="form-group">
+              <label for="inputEmail">Email</label>
+              <input type="email" class="form-control" id="inputEmail" placeholder="Email">
+            </div>
+            <div class="form-group">
+              <label for="inputReferredBy">Referred by</label>
+              <div class="input-group">
+                <input type="text" class="form-control" id="referSearch" placeholder="Search for referrer...">
+                <span class="input-group-btn">
+                  <button class="btn btn-default" id="memberReferGoButton" type="button" onclick="searchAndFillReferOptions()">Go!</button>
+                </span>
               </div>
-              <div class="form-group">
-                <label for="inputLastName">Last name</label>
-                <input type="text" class="form-control" id="inputLastName" placeholder="Last name">
-              </div>
-              <div class="form-group">
-                <label for="inputNickname">Nickname</label>
-                <input type="text" class="form-control" id="inputNickname" placeholder="Nickname">
-              </div>
-              <div class="form-group">
-                <label for="inputEmail">Email</label>
-                <input type="email" class="form-control" id="inputEmail" placeholder="Email">
-              </div>
-              <div class="form-group">
-                <label for="inputReferredBy">Referred by</label>
-                <select class="form-control" id="inputReferredBy">
-                  <option></option>
-                  <option value="1">One</option>
-                  <option value="2">Two</option>
-                </select>
-              </div>
-            </form>
+              <script type="text/javascript">
+                // submits refer search on enter
+                $("#referSearch").keypress(function(e) {
+                  if(e.which == 13) {
+                    this.blur();
+                    $("#memberReferGoButton").click();
+                  }
+                });
+                function searchAndFillReferOptions() {
+                  var query = $("#referSearch").val();
+                  var members = getMembers(query);
+                  if ( typeof members === 'undefined' ) {
+                    alert("Failed to search for referring members.");
+                  } else {
+                    $("#newMemberReferForm").empty();
+                    if ( members.length > 0 ) {
+                      members.forEach(function (member) {
+                        var radioDiv = $("<div>", {class: "radio"});
+                        var label = $("<label>", {html: member.first_name + " " + member.last_name + " (" + member.email + ")"});
+                        label.prepend($("<input>", {
+                          type: "radio",
+                          name: "inputReferredBy",
+                          value: member.id
+                        }));
+                        radioDiv.append(label);
+                        $("#newMemberReferForm").append(radioDiv);
+                      });
+                    } else {
+                      $("#newMemberReferForm").append($("<p>", {html: "No matches found"}));
+                    }
+                  }
+                }
+              </script>
+              <form id="newMemberReferForm">
+              </form>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -184,6 +218,11 @@
     
     <script type="text/javascript">
       $("#memberSearch").focus();
+      
+      $(".navbar-brand").click(function(e) {
+        $("#memberContainer").hide();
+        $("#memberListContainer").hide();
+      });
       
       // submits member search on enter
       $("#memberSearch").keypress(function(e) {

@@ -7,12 +7,24 @@ function isUndefined(e) {
 }
 
 function addNewMember() {
+  var firstName = $('#inputFirstName').val();
+  var lastName = $('#inputLastName').val();
+  var nickname = $('#inputNickname').val();
+  var email = $('#inputEmail').val();
+  var referrerFormData = $("#newMemberReferForm").serializeArray();
+  var referredBy = referrerFormData.length > 0 ? referrerFormData[0].value : null;
+
+  if ( !firstName || !lastName || !email ) {
+    alert("Missing member information. First name, last name, and email are required.");
+    return;
+  }
+    
   var memberObject = {
-    firstName: $('#inputFirstName').val(),
-    lastName: $('#inputLastName').val(),
-    nickname: $('#inputNickname').val(),
-    email: $('#inputEmail').val(),
-    referredBy: $('#inputReferredBy').val()
+    firstName: firstName,
+    lastName: lastName,
+    nickname: nickname,
+    email: email,
+    referredBy: referredBy
   }
   
   console.log(memberObject);
@@ -20,7 +32,7 @@ function addNewMember() {
   function addNewMemberSuccess(data, textStatus, jqXHR) {
     console.log("New member submission successful: ", data, textStatus, jqXHR);
     $('#newMemberModal').modal('hide');
-    // show member page
+    showMember(data[0].id);
   }
   
   function addNewMemberError(data, textStatus, jqXHR) {
