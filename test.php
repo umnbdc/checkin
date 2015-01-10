@@ -16,11 +16,11 @@ if ( $_POST['type'] == "newMember" ) {
   $member = $_POST['member'];
   
   $insertQuery = sprintf("INSERT INTO `member`(`first_name`, `last_name`, `nick_name`, `email`, `join_date`, `referred_by`) VALUES (%s,%s,%s,%s,CURRENT_TIMESTAMP,%s)",
-      "'" . mysql_real_escape_string($member['firstName']) . "'",
-      "'" . mysql_real_escape_string($member['lastName']) . "'",
-      $member['nickname'] ? "'" . mysql_real_escape_string($member['nickname']) . "'" : 'NULL',
-      "'" . mysql_real_escape_string($member['email']) . "'",
-      $member['referredBy'] ? mysql_real_escape_string($member['referredBy']) : 'NULL');
+      "'" . mysql_escape_string($member['firstName']) . "'",
+      "'" . mysql_escape_string($member['lastName']) . "'",
+      $member['nickname'] ? "'" . mysql_escape_string($member['nickname']) . "'" : 'NULL',
+      "'" . mysql_escape_string($member['email']) . "'",
+      $member['referredBy'] ? mysql_escape_string($member['referredBy']) : 'NULL');
       
   $result = $link->query($insertQuery);
   if ( !$result ) {
@@ -39,7 +39,7 @@ if ( $_POST['type'] == "newMember" ) {
     $data = $rows[0];
   }
 } else if ( $_POST['type'] == "getMembers" ) {
-  $query = "%" . mysqli_real_escape_string($_POST['query']) . "%";
+  $query = "%" . mysql_escape_string($_POST['query']) . "%";
   
   $selectQuery = "SELECT * FROM `member` WHERE `first_name` LIKE '" . $query . "' OR `last_name` LIKE '" . $query . "' OR `nick_name` LIKE '" . $query . "' ORDER BY `last_name`";
   $result = $link->query($selectQuery);
@@ -52,9 +52,8 @@ if ( $_POST['type'] == "newMember" ) {
     }
     $data = $rows;
   }
-  $data = $selectQuery;
 } else if ( $_POST['type'] == "getMemberInfo" ) {
-  $id = mysql_real_escape_string($_POST['id']);
+  $id = mysql_escape_string($_POST['id']);
   
   // Get all object related to member id
 }
