@@ -23,12 +23,33 @@ function addNewMember() {
   var data = {type: "newMember", member: memberObject};
   
   $.ajax({
+    async: false,
     type: "POST",
     url: "send.php",
     data: data,
     success: addNewMemberSuccess,
     error: addNewMemberError,
     dataType: 'json'
-  });
+  }); 
+}
+
+function getMembers(query) {
+  var members = [];
   
+  function getMembersSuccess(data, textStatus, jqXHR) {
+    members = data.members;
+  }
+
+  function getMembersError(data, textStatus, jqXHR) {
+  }
+  
+  $.ajax({
+    async: false,
+    type: "POST",
+    url: "send.php",
+    data: {type: "getMembers", query: query},
+    success: getMembersSuccess,
+    error: getMembersError,
+    dataType: 'json'
+  });
 }

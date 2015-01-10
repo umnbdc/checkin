@@ -62,6 +62,34 @@
         </div>
       </p>
     </div><!-- /.container -->
+    
+    <div class="container" id="memberListContainer">
+      <h2>Member Search Results</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>First</th>
+            <th>Last</th>
+            <th>Email</th>
+            <th>Membership</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Kevin</td>
+            <td>Viratyosin</td>
+            <td>virat001@umn.edu</td>
+            <td>Competition Team</td>
+          </tr>
+          <tr>
+            <td>John</td>
+            <td>O'Leary</td>
+            <td>olear123@umn.edu</td>
+            <td>Competition Team</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- New member modal -->
     <div class="modal fade" id="newMemberModal" role="dialog" aria-labelledby="newMemberModalLabel" aria-hidden="true">
@@ -111,7 +139,5 @@
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="bootstrap/js/bootstrap.min.js"></script>
-    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-    <script src="bootstrap/js/ie10-viewport-bug-workaround.js"></script>
   </body>
 </html>
