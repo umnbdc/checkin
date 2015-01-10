@@ -18,6 +18,17 @@ if ($link->connect_error) {
     die("Connection failed: " . $link->connect_error);
 }
 
+function checkedInToday($safeId, $link) {
+  $selectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND DATE(`date_time`) = DATE(NOW())";
+  $result = $link->query($selectQuery);
+  if ( !$result ) {
+    die("Failed to select from checkin");
+  } else {
+    $checkins = resultToArray($result);
+  }
+  return $checkins != [];
+}
+
 $data = $_POST;
 
 if ( $_POST['type'] == "newMember" ) {
@@ -107,15 +118,7 @@ if ( $_POST['type'] == "newMember" ) {
 } else if ( $_POST['type'] == "checkInMember" ) {
   $id = mysql_escape_string($_POST['id']);
   
-  $selectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $id . "' AND DATE(`date_time`) = DATE(NOW())";
-  $result = $link->query($selectQuery);
-  if ( !$result ) {
-    die("Failed to select from checkin");
-  } else {
-    $checkins = resultToArray($result);
-  }
-  
-  if ( $checkins == [] ) {
+  if ( !checkedInToday($id, $link) ) {
     $insertQuery = "INSERT INTO `checkin`(`member_id`, `date_time`) VALUES ('" . $id . "',CURRENT_TIMESTAMP)";
     $result = $link->query($insertQuery);
     if ( !$result ) {
@@ -125,6 +128,9 @@ if ( $_POST['type'] == "newMember" ) {
   } else {
     $data['wasAlreadyCheckedIn'] = true;
   }
+} else if ( $_POST['type'] == "checkedIn?" ) {
+  $id = mysql_escape_string($_POST['id']);
+  $data['checkedIn'] = checkedInToday($id, $link);
 }
 
 $link->close();

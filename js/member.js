@@ -2,6 +2,10 @@ var apiURL = "data.php";
 
 var CURRENT_TERM = "Spring2015";
 
+function isUndefined(e) {
+  return typeof e === 'undefined';
+}
+
 function addNewMember() {
   var memberObject = {
     firstName: $('#inputFirstName').val(),
@@ -137,9 +141,13 @@ function showMember(id) {
     $("#memberHistoryTable tbody").append(row);
   });
   
-  // assign buttons functions
+  // setup checkin button
   var checkInButton = $("#memberInfoCheckinButton");
   checkInButton.click(function() {checkInMember(member.id, checkInButton)});
+  // disable button if already checked in
+  isCheckedInToday(member.id, true, function() {checkInButton.prop('disabled',true)}, function() {checkInButton.prop('disabled',false)});
+  
+  // assign other buttons functions
   $("#memberInfoEditButton").click(function() {});
   $("#memberInfoPayButton").off();
   $("#memberInfoMembershipButton").off();
@@ -172,6 +180,41 @@ function getMember(id) {
   });
   
   return responseData;
+}
+
+function isCheckedInToday(id, async, yesAction, noAction) {
+  var response = true;
+  
+  function isCheckedInSuccess(data, textStatus, jqXHR) {
+    console.log("Member 'is checked in?' successful: ", data, textStatus, jqXHR);
+    response = data.checkedIn;
+    if ( response ) {
+      if ( yesAction != null ) {
+        yesAction();
+      }
+    } else {
+      if ( noAction != null ) {
+        noAction();
+      }
+    }
+  }
+  function isCheckedInError(data, textStatus, jqXHR) {
+    console.log("Member 'is checked in?' failed: ", data, textStatus, jqXHR);
+  }
+  
+  $.ajax({
+    async: async,
+    type: "POST",
+    url: apiURL,
+    data: {type: "checkedIn?", id: id},
+    success: isCheckedInSuccess,
+    error: isCheckedInError,
+    dataType: 'json'
+  });
+  
+  if ( !async ) {
+    return response;
+  }
 }
 
 function checkInMember(id, button) {
@@ -225,6 +268,8 @@ function showMemberList(members) {
     row.click(function() {
       showMember(member.id);
     });
+    // disable button if already checked in
+    isCheckedInToday(member.id, true, function() {button.prop('disabled',true)}, null);
     
     tableBody.append(row);
   }
