@@ -97,6 +97,10 @@ function formatAmount(amount) {
   return negString + "$" + dollarString + "." + centString;
 }
 
+function updateMember(id) {
+  alert("Update member" + id);
+}
+
 function updateMembershipAndFeeStatus(id) {
   var feeStatus = $("#inputFeeStatus").val();
   var membership = $("#inputMembership").val();
@@ -208,12 +212,22 @@ function showMember(id) {
   } else {
     $("#inputMembership").children()[0].selected = true;
   }
-  // set update button
+  // set update membership button
   $("#updateMembershipButton").off();
   $("#updateMembershipButton").click(function() { updateMembershipAndFeeStatus(member.id) });
   
+  // setup edit button
+  // no code for button, done through modal data attributes
+  // set modal data
+  $("#inputEditFirstName").val(member.first_name);
+  $("#inputEditLastName").val(member.last_name);
+  $("#inputEditNickname").val(member.nick_name);
+  $("#inputEditEmail").val(member.email);
+  // set edit member button
+  $("#editMemberButton").off();
+  $("#editMemberButton").click(function() { updateMember(member.id) });
+  
   // assign other buttons functions
-  $("#memberInfoEditButton").click(function() {alert("Edit button");});
   $("#memberInfoPayButton").click(function() {alert("Pay button");});
   
   $("#memberListContainer").hide();

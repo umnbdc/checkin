@@ -246,6 +246,8 @@ if ( $_POST['type'] == "newMember" ) {
   $data['oldMembership'] = $oldMembership;
   $data['newFeeStatus'] = $feeStatus;
   $data['newMembership'] = $membership;
+  
+  // TODO Handle Referral Rewards
 }
 
 $link->close();
