@@ -98,7 +98,37 @@ function formatAmount(amount) {
 }
 
 function updateMember(id) {
-  alert("Update member" + id);
+  firstName = $("#inputEditFirstName").val();
+  lastName = $("#inputEditLastName").val();
+  nickName = $("#inputEditNickname").val();
+  email = $("#inputEditEmail").val();
+  
+  function updateMemberSuccess(data, textStatus, jqXHR) {
+    console.log("Update member info successful: ", data, textStatus, jqXHR);
+    $("#editMemberModal").modal('hide');
+    showMember(id);
+  }
+  
+  function updateMemberError(data, textStatus, jqXHR) {
+    console.log("Update member info failed: ", data, textStatus, jqXHR);
+    alert("There was an issue updating this member's info. Please try again.");
+  }
+  
+  $.ajax({
+    type: "POST",
+    url: apiURL,
+    data: {
+      type: "updateMember",
+      id: id,
+      firstName: firstName,
+      lastName: lastName,
+      nickName: nickName,
+      email: email
+    },
+    success: updateMemberSuccess,
+    error: updateMemberError,
+    dataType: 'json'
+  }); 
 }
 
 function updateMembershipAndFeeStatus(id) {

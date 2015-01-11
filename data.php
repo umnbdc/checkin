@@ -104,6 +104,16 @@ if ( $_POST['type'] == "newMember" ) {
   } else {
     $data = resultToArray($result);
   }
+} else if ( $_POST['type'] == "updateMember" ) {
+  $id = mysql_escape_string($_POST['id']);
+  $firstName = mysql_escape_string($_POST['firstName']);
+  $lastName = mysql_escape_string($_POST['lastName']);
+  $nickName = mysql_escape_string($_POST['nickName']);
+  $email = mysql_escape_string($_POST['email']);
+  
+  $updateQuery = "UPDATE `member` SET `first_name`='" . $firstName . "',`nick_name`='" . $nickName . "',`last_name`='" . $lastName . "',`email`='" . $email . "' WHERE `id`='" . $id . "'";
+  $data['updateQuery'] = $updateQuery;
+  safeQuery($updateQuery, $link, "Failed to update member info");
 } else if ( $_POST['type'] == "getMemberInfo" ) {
   $id = mysql_escape_string($_POST['id']);
   
