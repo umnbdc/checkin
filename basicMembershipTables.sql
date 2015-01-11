@@ -109,6 +109,25 @@ CREATE TABLE waiver_status (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table referral
+--
+DROP TABLE IF EXISTS referral;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE referral (
+  id int(10) NOT NULL AUTO_INCREMENT,
+  referrer_id smallint(10) NOT NULL,
+  referred_id smallint(10) NOT NULL,
+  PRIMARY KEY (id),
+  INDEX (referrer_id),
+  FOREIGN KEY (referrer_id) 
+    REFERENCES member(id),
+  FOREIGN KEY (referred_id) 
+    REFERENCES member(id)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table checkin
 --
 DROP TABLE IF EXISTS checkin;

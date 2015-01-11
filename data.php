@@ -115,6 +115,14 @@ if ( $_POST['type'] == "newMember" ) {
   } else {
     $data['waiverStatus'] = resultToArray($result);
   }
+  
+  $referralSelectQuery = "SELECT * FROM `referral` WHERE `referrer_id`='" . $id . "'";
+  $result = $link->query($referralSelectQuery);
+  if ( !$result ) {
+    die("Failed to getMemberInfo referral");
+  } else {
+    $data['references'] = resultToArray($result);
+  }
 } else if ( $_POST['type'] == "checkInMember" ) {
   $id = mysql_escape_string($_POST['id']);
   

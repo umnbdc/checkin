@@ -78,7 +78,7 @@
             <th>Membership</th>
             <th>Fee Status</th>
             <th>Waiver</th>
-            <th>Balance</th>
+            <th>Outstanding Membership Dues</th>
           </tr>
         </thead>
         <tbody>
@@ -88,7 +88,7 @@
         <div class="btn-group">
           <button type="button" id="memberInfoCheckinButton" class="btn btn-primary">Check in</button>
           <button type="button" id="memberInfoEditButton" class="btn btn-default">Edit info</button>
-          <button type="button" id="memberInfoPayButton" class="btn btn-default">Pay and Charge</button>
+          <button type="button" id="memberInfoPayButton" class="btn btn-default">Pay and Purchase</button>
           <button type="button" id="memberInfoMembershipButton" class="btn btn-default">Membership and Fee Status</button>
         </div>
       </p>
