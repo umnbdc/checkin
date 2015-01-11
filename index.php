@@ -149,6 +149,8 @@
     <script src="bootstrap/js/bootstrap.min.js"></script>
     
     <script type="text/javascript">
+      setEnvironment();
+      
       $("#memberSearch").focus();
       
       $(".navbar-brand").click(function(e) {

@@ -49,6 +49,9 @@ function assocArraySelectQuery($query, $link, $errorMessage) {
   return resultToArray(safeQuery($query, $link, $errorMessage));
 }
 
+// Environment
+$CURRENT_TERM = "Spring2015";
+
 // Create connection
 $servername = "localhost";
 $username = "adminPmvkzYa";
@@ -72,7 +75,10 @@ function checkedInToday($safeId, $link) {
 
 $data = $_POST;
 
-if ( $_POST['type'] == "newMember" ) {
+if ( $_POST['type'] == "environment" ) {
+  $data = [];
+  $data['CURRENT_TERM'] = $CURRENT_TERM;
+} else if ( $_POST['type'] == "newMember" ) {
   $member = $_POST['member'];
   
   $insertQuery = sprintf("INSERT INTO `member`(`first_name`, `last_name`, `nick_name`, `email`, `join_date`, `referred_by`) VALUES (%s,%s,%s,%s,CURRENT_TIMESTAMP,%s)",
@@ -94,16 +100,6 @@ if ( $_POST['type'] == "newMember" ) {
   } else {
     $data = resultToArray($result);
   }
-} else if ( $_POST['type'] == "getMembers" ) {
-  $query = "%" . mysql_escape_string($_POST['query']) . "%";
-  
-  $selectQuery = "SELECT * FROM `member` WHERE `first_name` LIKE '" . $query . "' OR `last_name` LIKE '" . $query . "' OR `nick_name` LIKE '" . $query . "' ORDER BY `last_name`";
-  $result = $link->query($selectQuery);
-  if ( !$result ) {
-    die("Failed to search members");
-  } else {
-    $data = resultToArray($result);
-  }
 } else if ( $_POST['type'] == "updateMember" ) {
   $id = mysql_escape_string($_POST['id']);
   $firstName = mysql_escape_string($_POST['firstName']);
@@ -114,6 +110,16 @@ if ( $_POST['type'] == "newMember" ) {
   $updateQuery = "UPDATE `member` SET `first_name`='" . $firstName . "',`nick_name`='" . $nickName . "',`last_name`='" . $lastName . "',`email`='" . $email . "' WHERE `id`='" . $id . "'";
   $data['updateQuery'] = $updateQuery;
   safeQuery($updateQuery, $link, "Failed to update member info");
+} else if ( $_POST['type'] == "getMembers" ) {
+  $query = "%" . mysql_escape_string($_POST['query']) . "%";
+  
+  $selectQuery = "SELECT * FROM `member` WHERE `first_name` LIKE '" . $query . "' OR `last_name` LIKE '" . $query . "' OR `nick_name` LIKE '" . $query . "' ORDER BY `last_name`";
+  $result = $link->query($selectQuery);
+  if ( !$result ) {
+    die("Failed to search members");
+  } else {
+    $data = resultToArray($result);
+  }
 } else if ( $_POST['type'] == "getMemberInfo" ) {
   $id = mysql_escape_string($_POST['id']);
   

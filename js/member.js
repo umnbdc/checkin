@@ -1,9 +1,30 @@
 var apiURL = "data.php";
 
-var CURRENT_TERM = "Spring2015";
+var CURRENT_TERM = "";
 
 function isUndefined(e) {
   return typeof e === 'undefined';
+}
+
+function setEnvironment() {
+  function environmentSuccess(data, textStatus, jqXHR) {
+    console.log("Environment retrieval successful: ", data, textStatus, jqXHR);
+    CURRENT_TERM = data.CURRENT_TERM;
+  }
+  
+  function environmentError(data, textStatus, jqXHR) {
+    console.log("Environment retrieval failed: ", data, textStatus, jqXHR);
+    alert("There was an issue retrieving environment info. Please try again.");
+  }
+  
+  $.ajax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "environment"},
+    success: environmentSuccess,
+    error: environmentError,
+    dataType: 'json'
+  });
 }
 
 function addNewMember() {
