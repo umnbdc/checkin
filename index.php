@@ -88,7 +88,7 @@
         <div class="btn-group">
           <button type="button" id="memberInfoCheckinButton" class="btn btn-primary">Check in</button>
           <button type="button" id="memberInfoEditButton" class="btn btn-default" data-toggle="modal" data-target="#editMemberModal">Edit info</button>
-          <button type="button" id="memberInfoPayButton" class="btn btn-default">Pay and Purchase</button>
+          <button type="button" id="memberInfoPayButton" class="btn btn-default" data-toggle="modal" data-target="#payModal">Pay</button>
           <button type="button" id="memberInfoMembershipButton" class="btn btn-default" data-toggle="modal" data-target="#membershipModal">Membership and Fee Status</button>
         </div>
       </p>
@@ -139,6 +139,9 @@
     
     <!-- Edit member modal -->
     <?php include "modals/editMemberModal.php"; ?>
+    
+    <!-- Pay modal -->
+    <?php include "modals/payModal.php"; ?>
     
     <!-- Membership modal -->
     <?php include "modals/membershipModal.php"; ?>

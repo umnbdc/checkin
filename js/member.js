@@ -183,6 +183,10 @@ function updateMembershipAndFeeStatus(id) {
   }); 
 }
 
+function payDialog(id) {
+  alert("Pay dialog " + id);
+}
+
 function showMember(id) {
   var memberData = getMember(id);
   if ( typeof memberData === 'undefined' ) {
@@ -223,7 +227,8 @@ function showMember(id) {
   infoRow.append($("<td>", {html: currentFeeStatus ? currentFeeStatus.kind : 'None'}));
   var currentWaiverStatus = getElementOfTerm(waiverStatus,CURRENT_TERM);
   infoRow.append($("<td>", {html: currentWaiverStatus && currentWaiverStatus.completed != 0 ? 'Yes' : 'No'}));
-  infoRow.append($("<td>", {html: formatAmount(calculateMembershipDuesBalance(debitCredits))}));
+  var currentOutstandingMembershipDues = calculateMembershipDuesBalance(debitCredits);
+  infoRow.append($("<td>", {html: formatAmount(currentOutstandingMembershipDues)}));
   $("#memberInfoTable tbody").append(infoRow);
   
   // fill credits and debits table
@@ -278,8 +283,14 @@ function showMember(id) {
   $("#editMemberButton").off();
   $("#editMemberButton").click(function() { updateMember(member.id) });
   
-  // assign other buttons functions
-  $("#memberInfoPayButton").click(function() {alert("Pay button");});
+  // setup pay button
+  // no code for button, done through modal data attributes
+  // set modal data
+  // set edit member button
+  $("#payModalCurrentOutstanding").html(formatAmount(currentOutstandingMembershipDues));
+  $("#inputCreditAmount").val("");
+  $("#payButton").off();
+  $("#payButton").click(function() { payDialog(member.id) });
   
   $("#memberListContainer").hide();
   $("#memberContainer").show();
