@@ -43,7 +43,6 @@ function addNewMember() {
   var data = {type: "newMember", member: memberObject};
   
   $.ajax({
-    async: false,
     type: "POST",
     url: apiURL,
     data: data,
@@ -66,18 +65,20 @@ function runSearch() {
 function getElementOfTerm(elements, term) {
   var element = null;
   elements.forEach(function(e) {
-    if ( e.term = term ) {
+    if ( e.term == term ) {
       element = e;
     }
   });
   return element;
 }
 
-function calculateBalance(transactions) {
-  // we'll want to handle the kind matching later, but for now...
+function calculateMembershipDuesBalance(transactions) {
+  // only considers credits/debits with kind matching "Membership *"
   var balance = 0;
   transactions.forEach(function(t) {
-    balance += parseInt(t.amount);
+    if ( t.kind.indexOf("Membership ") == 0 ) {
+      balance += parseInt(t.amount);
+    }
   });
   return balance;
 }
@@ -94,6 +95,37 @@ function formatAmount(amount) {
   var dollarString = dollars == 0 ? "0" : dollars;
   
   return negString + "$" + dollarString + "." + centString;
+}
+
+function updateMembershipAndFeeStatus(id) {
+  var feeStatus = $("#inputFeeStatus").val();
+  var membership = $("#inputMembership").val();
+  
+  function updateMembershipSuccess(data, textStatus, jqXHR) {
+    console.log("Update membership successful: ", data, textStatus, jqXHR);
+    $("#membershipModal").modal('hide');
+    showMember(id);
+  }
+  
+  function updateMembershipError(data, textStatus, jqXHR) {
+    console.log("Update membership failed: ", data, textStatus, jqXHR);
+    alert("There was an issue updating this membership and fee status. Please try again.");
+  }
+  
+  $.ajax({
+    type: "POST",
+    url: apiURL,
+    data: {
+      type: "updateMembershipAndFeeStatus",
+      id: id,
+      feeStatus: feeStatus,
+      membership: membership,
+      term: CURRENT_TERM
+    },
+    success: updateMembershipSuccess,
+    error: updateMembershipError,
+    dataType: 'json'
+  }); 
 }
 
 function showMember(id) {
@@ -136,7 +168,7 @@ function showMember(id) {
   infoRow.append($("<td>", {html: currentFeeStatus ? currentFeeStatus.kind : 'None'}));
   var currentWaiverStatus = getElementOfTerm(waiverStatus,CURRENT_TERM);
   infoRow.append($("<td>", {html: currentWaiverStatus && currentWaiverStatus.completed != 0 ? 'Yes' : 'No'}));
-  infoRow.append($("<td>", {html: formatAmount(calculateBalance(debitCredits))}));
+  infoRow.append($("<td>", {html: formatAmount(calculateMembershipDuesBalance(debitCredits))}));
   $("#memberInfoTable tbody").append(infoRow);
   
   // fill credits and debits table
@@ -145,6 +177,7 @@ function showMember(id) {
     row.append($("<td>", {html: parseInt(t.amount) > 0 ? "Credit" : "Debit"}));
     row.append($("<td>", {html: formatAmount(parseInt(t.amount))}));
     row.append($("<td>", {html: t.kind}));
+    row.append($("<td>", {html: t.method}));
     row.append($("<td>", {html: t.date_time}));
     $("#memberCreditDebitTable tbody").append(row);
   });
@@ -162,10 +195,26 @@ function showMember(id) {
   // disable button if already checked in
   isCheckedInToday(member.id, true, function() {checkInButton.prop('disabled',true)}, function() {checkInButton.prop('disabled',false)});
   
+  // setup membership button
+  // no code for button, done through modal data attributes
+  // set modal selects
+  if ( currentFeeStatus ) {
+    $("#inputFeeStatus").val(currentFeeStatus.kind);
+  } else {
+    $("#inputFeeStatus").children()[0].selected = true;
+  }
+  if ( currentMembership ) {
+    $("#inputMembership").val(currentMembership.kind);
+  } else {
+    $("#inputMembership").children()[0].selected = true;
+  }
+  // set update button
+  $("#updateMembershipButton").off();
+  $("#updateMembershipButton").click(function() { updateMembershipAndFeeStatus(member.id) });
+  
   // assign other buttons functions
-  $("#memberInfoEditButton").click(function() {});
-  $("#memberInfoPayButton").off();
-  $("#memberInfoMembershipButton").off();
+  $("#memberInfoEditButton").click(function() {alert("Edit button");});
+  $("#memberInfoPayButton").click(function() {alert("Pay button");});
   
   $("#memberListContainer").hide();
   $("#memberContainer").show();
