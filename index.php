@@ -34,13 +34,15 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">UMN BDC Check-in</a>
+          <a class="navbar-brand">UMN BDC Check-in</a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
-            <li><a href="#about">Reports</a></li>
-            <li><a href="#contact">Help</a></li>
+            <!--
+            <li class="active"><a href="">Home</a></li>
+            <li><a href="">Reports</a></li>
+            <li><a href="">Help</a></li>
+            -->
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -82,13 +84,39 @@
     <script src="bootstrap/js/bootstrap.min.js"></script>
     
     <script type="text/javascript">
+      function showHome() {
+        $("#memberContainer").hide();
+        $("#memberListContainer").hide();
+        history.pushState({page: "home"},"Home","?");
+      }
+      
+      <?php if ( $_GET['member_id'] ) { ?>
+        showMember(<?php echo $_GET['member_id']; ?>);
+      <?php } else if ( $_GET['search'] ) { ?>        
+        $("#memberSearch").val("<?php echo $_GET['search']; ?>");
+        runSearch();
+      <?php } else { ?>
+        showHome();
+      <?php } ?>
+      
+      function onpopstate(e) {
+        if ( e.state.page == "home" ) {
+          showHome();
+        } else if ( e.state.page == "member" ) {
+          showMember(e.state.id, true); // untrack = true
+        } else if ( e.state.page == "list" ) {
+          $("#memberSearch").val(e.state.query);
+          runSearch(true); // untrack = true
+        }
+      }
+      window.addEventListener("popstate", onpopstate);
+      
       setEnvironment();
       
       $("#memberSearch").focus();
       
       $(".navbar-brand").click(function(e) {
-        $("#memberContainer").hide();
-        $("#memberListContainer").hide();
+        showHome();
       });
       
       // submits member search on enter

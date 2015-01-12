@@ -82,13 +82,16 @@ function addNewMember() {
   }); 
 }
 
-function runSearch() {
+function runSearch(untrack) { // untrack optional, default: false
   var query = $("#memberSearch").val();
   var members = getMembers(query);
   if ( typeof members === 'undefined' ) {
     alert("Failed to search for members.");
   } else {
-    showMemberList(getMembers(query));
+    showMemberList(members);
+    if ( isUndefined(untrack) || untrack == false ) { 
+      history.pushState({page: "list", query: query}, "Member Search", "?search="+query);
+    }
   }
 }
 
@@ -285,7 +288,7 @@ function waiverDialogSumbit(member_id) {
   }); 
 }
 
-function showMember(id) {
+function showMember(id, untrack) { // untrack optional, default: false
   var memberData = getMember(id);
   if ( typeof memberData === 'undefined' ) {
     alert("Failed to find member with id " + id);
@@ -428,6 +431,10 @@ function showMember(id) {
   // prompt payment if member needs to pay dues (except for Competition which can be on a plan)
   if ( currentOutstandingMembershipDues < 0 && currentMembership && currentMembership.kind != 'Competition' ) {
     $("#payModal").modal('show');
+  }
+  
+  if ( isUndefined(untrack) || untrack == false ) {
+    history.pushState({page: "member", id: id}, member.first_name + " " + member.last_name, "?member_id="+id);
   }
 }
 
