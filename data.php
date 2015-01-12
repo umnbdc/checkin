@@ -199,9 +199,14 @@ if ( $_POST['type'] == "environment" ) {
   $data['updateQuery'] = $updateQuery;
   safeQuery($updateQuery, $link, "Failed to update member info");
 } else if ( $_POST['type'] == "getMembers" ) {
-  $query = "%" . mysql_escape_string($_POST['query']) . "%";
-  
-  $selectQuery = "SELECT * FROM `member` WHERE `first_name` LIKE '" . $query . "' OR `last_name` LIKE '" . $query . "' OR `nick_name` LIKE '" . $query . "' ORDER BY `last_name`";
+  $likeConditions = "";
+  $searchTermParts = explode(" ", $_POST['query']);
+  foreach ($searchTermParts as $s) {
+    $s = "%" . mysql_escape_string($s) . "%";
+    $likeConditions = $linkConditions . " LIKE '" . $s . "' OR `last_name` LIKE '" . $s . "' OR `nick_name` LIKE '" . $s . "'";
+  }
+    
+  $selectQuery = "SELECT * FROM `member` WHERE `first_name`" . $likeConditions . " ORDER BY `last_name`";
   $result = $link->query($selectQuery);
   if ( !$result ) {
     die("Failed to search members");
