@@ -29,7 +29,7 @@ function createMembershipDueKind($membership, $feeStatus, $term) {
   return "Membership (" . $membership . ", " . $feeStatus . ", " . $term . ")";
 }
 
-function resultToArray($result) {
+function resultToAssocArray($result) {
   $rows = array();
   while($r = mysqli_fetch_assoc($result)) {
       $rows[] = $r;
@@ -46,11 +46,22 @@ function safeQuery($query, $link, $errorMessage) {
 }
 
 function assocArraySelectQuery($query, $link, $errorMessage) {
-  return resultToArray(safeQuery($query, $link, $errorMessage));
+  return resultToAssocArray(safeQuery($query, $link, $errorMessage));
 }
 
 // Environment
 $CURRENT_TERM = "Spring2015";
+$CURRENT_START_DATE = "2015-01-01";
+$CURRENT_END_DATE = "2015-05-31";
+
+$CHECKINS_PER_WEEK = array(
+  "Single" => 1,
+  "Standard" => 2,
+  "Social" => 2,
+  "Competition" => INF,
+  "Summer" => INF,
+);
+$NUMBER_OF_FREE_CHECKINS = 2;
 
 // Create connection
 $servername = "localhost";
@@ -68,9 +79,37 @@ function checkedInToday($safeId, $link) {
   if ( !$result ) {
     die("Failed to select from checkin");
   } else {
-    $checkins = resultToArray($result);
+    $checkins = resultToAssocArray($result);
   }
   return $checkins != [];
+}
+
+function memberAllowedToCheckIn($safeId, $link) {
+  global $CURRENT_TERM;
+  global $CURRENT_START_DATE;
+  global $CURRENT_END_DATE;
+  global $CHECKINS_PER_WEEK;
+  global $NUMBER_OF_FREE_CHECKINS;
+  
+  $membershipSelectQuery = "SELECT `kind` FROM `membership` WHERE `member_id`='" . $safeId . "' AND `term`='" . $CURRENT_TERM . "'";
+  $membershipArray = assocArraySelectQuery($membershipSelectQuery, $link, "Failed to select membership in memberAllowedToCheckIn");
+  assert(count($membershipArray) < 2, "Multiple memberships: (member_id, term) = (". $safeId . ", " . $CURRENT_TERM . ")");
+  
+  if ( count($membershipArray) == 1 ) {
+    $kind = $membershipArray[0]['kind'];
+    if ( $kind == 'Competition' ) {
+      return true;
+    } else {
+      // note: week of year starts monday which is OK for us
+      $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND WEEKOFYEAR(`date_time`)=WEEKOFYEAR(NOW())";
+      $checkinsThisWeek = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select checkins for this week in memberAllowedToCheckIn");
+      return count($checkinsThisWeek) < $CHECKINS_PER_WEEK;
+    }
+  } else { // no membership
+    $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND DATE(`date_time`) BETWEEN '" . $CURRENT_START_DATE . "' AND '" . $CURRENT_END_DATE . "'";
+    $checkinsThisTerm = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select checkins for this term in memberAllowedToCheckIn");
+    return count($checkinsThisTerm) < $NUMBER_OF_FREE_CHECKINS;
+  }
 }
 
 $data = $_POST;
@@ -98,7 +137,7 @@ if ( $_POST['type'] == "environment" ) {
   if ( !$result ) {
     die("Failed to fetch the new member");
   } else {
-    $data = resultToArray($result);
+    $data = resultToAssocArray($result);
   }
 } else if ( $_POST['type'] == "updateMember" ) {
   $id = mysql_escape_string($_POST['id']);
@@ -118,7 +157,7 @@ if ( $_POST['type'] == "environment" ) {
   if ( !$result ) {
     die("Failed to search members");
   } else {
-    $data = resultToArray($result);
+    $data = resultToAssocArray($result);
   }
 } else if ( $_POST['type'] == "getMemberInfo" ) {
   $id = mysql_escape_string($_POST['id']);
@@ -130,7 +169,7 @@ if ( $_POST['type'] == "environment" ) {
   if ( !$result ) {
     die("Failed to getMemberInfo member");
   } else {
-    $data['member'] = resultToArray($result)[0]; // assume only one member with id
+    $data['member'] = resultToAssocArray($result)[0]; // assume only one member with id
   }
   
   $membershipSelectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $id . "'";
@@ -138,7 +177,7 @@ if ( $_POST['type'] == "environment" ) {
   if ( !$result ) {
     die("Failed to getMemberInfo membership");
   } else {
-    $data['memberships'] = resultToArray($result);
+    $data['memberships'] = resultToAssocArray($result);
   }
   
   $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $id . "' ORDER BY `date_time`";
@@ -146,7 +185,7 @@ if ( $_POST['type'] == "environment" ) {
   if ( !$result ) {
     die("Failed to getMemberInfo checkin");
   } else {
-    $data['checkIns'] = resultToArray($result);
+    $data['checkIns'] = resultToAssocArray($result);
   }
   
   $debitCreditSelectQuery = "SELECT * FROM `debit_credit` WHERE `member_id`='" . $id . "' ORDER BY `date_time`";
@@ -154,7 +193,7 @@ if ( $_POST['type'] == "environment" ) {
   if ( !$result ) {
     die("Failed to getMemberInfo debit/credit");
   } else {
-    $data['debitCredits'] = resultToArray($result);
+    $data['debitCredits'] = resultToAssocArray($result);
   }
   
   $feeStatusSelectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $id . "'";
@@ -162,7 +201,7 @@ if ( $_POST['type'] == "environment" ) {
   if ( !$result ) {
     die("Failed to getMemberInfo fee status");
   } else {
-    $data['feeStatus'] = resultToArray($result);
+    $data['feeStatus'] = resultToAssocArray($result);
   }
   
   $waiverStatusSelectQuery = "SELECT * FROM `waiver_status` WHERE `member_id`='" . $id . "'";
@@ -170,7 +209,7 @@ if ( $_POST['type'] == "environment" ) {
   if ( !$result ) {
     die("Failed to getMemberInfo waiver status");
   } else {
-    $data['waiverStatus'] = resultToArray($result);
+    $data['waiverStatus'] = resultToAssocArray($result);
   }
   
   $referralSelectQuery = "SELECT * FROM `referral` WHERE `referrer_id`='" . $id . "'";
@@ -178,20 +217,25 @@ if ( $_POST['type'] == "environment" ) {
   if ( !$result ) {
     die("Failed to getMemberInfo referral");
   } else {
-    $data['references'] = resultToArray($result);
+    $data['references'] = resultToAssocArray($result);
   }
 } else if ( $_POST['type'] == "checkInMember" ) {
   $id = mysql_escape_string($_POST['id']);
   
-  if ( !checkedInToday($id, $link) ) {
-    $insertQuery = "INSERT INTO `checkin`(`member_id`, `date_time`) VALUES ('" . $id . "',CURRENT_TIMESTAMP)";
-    $result = $link->query($insertQuery);
-    if ( !$result ) {
-      die("Failed to insert new checkin");
+  if ( memberAllowedToCheckIn($id, $link) ) {  
+    $data['permitted'] = true;
+    if ( !checkedInToday($id, $link) ) {
+      $insertQuery = "INSERT INTO `checkin`(`member_id`, `date_time`) VALUES ('" . $id . "',CURRENT_TIMESTAMP)";
+      $result = $link->query($insertQuery);
+      if ( !$result ) {
+        die("Failed to insert new checkin");
+      }
+      $data['wasAlreadyCheckedIn'] = false;
+    } else {
+      $data['wasAlreadyCheckedIn'] = true;
     }
-    $data['wasAlreadyCheckedIn'] = false;
   } else {
-    $data['wasAlreadyCheckedIn'] = true;
+    $data['permitted'] = false;
   }
 } else if ( $_POST['type'] == "checkedIn?" ) {
   $id = mysql_escape_string($_POST['id']);
