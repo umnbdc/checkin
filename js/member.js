@@ -6,7 +6,7 @@ function isUndefined(e) {
   return typeof e === 'undefined';
 }
 
-function setEnvironment() {
+function setEnvironment(async) {
   function environmentSuccess(data, textStatus, jqXHR) {
     console.log("Environment retrieval successful: ", data, textStatus, jqXHR);
     CURRENT_TERM = data.CURRENT_TERM;
@@ -18,6 +18,7 @@ function setEnvironment() {
   }
   
   $.ajax({
+    async: async,
     type: "POST",
     url: apiURL,
     data: {type: "environment"},
@@ -397,6 +398,7 @@ function showMember(id, untrack) { // untrack optional, default: false
   
   // setup waiver modal
   $("#inputWaiverStatus").val( currentWaiverStatus ? currentWaiverStatus.completed : 0 );
+  $("#waiverModalCurrentTerm").html(CURRENT_TERM);
   $("#updateWaiverButton").off();
   $("#updateWaiverButton").click(function() { waiverDialogSumbit(member.id) });
   

@@ -14,6 +14,8 @@
     <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap theme -->
     <link href="bootstrap/css/bootstrap-theme.min.css" rel="stylesheet">
+    <!-- Bootstrap sticky footer -->
+    <link href="bootstrap/css/sticky-footer-navbar.css" rel="stylesheet">
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     
@@ -65,9 +67,15 @@
       </p>
     </div><!-- /.container -->
 
-    <!-- include Modals -->
+    <!-- include Containers -->
     <?php include "containers/memberContainer.php"; ?>
     <?php include "containers/memberListContainer.php"; ?>
+
+    <footer class="footer">
+      <div class="container">
+        <p class="text-muted">Developed for the University of Minnesota Ballroom Dance Club</p>
+      </div>
+    </footer>
 
     <!-- include Modals -->
     <?php include "modals/newMemberModal.php"; ?>
@@ -84,6 +92,8 @@
     <script src="bootstrap/js/bootstrap.min.js"></script>
     
     <script type="text/javascript">
+      setEnvironment(false);
+      
       function showHome() {
         $("#memberContainer").hide();
         $("#memberListContainer").hide();
@@ -110,8 +120,6 @@
         }
       }
       window.addEventListener("popstate", onpopstate);
-      
-      setEnvironment();
       
       $("#memberSearch").focus();
       
