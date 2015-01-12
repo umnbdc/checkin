@@ -201,6 +201,11 @@ if ( $_POST['type'] == "environment" ) {
   
   $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $id . "'";
   $data['member'] = assocArraySelectQuery($memberSelectQuery, $link, "Failed to getMemberInfo member")[0]; // assume only one member with id
+  if ( $data['member']['referred_by'] ) {
+    $referredBySelectQuery = "SELECT * FROM `member` WHERE `id`='" . $data['member']['referred_by'] . "'";
+    $referrerMemberObject = assocArraySelectQuery($referredBySelectQuery, $link, "Failed to get referrer member info in getMemberInfo")[0];
+    $data['member']['referred_by_name'] = $referrerMemberObject['first_name'] . " " . $referrerMemberObject['last_name'];
+  }
   
   $membershipSelectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $id . "'";
   $data['memberships'] = assocArraySelectQuery($membershipSelectQuery, $link, "Failed to getMemberInfo membership");
@@ -218,7 +223,13 @@ if ( $_POST['type'] == "environment" ) {
   $data['waiverStatus'] = assocArraySelectQuery($waiverStatusSelectQuery, $link, "Failed to getMemberInfo waiver status");
   
   $referralSelectQuery = "SELECT * FROM `referral` WHERE `referrer_id`='" . $id . "'";
-  $data['references'] = assocArraySelectQuery($referralSelectQuery, $link, "Failed to getMemberInfo referral");
+  $references = assocArraySelectQuery($referralSelectQuery, $link, "Failed to getMemberInfo referral");
+  for ( $i = 0; $i < count($references); $i++ ) {
+    $referredSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $references[$i]['referred_id'] . "'";
+    $memberObject = assocArraySelectQuery($referredSelectQuery, $link, "Failed to get referred member info in getMemberInfo")[0];
+    $references[$i]['referred_name'] = $memberObject['first_name'] . " " . $memberObject['last_name'];
+  }
+  $data['references'] = $references;
 } else if ( $_POST['type'] == "checkInMember" ) {
   $id = mysql_escape_string($_POST['id']);
   $override = array_key_exists('override', $_POST) && $_POST['override'] == "true";

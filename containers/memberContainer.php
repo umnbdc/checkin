@@ -53,4 +53,15 @@
     <tbody>
     </tbody>
   </table>
+  <h3>References</h3>
+  <p id="referredByP">Referred by: <span id="referredBySpan"></span></p>
+  <table id="referredTable" class="table table-condensed table-hover">
+    <thead>
+      <tr>
+        <th>Referred</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
 </div>

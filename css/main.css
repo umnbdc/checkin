@@ -9,3 +9,8 @@ body {
 .transactionAmount.negative {
   color: red;
 }
+
+#referredBySpan {
+  cursor: pointer;
+  text-decoration: underline;
+}

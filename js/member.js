@@ -299,11 +299,13 @@ function showMember(id) {
   var feeStatus = memberData.feeStatus;
   var debitCredits = memberData.debitCredits;
   var checkIns = memberData.checkIns;
+  var references = memberData.references;
   
   // Clear member info tables
   $("#memberInfoTable tbody").empty();
   $("#memberCreditDebitTable tbody").empty();
   $("#memberHistoryTable tbody").empty();
+  $("#referredTable tbody").empty();
   // Clear button event listeners
   $("#memberInfoCheckinButton").off();
   $("#memberInfoEditButton").off();
@@ -346,6 +348,29 @@ function showMember(id) {
     row.append($("<td>", {html: c.date_time}));
     $("#memberHistoryTable tbody").append(row);
   });
+  
+  // fill in references table
+  if ( member.referred_by ) {
+    $("#referredBySpan").html(member.referred_by_name);
+    $("#referredBySpan").click(function() {
+      showMember(member.referred_by);
+    });
+    $("#referredByP").show();
+  } else {
+    $("#referredByP").hide();
+  }
+  if ( references.length == 0 ) {
+    $("#referredTable").hide();
+  } else {
+    references.forEach(function(r) {
+      var row = $("<tr><td>" + r.referred_name + "</td></tr>");
+      row.click(function() {
+        showMember(r.referred_id);
+      });
+      $("#referredTable tbody").append(row);
+    });
+    $("#referredTable").show();
+  }
   
   // setup checkin button
   var checkInButton = $("#memberInfoCheckinButton");
