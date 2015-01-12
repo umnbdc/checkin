@@ -81,12 +81,7 @@ if ($link->connect_error) {
 
 function checkedInToday($safeId, $link) {
   $selectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND DATE(`date_time`) = DATE(NOW())";
-  $result = $link->query($selectQuery);
-  if ( !$result ) {
-    die("Failed to select from checkin");
-  } else {
-    $checkins = resultToAssocArray($result);
-  }
+  $checkins = assocArraySelectQuery($selectQuery, $link, "Failed to select from checkin");
   return $checkins != [];
 }
 
@@ -175,19 +170,10 @@ if ( $_POST['type'] == "environment" ) {
       $member['nickname'] ? "'" . mysql_escape_string($member['nickname']) . "'" : 'NULL',
       "'" . mysql_escape_string($member['email']) . "'",
       $member['referredBy'] ? mysql_escape_string($member['referredBy']) : 'NULL');
-      
-  $result = $link->query($insertQuery);
-  if ( !$result ) {
-    die("Failed to insert new member");
-  }
+  safeQuery($insertQuery, $link, "Failed to insert new member");
   
   $selectQuery = sprintf("SELECT * FROM `member` WHERE `email`='%s'", $member['email']);
-  $result = $link->query($selectQuery);
-  if ( !$result ) {
-    die("Failed to fetch the new member");
-  } else {
-    $data = resultToAssocArray($result);
-  }
+  $data = assocArraySelectQuery($selectQuery, $link, "Failed to fetch the new member");
 } else if ( $_POST['type'] == "updateMember" ) {
   $id = mysql_escape_string($_POST['id']);
   $firstName = mysql_escape_string($_POST['firstName']);
@@ -207,72 +193,32 @@ if ( $_POST['type'] == "environment" ) {
   }
     
   $selectQuery = "SELECT * FROM `member` WHERE `first_name`" . $likeConditions . " ORDER BY `last_name`";
-  $result = $link->query($selectQuery);
-  if ( !$result ) {
-    die("Failed to search members");
-  } else {
-    $data = resultToAssocArray($result);
-  }
+  $data = assocArraySelectQuery($selectQuery, $link, "Failed to search members");
 } else if ( $_POST['type'] == "getMemberInfo" ) {
   $id = mysql_escape_string($_POST['id']);
   
   $data = [];
   
   $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $id . "'";
-  $result = $link->query($memberSelectQuery);
-  if ( !$result ) {
-    die("Failed to getMemberInfo member");
-  } else {
-    $data['member'] = resultToAssocArray($result)[0]; // assume only one member with id
-  }
+  $data['member'] = assocArraySelectQuery($memberSelectQuery, $link, "Failed to getMemberInfo member")[0]; // assume only one member with id
   
   $membershipSelectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $id . "'";
-  $result = $link->query($membershipSelectQuery);
-  if ( !$result ) {
-    die("Failed to getMemberInfo membership");
-  } else {
-    $data['memberships'] = resultToAssocArray($result);
-  }
+  $data['memberships'] = assocArraySelectQuery($membershipSelectQuery, $link, "Failed to getMemberInfo membership");
   
   $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $id . "' ORDER BY `date_time`";
-  $result = $link->query($checkinSelectQuery);
-  if ( !$result ) {
-    die("Failed to getMemberInfo checkin");
-  } else {
-    $data['checkIns'] = resultToAssocArray($result);
-  }
+  $data['checkIns'] = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to getMemberInfo checkin");
   
   $debitCreditSelectQuery = "SELECT * FROM `debit_credit` WHERE `member_id`='" . $id . "' ORDER BY `date_time`";
-  $result = $link->query($debitCreditSelectQuery);
-  if ( !$result ) {
-    die("Failed to getMemberInfo debit/credit");
-  } else {
-    $data['debitCredits'] = resultToAssocArray($result);
-  }
+  $data['debitCredits'] = assocArraySelectQuery($debitCreditSelectQuery, $link, "Failed to getMemberInfo debit/credit");
   
   $feeStatusSelectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $id . "'";
-  $result = $link->query($feeStatusSelectQuery);
-  if ( !$result ) {
-    die("Failed to getMemberInfo fee status");
-  } else {
-    $data['feeStatus'] = resultToAssocArray($result);
-  }
+  $data['feeStatus'] = assocArraySelectQuery($feeStatusSelectQuery, $link, "Failed to getMemberInfo fee status");
   
   $waiverStatusSelectQuery = "SELECT * FROM `waiver_status` WHERE `member_id`='" . $id . "'";
-  $result = $link->query($waiverStatusSelectQuery);
-  if ( !$result ) {
-    die("Failed to getMemberInfo waiver status");
-  } else {
-    $data['waiverStatus'] = resultToAssocArray($result);
-  }
+  $data['waiverStatus'] = assocArraySelectQuery($waiverStatusSelectQuery, $link, "Failed to getMemberInfo waiver status");
   
   $referralSelectQuery = "SELECT * FROM `referral` WHERE `referrer_id`='" . $id . "'";
-  $result = $link->query($referralSelectQuery);
-  if ( !$result ) {
-    die("Failed to getMemberInfo referral");
-  } else {
-    $data['references'] = resultToAssocArray($result);
-  }
+  $data['references'] = assocArraySelectQuery($referralSelectQuery, $link, "Failed to getMemberInfo referral");
 } else if ( $_POST['type'] == "checkInMember" ) {
   $id = mysql_escape_string($_POST['id']);
   $override = array_key_exists('override', $_POST) && $_POST['override'] == "true";
@@ -281,10 +227,7 @@ if ( $_POST['type'] == "environment" ) {
     $data['permitted'] = true;
     if ( !checkedInToday($id, $link) ) {
       $insertQuery = "INSERT INTO `checkin`(`member_id`, `date_time`) VALUES ('" . $id . "',CURRENT_TIMESTAMP)";
-      $result = $link->query($insertQuery);
-      if ( !$result ) {
-        die("Failed to insert new checkin");
-      }
+      safeQuery($insertQuery, $link, "Failed to insert new checkin");
       $data['wasAlreadyCheckedIn'] = false;
     } else {
       $data['wasAlreadyCheckedIn'] = true;
