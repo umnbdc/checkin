@@ -1,5 +1,18 @@
 <?php
 
+// Environment
+$CURRENT_TERM = "Spring2015";
+$CURRENT_START_DATE = "2015-01-01";
+$CURRENT_END_DATE = "2015-05-31";
+$CHECKINS_PER_WEEK = array(
+  "Single" => 1,
+  "Standard" => 2,
+  "Social" => 2,
+  "Competition" => INF,
+  "Summer" => INF,
+);
+$NUMBER_OF_FREE_CHECKINS = 2;
+
 // return positive integer, number of cents
 function calculateDues($membership, $feeStatus, $term) {
   $feeTable = [];
@@ -19,10 +32,17 @@ function calculateDues($membership, $feeStatus, $term) {
   $feeTable['Affiliate'] = [];
   $feeTable['Affiliate']['Competition'] = 5000;
   
-  $feeTable['Summer'] = [];
-  $feeTable['Summer']['Summer'] = 0;
+  // Summer membership/feeStatus should only be available in during summer terms
+  if ( strpos($term, "Summer") === 0 ) {
+    $feeTable['Summer'] = [];
+    $feeTable['Summer']['Summer'] = 0;
+  }
   
-  return $feeTable[$feeStatus][$membership];
+  if (array_key_exists($feeStatus, $feeTable) && array_key_exists($membership, $feeTable[$feeStatus])) {
+    return $feeTable[$feeStatus][$membership];
+  } else {
+    die("membership-feeStatus-term combination is invalid");
+  }
 }
 
 function createMembershipDueKind($membership, $feeStatus, $term) {
@@ -48,20 +68,6 @@ function safeQuery($query, $link, $errorMessage) {
 function assocArraySelectQuery($query, $link, $errorMessage) {
   return resultToAssocArray(safeQuery($query, $link, $errorMessage));
 }
-
-// Environment
-$CURRENT_TERM = "Spring2015";
-$CURRENT_START_DATE = "2015-01-01";
-$CURRENT_END_DATE = "2015-05-31";
-
-$CHECKINS_PER_WEEK = array(
-  "Single" => 1,
-  "Standard" => 2,
-  "Social" => 2,
-  "Competition" => INF,
-  "Summer" => INF,
-);
-$NUMBER_OF_FREE_CHECKINS = 2;
 
 // Create connection
 $servername = "localhost";
@@ -246,6 +252,9 @@ if ( $_POST['type'] == "environment" ) {
   $feeStatus = mysql_escape_string($_POST['feeStatus']);
   $membership = mysql_escape_string($_POST['membership']);
   $term = mysql_escape_string($_POST['term']);
+  
+  // if the new combination is invalid, it will error out before DB changes are made
+  calculateDues($membership, $feeStatus, $term);
   
   $data = [];
   
