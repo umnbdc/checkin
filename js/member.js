@@ -489,12 +489,13 @@ function checkInMember(id, button, override) { // override is optional
 }
 
 function showMemberList(members) {
-  // TODO what if members == []
-  
-  
   // First clear member table
   var tableBody = $("#memberListTable tbody");
   tableBody.empty();
+  
+  if ( members.length == 0 ) {
+    tableBody.append("<tr><td colspan='4'>No members matched the search term</td></tr>");
+  }
   
   function addRow(member) {
     var row = $("<tr>");
