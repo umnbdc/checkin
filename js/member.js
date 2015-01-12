@@ -261,6 +261,30 @@ function volunteerPointsDialogSubmit(member_id) {
   }); 
 }
 
+function waiverDialogSumbit(member_id) {
+  var completed = $("#inputWaiverStatus").val();
+  
+  function updateWaiverSuccess(data, textStatus, jqXHR) {
+    console.log("Waiver update successful: ", data, textStatus, jqXHR);
+    $('#waiverModal').modal('hide');
+    showMember(member_id);
+  }
+  
+  function updateWaiverError(data, textStatus, jqXHR) {
+    console.log("Waiver update failed: ", data, textStatus, jqXHR);
+    alert("There was an issue updating this user's waiver status. Please try again.");
+  }
+  
+  $.ajax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "updateWaiver", member_id: member_id, completed: completed, term: CURRENT_TERM},
+    success: updateWaiverSuccess,
+    error: updateWaiverError,
+    dataType: 'json'
+  }); 
+}
+
 function showMember(id) {
   var memberData = getMember(id);
   if ( typeof memberData === 'undefined' ) {
@@ -342,6 +366,11 @@ function showMember(id) {
   }
   $("#updateMembershipButton").off();
   $("#updateMembershipButton").click(function() { updateMembershipAndFeeStatus(member.id) });
+  
+  // setup waiver modal
+  $("#inputWaiverStatus").val( currentWaiverStatus ? currentWaiverStatus.completed : 0 );
+  $("#updateWaiverButton").off();
+  $("#updateWaiverButton").click(function() { waiverDialogSumbit(member.id) });
   
   // setup edit modal
   $("#inputEditFirstName").val(member.first_name);

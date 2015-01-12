@@ -331,6 +331,16 @@ if ( $_POST['type'] == "environment" ) {
   $amount = $points*600;
   
   insertPayment($member_id, $amount, $method, $kind);
+} else if ( $_POST['type'] == "updateWaiver" ) {
+  $member_id = mysql_escape_string($_POST['member_id']);
+  $completed = mysql_escape_string($_POST['completed']);
+  $term = mysql_escape_string($_POST['term']);
+  assert($completed == 0 || $completed == 1);
+  
+  $deleteQuery = "DELETE FROM `waiver_status` WHERE `member_id`='" . $member_id . "' AND `term`='" . $term . "'";
+  safeQuery($deleteQuery, $link, "Failed to delete waiver status in updateWaiver");
+  $insertQuery = "INSERT INTO `waiver_status`(`member_id`, `term`, `completed`) VALUES ('" . $member_id . "','" . $term . "','" . $completed . "')";
+  safeQuery($insertQuery, $link, "Failed to insert new waiver status in updateWaiver");
 }
 
 $link->close();
