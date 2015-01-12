@@ -340,6 +340,11 @@ function showMember(id) {
   
   $("#memberListContainer").hide();
   $("#memberContainer").show();
+  
+  // prompt payment if member needs to pay dues (except for Competition which can be on a plan)
+  if ( currentOutstandingMembershipDues < 0 && currentMembership && currentMembership.kind != 'Competition' ) {
+    $("#payModal").modal('show');
+  }
 }
 
 function getMember(id) {
