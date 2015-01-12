@@ -118,6 +118,37 @@ function memberAllowedToCheckIn($safeId, $link) {
   }
 }
 
+function hasHadMembership($safeId) {
+  global $link;
+  
+  $selectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $safeId . "'";
+  $membershipArray = assocArraySelectQuery($selectQuery, $link, "Failed to select membership in isFirstMembership");
+  return $membershipArray != [];
+}
+
+function generateReferral($safeId) {
+  global $link;
+  
+  $selectQuery = "SELECT * FROM `member` WHERE `id`='" . $safeId . "'";
+  $memberArray = assocArraySelectQuery($selectQuery, $link, "Failed to select member in generateReferral");
+  assert(count($memberArray) == 1);
+  $referredMember = $memberArray[0];
+  
+  if ( $referredMember['referred_by'] ) {
+    $referredMemberId = $referredMember['id'];
+    $referrerMemberId = $referredMember['referred_by'];
+    
+    // double check that the referred hasn't already been referred
+    $referralSelectQuery = "SELECT * FROM `referral` WHERE `referred_id`='" . $referredMemberId . "'";
+    $referralArray = assocArraySelectQuery($referralSelectQuery, $link, "Failed to select referral in generateReferral");
+    if ( count($referralArray) == 0 ) {
+      $referralInsertQuery = "INSERT INTO `referral`(`referrer_id`, `referred_id`) VALUES ('" . $referrerMemberId . "','" . $referredMemberId . "')";
+      safeQuery($referralInsertQuery, $link, "Failed to insert new referral");
+      // TODO run rewards
+    }
+  }
+}
+
 $data = $_POST;
 
 if ( $_POST['type'] == "environment" ) {
@@ -253,13 +284,17 @@ if ( $_POST['type'] == "environment" ) {
   $membership = mysql_escape_string($_POST['membership']);
   $term = mysql_escape_string($_POST['term']);
   
-  // if the new combination is invalid, it will error out before DB changes are made
-  calculateDues($membership, $feeStatus, $term);
-  
   $data = [];
   
   $oldFeeStatus = '';
   $oldMembership = '';
+  
+  // we don't want to generate the referral before in case something fails
+  // but we need to check for previous membership before memberships are inserted into the DB
+  // also only generate referral for paid memberships
+  // Note:
+  // Also if the new combination is invalid, it will error out before DB changes are made
+  $generateReferralAtEnd = !hasHadMembership($id) && calculateDues($membership, $feeStatus, $term) > 0;
   
   // update/insert fee status
   $feeStatusSelectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
@@ -317,7 +352,9 @@ if ( $_POST['type'] == "environment" ) {
   $data['newFeeStatus'] = $feeStatus;
   $data['newMembership'] = $membership;
   
-  // TODO Handle Referral Rewards
+  if ( generateReferralAtEnd ) {
+    generateReferral($id);
+  }
 } else if ( $_POST['type'] == "payment" ) {
   $member_id = mysql_escape_string($_POST['member_id']);
   $kind = mysql_escape_string($_POST['kind']);
