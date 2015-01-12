@@ -399,16 +399,38 @@ function isCheckedInToday(id, async, yesAction, noAction) {
   }
 }
 
-function checkInMember(id, button) {
+function showCheckinErrorModal(id, button) {
+  $("#overrideButton").off();
+  $("#overrideButton").click(function() {
+    var confirmation = confirm("Are you sure you want to checkin this member outside his/her membership?");
+    if ( confirmation ) {
+      checkInMember(id, null, true);  
+      $("#checkinErrorModal").modal('hide');
+      if ( button ) {
+        button.prop('disabled', true);
+      }
+    }
+  });
+  
+  $("#checkinErrorModal").modal('show');
+}
+
+function checkInMember(id, button, override) { // override is optional
+  if ( isUndefined(override) ) {
+    override = false;
+  }
+  
   function checkInMemberSuccess(data, textStatus, jqXHR) {
     console.log("Member checkin successful: ", data, textStatus, jqXHR);
     if ( data.permitted ) {
       if ( data.wasAlreadyCheckedIn ) {
         alert("Member was already checked in today.");
       }
-      button.prop('disabled', true);
+      if ( button != null ) {
+        button.prop('disabled', true);
+      }
     } else {
-      alert("Member cannot be checked in."); // TODO create override/change membership dialog
+      showCheckinErrorModal(id, button);
     }
   }
   
@@ -420,7 +442,7 @@ function checkInMember(id, button) {
   $.ajax({
     type: "POST",
     url: apiURL,
-    data: {type: "checkInMember", id: id},
+    data: {type: "checkInMember", id: id, override: override},
     success: checkInMemberSuccess,
     error: checkInMemberError,
     dataType: 'json'

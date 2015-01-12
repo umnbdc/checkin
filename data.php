@@ -221,8 +221,9 @@ if ( $_POST['type'] == "environment" ) {
   }
 } else if ( $_POST['type'] == "checkInMember" ) {
   $id = mysql_escape_string($_POST['id']);
+  $override = array_key_exists('override', $_POST) && $_POST['override'] == "true";
   
-  if ( memberAllowedToCheckIn($id, $link) ) {  
+  if ( $override || memberAllowedToCheckIn($id, $link) ) {  
     $data['permitted'] = true;
     if ( !checkedInToday($id, $link) ) {
       $insertQuery = "INSERT INTO `checkin`(`member_id`, `date_time`) VALUES ('" . $id . "',CURRENT_TIMESTAMP)";

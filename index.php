@@ -145,6 +145,9 @@
     
     <!-- Membership modal -->
     <?php include "modals/membershipModal.php"; ?>
+    
+    <!-- Check in Error modal -->
+    <?php include "modals/checkinErrorModal.php"; ?>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
