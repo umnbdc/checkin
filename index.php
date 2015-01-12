@@ -62,95 +62,17 @@
         </div>
       </p>
     </div><!-- /.container -->
-    
-    <div class="container" id="memberContainer" style="display: none">
-      <h2>
-        <span class="firstName"></span>
-        <span class="lastName"></span>
-      </h2>
-      <table id="memberInfoTable" class="table table-condensed">
-        <thead>
-          <tr>
-            <th>First</th>
-            <th>Last</th>
-            <th>Nickname</th>
-            <th>Email</th>
-            <th>Membership</th>
-            <th>Fee Status</th>
-            <th>Waiver</th>
-            <th>Outstanding Membership Dues</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-      <p>
-        <div class="btn-group">
-          <button type="button" id="memberInfoCheckinButton" class="btn btn-primary">Check in</button>
-          <button type="button" id="memberInfoEditButton" class="btn btn-default" data-toggle="modal" data-target="#editMemberModal">Edit info</button>
-          <button type="button" id="memberInfoPayButton" class="btn btn-default" data-toggle="modal" data-target="#payModal">Pay</button>
-          <button type="button" id="memberInfoVolunteerPointsButton" style="display: none" class="btn btn-default" data-toggle="modal" data-target="#volunteerPointsModal">Volunteer Points</button>
-          <button type="button" id="memberInfoMembershipButton" class="btn btn-default" data-toggle="modal" data-target="#membershipModal">Membership and Fee Status</button>
-        </div>
-      </p>
-      <h3>Credits and debits</h3>
-      <table id="memberCreditDebitTable" class="table table-condensed">
-        <thead>
-          <tr>
-            <th>Credit/Debit</th>
-            <th>Amount</th>
-            <th>Kind</th>
-            <th>Method</th>
-            <th>Charged/Paid</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-      <h3>Check In History</h3>
-      <table id="memberHistoryTable" class="table table-condensed">
-        <thead>
-          <tr>
-            <th>When</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-    </div>
-    
-    <div class="container" id="memberListContainer" style="display: none">
-      <h2>Member Search Results</h2>
-      <table id="memberListTable" class="table table-condensed table-hover">
-        <thead>
-          <tr>
-            <th></th>
-            <th>First</th>
-            <th>Last</th>
-            <th>Email</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-    </div>
 
-    <!-- New member modal -->
+    <!-- include Modals -->
+    <?php include "containers/memberContainer.php"; ?>
+    <?php include "containers/memberListContainer.php"; ?>
+
+    <!-- include Modals -->
     <?php include "modals/newMemberModal.php"; ?>
-    
-    <!-- Edit member modal -->
     <?php include "modals/editMemberModal.php"; ?>
-    
-    <!-- Pay modal -->
     <?php include "modals/payModal.php"; ?>
-    
-    <!-- Pay modal -->
     <?php include "modals/volunteerPointsModal.php"; ?>
-    
-    <!-- Membership modal -->
     <?php include "modals/membershipModal.php"; ?>
-    
-    <!-- Check in Error modal -->
     <?php include "modals/checkinErrorModal.php"; ?>
 
     <!-- Bootstrap core JavaScript
