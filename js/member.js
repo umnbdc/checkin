@@ -233,6 +233,34 @@ function payDialogSubmit(id) {
   }); 
 }
 
+function volunteerPointsDialogSubmit(member_id) {
+  var points = $("#inputPointsAmount").val();
+  if ( !isPositiveIntegerString(points) ) {
+    alert("Points must be a positive integer");
+    return;
+  }
+  
+  function addVolunteerPointsSuccess(data, textStatus, jqXHR) {
+    console.log("Volunteer points submission successful: ", data, textStatus, jqXHR);
+    $('#volunteerPointsModal').modal('hide');
+    showMember(member_id);
+  }
+  
+  function addVolunteerPointsError(data, textStatus, jqXHR) {
+    console.log("Volunteer points failed: ", data, textStatus, jqXHR);
+    alert("There was an issue submitting this payment. Please try again.");
+  }
+  
+  $.ajax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "addVolunteerPoints", member_id: member_id, points: points},
+    success: addVolunteerPointsSuccess,
+    error: addVolunteerPointsError,
+    dataType: 'json'
+  }); 
+}
+
 function showMember(id) {
   var memberData = getMember(id);
   if ( typeof memberData === 'undefined' ) {
@@ -301,9 +329,7 @@ function showMember(id) {
   // disable button if already checked in
   isCheckedInToday(member.id, true, function() {checkInButton.prop('disabled',true)}, function() {checkInButton.prop('disabled',false)});
   
-  // setup membership button
-  // no code for button, done through modal data attributes
-  // set modal selects
+  // setup membership modal
   if ( currentFeeStatus ) {
     $("#inputFeeStatus").val(currentFeeStatus.kind);
   } else {
@@ -314,29 +340,31 @@ function showMember(id) {
   } else {
     $("#inputMembership").children()[0].selected = true;
   }
-  // set update membership button
   $("#updateMembershipButton").off();
   $("#updateMembershipButton").click(function() { updateMembershipAndFeeStatus(member.id) });
   
-  // setup edit button
-  // no code for button, done through modal data attributes
-  // set modal data
+  // setup edit modal
   $("#inputEditFirstName").val(member.first_name);
   $("#inputEditLastName").val(member.last_name);
   $("#inputEditNickname").val(member.nick_name);
   $("#inputEditEmail").val(member.email);
-  // set edit member button
   $("#editMemberButton").off();
   $("#editMemberButton").click(function() { updateMember(member.id) });
   
-  // setup pay button
-  // no code for button, done through modal data attributes
-  // set modal data
-  // set edit member button
+  // setup pay modal
   $("#payModalCurrentOutstanding").html(formatAmount(currentOutstandingMembershipDues));
   $("#inputCreditAmount").val("");
   $("#payButton").off();
   $("#payButton").click(function() { payDialogSubmit(member.id) });
+  
+  // setup volunteer points modal
+  if ( currentMembership && currentMembership.kind == 'Competition' ) {
+    $("#volunteerPointsModalCurrentOutstanding").html(formatAmount(currentOutstandingMembershipDues));
+    $("#inputPointsAmount").val("");
+    $("#volunteerPointsButton").off();
+    $("#volunteerPointsButton").click(function() { volunteerPointsDialogSubmit(member.id) });
+    $("#memberInfoVolunteerPointsButton").show();
+  }
   
   $("#memberListContainer").hide();
   $("#memberContainer").show();

@@ -21,13 +21,13 @@ function calculateDues($membership, $feeStatus, $term) {
   $feeTable['StudentServicesFees']['Standard'] = 5000;
   $feeTable['StudentServicesFees']['Single'] = 2500;
   $feeTable['StudentServicesFees']['Social'] = 1500;
-  $feeTable['StudentServicesFees']['Competition'] = 14000;
+  $feeTable['StudentServicesFees']['Competition'] = 20000;
   
   $feeTable['URCMembership'] = [];
   $feeTable['URCMembership']['Standard'] = 6000;
   $feeTable['URCMembership']['Single'] = 3000;
   $feeTable['URCMembership']['Social'] = 1800;
-  $feeTable['URCMembership']['Competition'] = 14000;
+  $feeTable['URCMembership']['Competition'] = 20000;
   
   $feeTable['Affiliate'] = [];
   $feeTable['Affiliate']['Competition'] = 5000;
