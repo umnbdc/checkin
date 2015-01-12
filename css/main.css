@@ -1,0 +1,11 @@
+body {
+  padding-top: 50px;
+}
+
+.transactionAmount.positive {
+  color: green;
+}
+
+.transactionAmount.negative {
+  color: red;
+}

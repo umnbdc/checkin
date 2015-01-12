@@ -20,7 +20,7 @@
     <script src="js/member.js"></script>
 
     <!-- Custom styles for this template -->
-    <link href="starter-template.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
   </head>
 
   <body>

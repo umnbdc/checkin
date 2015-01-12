@@ -114,17 +114,21 @@ function calculateMembershipDuesBalance(transactions) {
 }
 
 function formatAmount(amount) {
-  var negString = ""
+  var negString = "";
+  var classString = "transactionAmount";
   if ( amount < 0 ) {
     negString = "-";
     amount = -1 * amount;
+    classString = classString + " negative";
+  } else if ( amount > 0 ) {
+    classString = classString + " positive";
   }
   var cents = amount % 100;
   var dollars = Math.floor(amount / 100);
   var centString = cents == 0 ? "00" : cents;
   var dollarString = dollars == 0 ? "0" : dollars;
   
-  return negString + "$" + dollarString + "." + centString;
+  return "<span class='" + classString + "'>" + negString + "$" + dollarString + "." + centString + "</span>";
 }
 
 function updateMember(id) {
