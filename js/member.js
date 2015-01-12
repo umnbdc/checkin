@@ -364,6 +364,8 @@ function showMember(id) {
     $("#volunteerPointsButton").off();
     $("#volunteerPointsButton").click(function() { volunteerPointsDialogSubmit(member.id) });
     $("#memberInfoVolunteerPointsButton").show();
+  } else {
+    $("#memberInfoVolunteerPointsButton").hide();
   }
   
   $("#memberListContainer").hide();

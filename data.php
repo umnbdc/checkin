@@ -149,6 +149,18 @@ function generateReferral($safeId) {
   }
 }
 
+function insertPayment($member_id, $amount, $method, $kind) {
+  // assumes that the parameters are safe
+  global $link;
+    
+  $insertQuery = sprintf("INSERT INTO `debit_credit`(`member_id`, `amount`, `method`, `kind`, `date_time`) VALUES (%s,%s,%s,%s,CURRENT_TIMESTAMP)",
+      "'" . $member_id . "'",
+      "'" . $amount . "'",
+      "'" . $method . "'",
+      "'" . $kind . "'");
+  safeQuery($insertQuery, $link, "Failed to insert new payment");
+}
+
 $data = $_POST;
 
 if ( $_POST['type'] == "environment" ) {
@@ -361,12 +373,16 @@ if ( $_POST['type'] == "environment" ) {
   $method = mysql_escape_string($_POST['method']);
   $amount = mysql_escape_string($_POST['amount']); // should be in cents
   
-  $insertQuery = sprintf("INSERT INTO `debit_credit`(`member_id`, `amount`, `method`, `kind`, `date_time`) VALUES (%s,%s,%s,%s,CURRENT_TIMESTAMP)",
-      "'" . $member_id . "'",
-      "'" . $amount . "'",
-      "'" . $method . "'",
-      "'" . $kind . "'");
-  safeQuery($insertQuery, $link, "Failed to insert new payment");
+  insertPayment($member_id, $amount, $method, $kind);
+} else if ( $_POST['type'] == "addVolunteerPoints" ) {
+  $member_id = mysql_escape_string($_POST['member_id']);
+  $points = mysql_escape_string($_POST['points']);
+  
+  $method = "VolunteerPoints";
+  $kind = "Membership (VolunteerPoints x " . $points . ")";
+  $amount = $points*600;
+  
+  insertPayment($member_id, $amount, $method, $kind);
 }
 
 $link->close();
