@@ -51,7 +51,8 @@
     </nav>
 
     <div class="container">
-      <h1>UMN BDC Check-in</h1>
+      <!-- <h1>UMN BDC Check-in</h1> -->
+      <p><br/></p>
       <p>
         <div class="input-group">
           <input type="text" class="form-control" id="memberSearch" placeholder="Search for member...">
