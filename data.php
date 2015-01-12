@@ -264,6 +264,18 @@ if ( $_POST['type'] == "environment" ) {
   $data['newMembership'] = $membership;
   
   // TODO Handle Referral Rewards
+} else if ( $_POST['type'] == "payment" ) {
+  $member_id = mysql_escape_string($_POST['member_id']);
+  $kind = mysql_escape_string($_POST['kind']);
+  $method = mysql_escape_string($_POST['method']);
+  $amount = mysql_escape_string($_POST['amount']); // should be in cents
+  
+  $insertQuery = sprintf("INSERT INTO `debit_credit`(`member_id`, `amount`, `method`, `kind`, `date_time`) VALUES (%s,%s,%s,%s,CURRENT_TIMESTAMP)",
+      "'" . $member_id . "'",
+      "'" . $amount . "'",
+      "'" . $method . "'",
+      "'" . $kind . "'");
+  safeQuery($insertQuery, $link, "Failed to insert new payment");
 }
 
 $link->close();

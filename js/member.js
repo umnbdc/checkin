@@ -27,6 +27,17 @@ function setEnvironment() {
   });
 }
 
+// returns true if list contains an empty string
+function containsEmptyString(list) {
+  return list.some(function(e) {
+    return e === "";
+  });
+}
+
+function isPositiveIntegerString(string) {
+  return /^[1-9][0-9]*$/.test(string);
+}
+
 function addNewMember() {
   var firstName = $('#inputFirstName').val();
   var lastName = $('#inputLastName').val();
@@ -35,7 +46,7 @@ function addNewMember() {
   var referrerFormData = $("#newMemberReferForm").serializeArray();
   var referredBy = referrerFormData.length > 0 ? referrerFormData[0].value : null;
 
-  if ( !firstName || !lastName || !email ) {
+  if ( containsEmptyString([firstName, lastName, email]) ) {
     alert("Missing member information. First name, last name, and email are required.");
     return;
   }
@@ -47,8 +58,6 @@ function addNewMember() {
     email: email,
     referredBy: referredBy
   }
-  
-  console.log(memberObject);
   
   function addNewMemberSuccess(data, textStatus, jqXHR) {
     console.log("New member submission successful: ", data, textStatus, jqXHR);
@@ -97,7 +106,7 @@ function calculateMembershipDuesBalance(transactions) {
   // only considers credits/debits with kind matching "Membership *"
   var balance = 0;
   transactions.forEach(function(t) {
-    if ( t.kind.indexOf("Membership ") == 0 ) {
+    if ( t.kind.indexOf("Membership") == 0 ) {
       balance += parseInt(t.amount);
     }
   });
@@ -111,7 +120,7 @@ function formatAmount(amount) {
     amount = -1 * amount;
   }
   var cents = amount % 100;
-  var dollars = amount / 100;
+  var dollars = Math.floor(amount / 100);
   var centString = cents == 0 ? "00" : cents;
   var dollarString = dollars == 0 ? "0" : dollars;
   
@@ -183,8 +192,41 @@ function updateMembershipAndFeeStatus(id) {
   }); 
 }
 
-function payDialog(id) {
-  alert("Pay dialog " + id);
+function payDialogSubmit(id) {
+  var kind = $("#inputCreditKind").val();
+  var method = $("#inputCreditMethod").val();
+  var amount = $("#inputCreditAmount").val();
+  
+  if ( containsEmptyString([kind, method]) ) {
+    alert("Kind and method cannot be empty strings");
+    return;
+  }
+  
+  if ( !isPositiveIntegerString(amount) ) {
+    alert("Amount must be a positive integer");
+    return;
+  }
+  amount = amount * 100; // amount needs to be in cents
+  
+  function addPaymentSuccess(data, textStatus, jqXHR) {
+    console.log("Payment submission successful: ", data, textStatus, jqXHR);
+    $('#payModal').modal('hide');
+    showMember(id);
+  }
+  
+  function addPaymentError(data, textStatus, jqXHR) {
+    console.log("Payment submission failed: ", data, textStatus, jqXHR);
+    alert("There was an issue submitting this payment. Please try again.");
+  }
+  
+  $.ajax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "payment", kind: kind, method: method, amount: amount, member_id: id},
+    success: addPaymentSuccess,
+    error: addPaymentError,
+    dataType: 'json'
+  }); 
 }
 
 function showMember(id) {
@@ -290,7 +332,7 @@ function showMember(id) {
   $("#payModalCurrentOutstanding").html(formatAmount(currentOutstandingMembershipDues));
   $("#inputCreditAmount").val("");
   $("#payButton").off();
-  $("#payButton").click(function() { payDialog(member.id) });
+  $("#payButton").click(function() { payDialogSubmit(member.id) });
   
   $("#memberListContainer").hide();
   $("#memberContainer").show();
