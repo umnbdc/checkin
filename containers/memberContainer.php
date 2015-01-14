@@ -29,6 +29,7 @@
       <button type="button" id="memberInfoMembershipButton" class="btn btn-default" data-toggle="modal" data-target="#membershipModal">Membership and Fee Status</button>
     </div>
   </p>
+  
   <h3>Credits and debits</h3>
   <table id="memberCreditDebitTable" class="table table-condensed">
     <thead>
@@ -43,6 +44,21 @@
     <tbody>
     </tbody>
   </table>
+  
+  <h3>Rewards</h3>
+  <table id="memberRewardsTable" class="table table-condensed table-hover">
+    <thead>
+      <tr>
+        <th>Kind</th>
+        <th>Term</th>
+        <th>Issue Date</th>
+        <th>Claimed</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+  
   <h3>Check In History</h3>
   <table id="memberHistoryTable" class="table table-condensed">
     <thead>
@@ -53,6 +69,7 @@
     <tbody>
     </tbody>
   </table>
+  
   <h3>References</h3>
   <p id="referredByP">Referred by: <span id="referredBySpan"></span></p>
   <table id="referredTable" class="table table-condensed table-hover">
@@ -64,4 +81,5 @@
     <tbody>
     </tbody>
   </table>
+  
 </div>

@@ -270,6 +270,9 @@ if ( $_POST['type'] == "environment" ) {
     $references[$i]['referred_name'] = $memberObject['first_name'] . " " . $memberObject['last_name'];
   }
   $data['references'] = $references;
+  
+  $rewardSelectQuery = "SELECT * FROM `reward` WHERE `member_id`='" . $id . "'";
+  $data['rewards'] = assocArraySelectQuery($rewardSelectQuery, $link, "Failed to getMemberInfo rewards");
 } else if ( $_POST['type'] == "checkInMember" ) {
   $id = mysql_escape_string($_POST['id']);
   $override = array_key_exists('override', $_POST) && $_POST['override'] == "true";
@@ -392,6 +395,13 @@ if ( $_POST['type'] == "environment" ) {
   safeQuery($deleteQuery, $link, "Failed to delete waiver status in updateWaiver");
   $insertQuery = "INSERT INTO `waiver_status`(`member_id`, `term`, `completed`) VALUES ('" . $member_id . "','" . $term . "','" . $completed . "')";
   safeQuery($insertQuery, $link, "Failed to insert new waiver status in updateWaiver");
+} else if ( $_POST['type'] == "claimReward" ) {
+  $reward = $_POST['reward'];
+  $rewardId = mysql_escape_string($reward['id']);
+  if ( $reward['claimed'] == '0' ) {
+    $updateQuery = "UPDATE `reward` SET `claim_date_time`=CURRENT_TIMESTAMP,`claimed`=1 WHERE `id`='" . $rewardId . "'";
+    safeQuery($updateQuery, $link, "Failed to update reward in claimReward");
+  }
 }
 
 $link->close();

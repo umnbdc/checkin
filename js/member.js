@@ -289,6 +289,29 @@ function waiverDialogSumbit(member_id) {
   }); 
 }
 
+function claimReward(reward) {
+  if ( reward.claimed == "0" ) {
+    function claimRewardSuccess(data, textStatus, jqXHR) {
+      console.log("Reward claim successful: ", data, textStatus, jqXHR);
+      showMember(reward.member_id);
+    }
+  
+    function claimRewardError(data, textStatus, jqXHR) {
+      console.log("Reward claim failed: ", data, textStatus, jqXHR);
+      alert("There was an issue claiming this reward. Please try again.");
+    }
+  
+    $.ajax({
+      type: "POST",
+      url: apiURL,
+      data: {type: "claimReward", reward: reward},
+      success: claimRewardSuccess,
+      error: claimRewardError,
+      dataType: 'json'
+    });
+  }
+}
+
 function showMember(id, untrack) { // untrack optional, default: false
   var memberData = getMember(id);
   if ( typeof memberData === 'undefined' ) {
@@ -304,12 +327,15 @@ function showMember(id, untrack) { // untrack optional, default: false
   var debitCredits = memberData.debitCredits;
   var checkIns = memberData.checkIns;
   var references = memberData.references;
+  var rewards = memberData.rewards;
   
   // Clear member info tables
   $("#memberInfoTable tbody").empty();
   $("#memberCreditDebitTable tbody").empty();
   $("#memberHistoryTable tbody").empty();
   $("#referredTable tbody").empty();
+  $("#memberRewardsTable tbody").empty();
+  
   // Clear button event listeners
   $("#memberInfoCheckinButton").off();
   $("#memberInfoEditButton").off();
@@ -345,6 +371,9 @@ function showMember(id, untrack) { // untrack optional, default: false
     row.append($("<td>", {html: t.date_time}));
     $("#memberCreditDebitTable tbody").append(row);
   });
+  if ( debitCredits.length == 0 ) {
+    $("#memberCreditDebitTable tbody").append("<tr><td colspan='5'>No debits or credits</td></tr>");
+  }
   
   // fill check in history table
   checkIns.forEach(function(c) {
@@ -352,6 +381,9 @@ function showMember(id, untrack) { // untrack optional, default: false
     row.append($("<td>", {html: c.date_time}));
     $("#memberHistoryTable tbody").append(row);
   });
+  if ( checkIns.length == 0 ) {
+    $("#memberHistoryTable tbody").append("<tr><td colspan='1'>No checkins</td></tr>");
+  }
   
   // fill in references table
   if ( member.referred_by ) {
@@ -363,17 +395,41 @@ function showMember(id, untrack) { // untrack optional, default: false
   } else {
     $("#referredByP").hide();
   }
-  if ( references.length == 0 ) {
-    $("#referredTable").hide();
-  } else {
-    references.forEach(function(r) {
-      var row = $("<tr><td>" + r.referred_name + "</td></tr>");
-      row.click(function() {
-        showMember(r.referred_id);
-      });
-      $("#referredTable tbody").append(row);
+  references.forEach(function(r) {
+    var row = $("<tr><td>" + r.referred_name + "</td></tr>");
+    row.click(function() {
+      showMember(r.referred_id);
     });
-    $("#referredTable").show();
+    $("#referredTable tbody").append(row);
+  });
+  if ( references.length == 0 ) {
+    $("#referredTable tbody").append("<tr><td colspan='1'>No referrals by this member</td></tr>");
+  }
+  
+  // fill in rewards table
+  rewards.forEach(function(r) {
+    var row = $("<tr>");
+    row.append($("<td>", {html: r.kind}));
+    row.append($("<td>", {html: r.term}));
+    row.append($("<td>", {html: r.issue_date_time}));
+    var claimedTd = $("<td>");
+    if ( r.claimed == "1" ) {
+      claimedTd.html(r.claim_date_time);
+    } else {
+      var claimButton = $("<button class='btn btn-xs btn-success'>Claim</button>");
+      claimButton.click(function () {
+        var confirmationMessage = "Rewards should only be marked claimed after the reward has been given in full (e.g. if the reward is free shoes, make the reward as claimed after giving the member the shoes). Are you sure you want to continue?";
+        if ( confirm(confirmationMessage) ) {
+          claimReward(r);
+        }
+      });
+      claimedTd.append(claimButton);
+    }
+    row.append(claimedTd);
+    $("#memberRewardsTable tbody").append(row);
+  });
+  if ( rewards.length == 0 ) {
+    $("#memberRewardsTable tbody").append("<tr><td colspan='1'>No rewards</td></tr>");
   }
   
   // setup checkin button
