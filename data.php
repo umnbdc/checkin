@@ -14,6 +14,38 @@ $CHECKINS_PER_WEEK = array(
   "Summer" => INF,
 );
 $NUMBER_OF_FREE_CHECKINS = 2;
+$COMP_DUE_DATE_TABLE = array(
+  // term -> fee_status -> date -> min_outstanding_at_date (i.e. cumulative)
+  "Spring2015" => array(
+    "StudentServicesFees" => array(
+      "2015-02-12" => -9000,
+      "2015-03-06" => -4500,
+      "2015-04-03" => 0
+    ),
+    "Affiliate" => array(
+      "2015-02-12" => 0
+    )
+  )
+);
+$LATE_FEE_AMOUNT = 200;
+$COMP_PRACTICES_TABLE = array(
+  "Spring2015" => array(
+    "2015-02-03", "2015-02-05", "2015-02-06", // Feb
+    "2015-02-10", "2015-02-12", "2015-02-13",
+    "2015-02-17", "2015-02-19", "2015-02-20",
+    "2015-02-24", "2015-02-26", "2015-02-27",
+    "2015-03-03", "2015-03-05", "2015-03-06", // March
+    "2015-03-10", "2015-03-12", "2015-03-13",
+    // Spring Break
+    "2015-03-24", "2015-03-26", "2015-03-27",
+    "2015-03-31",
+                  "2015-04-02", "2015-04-03", // April
+    "2015-04-07", "2015-04-09", "2015-04-10",
+    "2015-04-14", "2015-04-16", "2015-04-17",
+    "2015-04-21", "2015-04-23", "2015-04-24"
+  )
+                        
+);
 
 // Safeguard against forgetting to change the current term start and end
 if ( strtotime($CURRENT_START_DATE) > strtotime('today') || strtotime($CURRENT_END_DATE) < strtotime('today') ) {
@@ -203,6 +235,93 @@ function insertPayment($member_id, $amount, $method, $kind) {
   safeQuery($insertQuery, $link, "Failed to insert new payment");
 }
 
+function calculateOutstandingDues($safe_member_id) {
+  global $link;
+  
+  $selectQuery = "SELECT * FROM `debit_credit` WHERE `member_id`='" . $safe_member_id . "' AND `kind` LIKE 'Membership%'";
+  $transactions = assocArraySelectQuery($selectQuery, $link, "Failed to select debit_credit from calculateOutstandingDues");
+  
+  $balance = 0;
+  foreach( $transactions as $t ) {
+    $balance += $t['amount'];
+  }
+  return $balance;
+}
+
+function getMembershipAndFeeStatus($safe_member_id, $term) {
+  global $link;
+  
+  $toReturn = array(
+    'membership' => '',
+    'fee_status' => ''
+  );
+  
+  $selectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $safe_member_id . "' AND `term`='" . $term . "'";
+  $membershipArray = assocArraySelectQuery($selectQuery, $link, "Failed to select membership in getMembershipAndFeeStatus");
+  if ( $membershipArray != [] ) {
+    $toReturn['membership'] = $membershipArray[0]['kind'];
+  }
+  
+  $selectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $safe_member_id . "' AND `term`='" . $term . "'";
+  $feeStatusArray = assocArraySelectQuery($selectQuery, $link, "Failed to select fee status in getMembershipAndFeeStatus");
+  if ( $feeStatusArray != [] ) {
+    $toReturn['fee_status'] = $feeStatusArray[0]['kind'];
+  }
+  
+  return $toReturn;
+}
+
+function updateCompetitionLateFees($safe_member_id, $term) {
+  global $link;
+  global $COMP_DUE_DATE_TABLE;
+  global $COMP_PRACTICES_TABLE;
+  global $LATE_FEE_AMOUNT;
+  
+  $membershipAndFeeStatus = getMembershipAndFeeStatus($safe_member_id, $term);
+  $membership = $membershipAndFeeStatus['membership'];
+  $fee_status = $membershipAndFeeStatus['fee_status'];
+  
+  if ( $membership != 'Competition' ) {
+    return;
+  }
+  
+  $balance = calculateOutstandingDues($safe_member_id);
+  
+  if ( $balance < 0 ) {
+    // get amount due by this date
+    $dueTable = $COMP_DUE_DATE_TABLE[$term][$fee_status];
+    // get earliest past due date where balance is less than minimum
+    $earliestPastDueDate = '';
+    foreach( array_keys($dueTable) as $date ) {
+      $minOutstandingAtDate = $dueTable[$date];
+      if ( strtotime($date) < strtotime('today') && $balance < $minOutstandingAtDate ) {
+        $earliestPastDueDate = $date;
+        break;
+      }
+    }
+    if ( $earliestPastDueDate != '' ) {
+      // count the practices from after (excluding) $earliestPastDueDate until now (including today)
+      $practicesLate = 0;
+      foreach( $COMP_PRACTICES_TABLE[$term] as $practice ) {
+        if ( strtotime($practice) > strtotime('today') ) {
+          break;
+        } else if ( strtotime($practice) > strtotime($earliestPastDueDate) ) {
+          $practicesLate += 1;
+        }
+      }
+      // update late fee debit
+      $kindPartial = "Membership (Late fee, since " . $earliestPastDueDate;
+      $debitDeleteQuery = "DELETE FROM `debit_credit` WHERE `member_id`='" . $safe_member_id . "' AND `kind` LIKE '" . $kindPartial . "%'";
+      safeQuery($debitDeleteQuery, $link, "Failed to delete old late fee debit in updateCompetitionLateFees");
+      
+      $kind = $kindPartial . ", " . $practicesLate . " practices late)";
+      $amount = -1 * $LATE_FEE_AMOUNT * $practicesLate;
+      $debitInsertQuery = "INSERT INTO `debit_credit`(`member_id`, `amount`, `kind`) VALUES ('" . $safe_member_id . "','" . $amount . "','" . $kind . "')";
+      safeQuery($debitInsertQuery, $link, "Failed to insert new late fee debit in updateCompetitionLateFees");
+    }
+  }
+}
+
 $data = $_POST;
 
 if ( $_POST['type'] == "environment" ) {
@@ -245,6 +364,8 @@ if ( $_POST['type'] == "environment" ) {
   $id = mysql_escape_string($_POST['id']);
   
   $data = [];
+  
+  updateCompetitionLateFees($id, $CURRENT_TERM); // function will check if applicable
   
   $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $id . "'";
   $data['member'] = assocArraySelectQuery($memberSelectQuery, $link, "Failed to getMemberInfo member")[0]; // assume only one member with id
