@@ -1,5 +1,7 @@
 <?php
 
+date_default_timezone_set('America/Chicago');
+
 // Environment
 $CURRENT_TERM = "Spring2015";
 $CURRENT_START_DATE = "2015-01-01";
@@ -12,6 +14,11 @@ $CHECKINS_PER_WEEK = array(
   "Summer" => INF,
 );
 $NUMBER_OF_FREE_CHECKINS = 2;
+
+// Safeguard against forgetting to change the current term start and end
+if ( strtotime($CURRENT_START_DATE) > strtotime('today') || strtotime($CURRENT_END_DATE) < strtotime('today') ) {
+  die("Current term (range) is out of date.");
+}
 
 // return positive integer, number of cents
 function calculateDues($membership, $feeStatus, $term) {
@@ -30,7 +37,7 @@ function calculateDues($membership, $feeStatus, $term) {
   $feeTable['URCMembership']['Competition'] = 20000;
   
   $feeTable['Affiliate'] = [];
-  $feeTable['Affiliate']['Competition'] = 5000;
+  $feeTable['Affiliate']['Competition'] = 6000;
   
   // Summer membership/feeStatus should only be available in during summer terms
   if ( strpos($term, "Summer") === 0 ) {
@@ -382,7 +389,7 @@ if ( $_POST['type'] == "environment" ) {
   
   $method = "VolunteerPoints";
   $kind = "Membership (VolunteerPoints x " . $points . ")";
-  $amount = $points*600;
+  $amount = $points*1200;
   
   insertPayment($member_id, $amount, $method, $kind);
 } else if ( $_POST['type'] == "updateWaiver" ) {

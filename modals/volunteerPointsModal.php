@@ -6,7 +6,7 @@
         <h4 class="modal-title" id="volunteerPointsModalLabel">Add Volunteer Points</h4>
       </div>
       <div class="modal-body">
-        <p>Each volunteer point is worth a credit of $6.</p>
+        <p>Each volunteer point is worth a credit of $12.</p>
         <p>Adding volunteer points should only be done at one time at the start of the term.</p>
         <p>Current outstanding membership dues: <span id="volunteerPointsModalCurrentOutstanding"></span></p>
         <div class="form-group">
