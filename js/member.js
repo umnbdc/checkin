@@ -144,7 +144,7 @@ function updateMember(id) {
   function updateMemberSuccess(data, textStatus, jqXHR) {
     console.log("Update member info successful: ", data, textStatus, jqXHR);
     $("#editMemberModal").modal('hide');
-    showMember(id);
+    refreshMember(id);
   }
   
   function updateMemberError(data, textStatus, jqXHR) {
@@ -176,7 +176,7 @@ function updateMembershipAndFeeStatus(id) {
   function updateMembershipSuccess(data, textStatus, jqXHR) {
     console.log("Update membership successful: ", data, textStatus, jqXHR);
     $("#membershipModal").modal('hide');
-    showMember(id);
+    refreshMember(id);
   }
   
   function updateMembershipError(data, textStatus, jqXHR) {
@@ -219,7 +219,7 @@ function payDialogSubmit(id) {
   function addPaymentSuccess(data, textStatus, jqXHR) {
     console.log("Payment submission successful: ", data, textStatus, jqXHR);
     $('#payModal').modal('hide');
-    showMember(id);
+    refreshMember(id);
   }
   
   function addPaymentError(data, textStatus, jqXHR) {
@@ -247,7 +247,7 @@ function volunteerPointsDialogSubmit(member_id) {
   function addVolunteerPointsSuccess(data, textStatus, jqXHR) {
     console.log("Volunteer points submission successful: ", data, textStatus, jqXHR);
     $('#volunteerPointsModal').modal('hide');
-    showMember(member_id);
+    refreshMember(member_id);
   }
   
   function addVolunteerPointsError(data, textStatus, jqXHR) {
@@ -271,7 +271,7 @@ function waiverDialogSumbit(member_id) {
   function updateWaiverSuccess(data, textStatus, jqXHR) {
     console.log("Waiver update successful: ", data, textStatus, jqXHR);
     $('#waiverModal').modal('hide');
-    showMember(member_id);
+    refreshMember(member_id);
   }
   
   function updateWaiverError(data, textStatus, jqXHR) {
@@ -293,7 +293,7 @@ function claimReward(reward) {
   if ( reward.claimed == "0" ) {
     function claimRewardSuccess(data, textStatus, jqXHR) {
       console.log("Reward claim successful: ", data, textStatus, jqXHR);
-      showMember(reward.member_id);
+      refreshMember(reward.member_id);
     }
   
     function claimRewardError(data, textStatus, jqXHR) {
@@ -494,6 +494,10 @@ function showMember(id, untrack) { // untrack optional, default: false
   if ( isUndefined(untrack) || untrack == false ) {
     history.pushState({page: "member", id: id}, member.first_name + " " + member.last_name, "?member_id="+id);
   }
+}
+
+function refreshMember(id) {
+  showMember(id, true);
 }
 
 function getMember(id) {
