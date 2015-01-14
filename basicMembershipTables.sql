@@ -119,6 +119,7 @@ CREATE TABLE reward (
   id int(10) NOT NULL AUTO_INCREMENT,
   member_id smallint(10) NOT NULL,
   kind varchar(255) NOT NULL,
+  term varchar(255) NOT NULL,
   issue_date_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   claim_date_time timestamp NULL,
   claimed tinyint(1) NOT NULL DEFAULT '0',
@@ -139,6 +140,7 @@ CREATE TABLE referral (
   id int(10) NOT NULL AUTO_INCREMENT,
   referrer_id smallint(10) NOT NULL,
   referred_id smallint(10) NOT NULL,
+  term varchar(255) NOT NULL,
   PRIMARY KEY (id),
   INDEX (referrer_id),
   FOREIGN KEY (referrer_id) 
