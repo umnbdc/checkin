@@ -529,17 +529,29 @@ if ( $_POST['type'] == "environment" ) {
   $kind = "Membership (VolunteerPoints x " . $points . ")";
   $amount = $points*1200;
   
-  insertPayment($member_id, $amount, $method, $kind);
+  if ( $_POST['auth_role'] == "Fundraising" ) {
+    insertPayment($member_id, $amount, $method, $kind);
+    $data['succeeded'] = true;
+  } else {
+    $data['succeeded'] = false;
+    $data['reason'] = "Only the fundraising officer can add volunteer points.";
+  }
 } else if ( $_POST['type'] == "updateWaiver" ) {
   $member_id = mysql_escape_string($_POST['member_id']);
   $completed = mysql_escape_string($_POST['completed']);
   $term = mysql_escape_string($_POST['term']);
   assert($completed == 0 || $completed == 1);
   
-  $deleteQuery = "DELETE FROM `waiver_status` WHERE `member_id`='" . $member_id . "' AND `term`='" . $term . "'";
-  safeQuery($deleteQuery, $link, "Failed to delete waiver status in updateWaiver");
-  $insertQuery = "INSERT INTO `waiver_status`(`member_id`, `term`, `completed`) VALUES ('" . $member_id . "','" . $term . "','" . $completed . "')";
-  safeQuery($insertQuery, $link, "Failed to insert new waiver status in updateWaiver");
+  if ( $_POST['auth_role'] == "SafetyAndFacilities" ) {  
+    $deleteQuery = "DELETE FROM `waiver_status` WHERE `member_id`='" . $member_id . "' AND `term`='" . $term . "'";
+    safeQuery($deleteQuery, $link, "Failed to delete waiver status in updateWaiver");
+    $insertQuery = "INSERT INTO `waiver_status`(`member_id`, `term`, `completed`) VALUES ('" . $member_id . "','" . $term . "','" . $completed . "')";
+    safeQuery($insertQuery, $link, "Failed to insert new waiver status in updateWaiver");
+    $data['succeeded'] = true;
+  } else {
+    $data['succeeded'] = false;
+    $data['reason'] = "Only the safety and facilities officer can modify waiver information.";
+  }
 } else if ( $_POST['type'] == "claimReward" ) {
   $reward = $_POST['reward'];
   $rewardId = mysql_escape_string($reward['id']);

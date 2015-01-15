@@ -6,6 +6,10 @@ function isAuthorized($type, $auth_username, $auth_role, $auth_token, $link) {
   global $link;
   $publicTypes = ["createUser", "login", "logout"];
   
+  $auth_username = mysql_escape_string($auth_username);
+  $auth_role = mysql_escape_string($auth_role);
+  $auth_token = mysql_escape_string($auth_token);
+  
   if ( in_array($_POST['type'],$publicTypes) ) {
     return true;
   }
@@ -42,9 +46,13 @@ function generateAuthToken($safeUsername) {
   return $token;
 }
 
-if ( !isAuthorized($_POST['type'], $_POST['auth_username'], $_POST['auth_role'], $_POST['auth_token'], $link) ) {
+function returnUnauthorized() {
   header('Content-Type: application/json');
   exit(json_encode(array("unauthorized" => true)));
+}
+
+if ( !isAuthorized($_POST['type'], $_POST['auth_username'], $_POST['auth_role'], $_POST['auth_token'], $link) ) {
+  returnUnauthorized();
 }
 
 if ( $_POST['type'] == "createUser" ) {

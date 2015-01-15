@@ -246,8 +246,13 @@ function volunteerPointsDialogSubmit(member_id) {
   
   function addVolunteerPointsSuccess(data, textStatus, jqXHR) {
     console.log("Volunteer points submission successful: ", data, textStatus, jqXHR);
-    $('#volunteerPointsModal').modal('hide');
-    refreshMember(member_id);
+    if ( data.succeeded ) {
+      $('#volunteerPointsModal').modal('hide');
+      refreshMember(member_id);
+    } else if ( data.reason ) {
+      alert(data.reason);
+      $('#volunteerPointsModal').modal('hide');
+    }
   }
   
   function addVolunteerPointsError(data, textStatus, jqXHR) {
@@ -270,8 +275,13 @@ function waiverDialogSumbit(member_id) {
   
   function updateWaiverSuccess(data, textStatus, jqXHR) {
     console.log("Waiver update successful: ", data, textStatus, jqXHR);
-    $('#waiverModal').modal('hide');
-    refreshMember(member_id);
+    if ( data.succeeded ) {
+      $('#waiverModal').modal('hide');
+      refreshMember(member_id);
+    } else if ( data.reason ) {
+      alert(data.reason);
+      $('#waiverModal').modal('hide');
+    }
   }
   
   function updateWaiverError(data, textStatus, jqXHR) {
@@ -453,10 +463,15 @@ function showMember(id, untrack) { // untrack optional, default: false
   $("#updateMembershipButton").click(function() { updateMembershipAndFeeStatus(member.id) });
   
   // setup waiver modal
-  $("#inputWaiverStatus").val( currentWaiverStatus ? currentWaiverStatus.completed : 0 );
-  $("#waiverModalCurrentTerm").html(CURRENT_TERM);
-  $("#updateWaiverButton").off();
-  $("#updateWaiverButton").click(function() { waiverDialogSumbit(member.id) });
+  if ( $.cookie("auth_role") == "SafetyAndFacilities" ) {
+    $("#inputWaiverStatus").val( currentWaiverStatus ? currentWaiverStatus.completed : 0 );
+    $("#waiverModalCurrentTerm").html(CURRENT_TERM);
+    $("#updateWaiverButton").off();
+    $("#updateWaiverButton").click(function() { waiverDialogSumbit(member.id) });
+    $("#memberInfoWaiverButton").show();
+  } else {
+    $("#memberInfoWaiverButton").hide();
+  }
   
   // setup edit modal
   $("#inputEditFirstName").val(member.first_name);
@@ -473,7 +488,7 @@ function showMember(id, untrack) { // untrack optional, default: false
   $("#payButton").click(function() { payDialogSubmit(member.id) });
   
   // setup volunteer points modal
-  if ( currentMembership && currentMembership.kind == 'Competition' ) {
+  if ( $.cookie("auth_role") == "Fundraising" && currentMembership && currentMembership.kind == 'Competition' ) {
     $("#volunteerPointsModalCurrentOutstanding").html(formatAmount(currentOutstandingMembershipDues));
     $("#inputPointsAmount").val("");
     $("#volunteerPointsButton").off();
