@@ -1,3 +1,27 @@
+function logout() {
+  
+  function logoutSuccess(data, textStatus, jqXHR) {
+    console.log("Logout successful: ", data, textStatus, jqXHR);
+    $.removeCookie("auth_token");
+    $.removeCookie("auth_username");
+    location.reload();
+  }
+  
+  function logoutError(data, textStatus, jqXHR) {
+    console.log("Logout failed: ", data, textStatus, jqXHR);
+    alert("There was an issue logging out. Please try again.");
+  }
+  
+  $.ajax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "logout", auth_token: $.cookie('auth_token')},
+    success: logoutSuccess,
+    error: logoutError,
+    dataType: 'json'
+  });
+}
+
 function authAjax(ajaxArgObj) {
   var originalSuccessFn = ajaxArgObj.success;
   var originalErrorFn = ajaxArgObj.error;
@@ -5,9 +29,7 @@ function authAjax(ajaxArgObj) {
   function error(data, textStatus, jqXHR) {
     if ( data.unauthorized ) {
       console.log("Unauthorized api access. Deleting cookie \"auth_token\"");
-      $.removeCookie("auth_token");
-      $.removeCookie("auth_username");
-      location.reload();
+      logout();
     } else if ( originalErrorFn ) {
       originalErrorFn(data, textStatus, jqXHR);
     }

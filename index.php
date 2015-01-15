@@ -49,6 +49,10 @@
             <li><a href="">Help</a></li>
             -->
           </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li><a id="loggedInAs"></a></li>
+            <li><a id="logoutButton" onclick="logout()">Logout</a></li>
+          </ul>
         </div><!--/.nav-collapse -->
       </div>
     </nav>
@@ -104,7 +108,8 @@
         history.pushState({page: "home"},"Home","?");
       }
       
-      if ( $.cookie('auth_token') ) {
+      if ( $.cookie('auth_token') && $.cookie('auth_username') ) {
+        $("#loggedInAs").html($.cookie('auth_username'));
         setEnvironment(false);
       
         <?php if ( $_GET['member_id'] ) { ?>

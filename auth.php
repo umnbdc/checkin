@@ -4,7 +4,7 @@
 
 function isAuthorized($type, $auth_username, $auth_token, $link) {
   global $link;
-  $publicTypes = ["createUser", "login"];
+  $publicTypes = ["createUser", "login", "logout"];
   
   if ( in_array($_POST['type'],$publicTypes) ) {
     return true;
@@ -83,6 +83,10 @@ if ( $_POST['type'] == "createUser" ) {
       $data["succeeded"] = true;
     }
   }
+} else if ( $_POST['type'] == "logout" ) {
+  $auth_token = mysql_escape_string($_POST['auth_token']);
+  $deleteQuery = "DELETE FROM `auth_token` WHERE `token`='" . $auth_token . "'";
+  safeQuery($deleteQuery, $link, "Failed to delete auth_token in logout");
 }
 
 // from data.php:
