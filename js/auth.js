@@ -117,7 +117,7 @@ function createUser() {
     alert("There was an issue creating a new user. Please try again.");
   }
   
-  $.ajax({
+  authAjax({
     type: "POST",
     url: apiURL,
     data: {type: "createUser", username: username, role: role, passwordHash: md5(password)},

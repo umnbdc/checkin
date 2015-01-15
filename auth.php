@@ -6,7 +6,7 @@ require "lib/password.php";
 
 function isAuthorized($type, $auth_username, $auth_role, $auth_token, $link) {
   global $link;
-  $publicTypes = ["createUser", "login", "logout"];
+  $publicTypes = ["login", "logout"];
   
   $auth_username = mysql_escape_string($auth_username);
   $auth_role = mysql_escape_string($auth_role);
@@ -58,28 +58,31 @@ if ( !isAuthorized($_POST['type'], $_POST['auth_username'], $_POST['auth_role'],
 }
 
 if ( $_POST['type'] == "createUser" ) {
-  // assert(0); // comment this out when you want to allow user creation, check the DB when you're done
   $data = array("succeeded" => false, "reason" => "");
   
   $username = mysql_escape_string($_POST['username']);
   $role = mysql_escape_string($_POST['role']);
   $passwordHash = mysql_escape_string($_POST['passwordHash']);
-  
-  if ( $username == '' || $passwordHash == '' || !in_array($role, array("President", "VicePresident", "Treasurer", "Secretary", "Travel", "SafetyAndFacilities", "Fundraising", "Dance", "Music", "Publicity", "Web")) ) {
-    $data["reason"] = "Invalid fields";
-  } else {  
-    // confirm no other user with username
-    $userSelectQuery = "SELECT * FROM `user` WHERE `username`='" . $username . "'";
-    $userSelectResult = assocArraySelectQuery($userSelectQuery, $link, "Failed to select user by username in createUser");
-    if ( count($userSelectResult) != 0 ) {
-      $data["reason"] = "Username taken";
-    } else {
-      $salt = uniqid(mt_rand(), true);
-      $hash = password_hash($passwordHash, PASSWORD_DEFAULT, ['salt' => $salt]);
-      $insertQuery = "INSERT INTO `user`(`username`, `role`, `hash`, `salt`) VALUES ('" . $username . "','" . $role . "','" . $hash . "','" . $salt . "')";
-      safeQuery($insertQuery, $link, "Failed to insert new user in createUser");
-      $data["succeeded"] = true;
+
+  if ( $_POST['auth_role'] == 'Admin' ) {  
+    if ( $username == '' || $passwordHash == '' || !in_array($role, array("President", "VicePresident", "Treasurer", "Secretary", "Travel", "SafetyAndFacilities", "Fundraising", "Dance", "Music", "Publicity", "Web")) ) {
+      $data["reason"] = "Invalid fields";
+    } else {  
+      // confirm no other user with username
+      $userSelectQuery = "SELECT * FROM `user` WHERE `username`='" . $username . "'";
+      $userSelectResult = assocArraySelectQuery($userSelectQuery, $link, "Failed to select user by username in createUser");
+      if ( count($userSelectResult) != 0 ) {
+        $data["reason"] = "Username taken";
+      } else {
+        $salt = uniqid(mt_rand(), true);
+        $hash = password_hash($passwordHash, PASSWORD_DEFAULT, ['salt' => $salt]);
+        $insertQuery = "INSERT INTO `user`(`username`, `role`, `hash`, `salt`) VALUES ('" . $username . "','" . $role . "','" . $hash . "','" . $salt . "')";
+        safeQuery($insertQuery, $link, "Failed to insert new user in createUser");
+        $data["succeeded"] = true;
+      }
     }
+  } else {
+    $data["reason"] = "Not authorized to create user";
   }
 } else if ( $_POST['type'] == "login" ) {
   $data = array("succeeded" => false, "auth_token" => null);
