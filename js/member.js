@@ -561,7 +561,8 @@ function isCheckedInToday(id, async, yesAction, noAction) {
   }
 }
 
-function showCheckinErrorModal(id, button) {
+function showCheckinErrorModal(id, reason, button) {
+  $("#checkInErrorReason").html(reason);
   $("#overrideButton").off();
   $("#overrideButton").click(function() {
     var confirmation = confirm("Are you sure you want to checkin this member outside his/her membership?");
@@ -592,7 +593,7 @@ function checkInMember(id, button, override) { // override is optional
         button.prop('disabled', true);
       }
     } else {
-      showCheckinErrorModal(id, button);
+      showCheckinErrorModal(id, data.permission_reason, button);
     }
   }
   

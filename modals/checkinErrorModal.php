@@ -6,7 +6,8 @@
         <h4 class="modal-title" id="checkinErrorModalLabel">Checkin Error</h4>
       </div>
       <div class="modal-body">
-        <p>This member could not be checked in. Please check the member's membership.</p>
+        <p>This member could not be checked in. Reason: "<span id="checkInErrorReason"></span>"</p>
+        <p>Please check the member's membership.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>

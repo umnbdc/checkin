@@ -128,6 +128,20 @@ if ($link->connect_error) {
     die("Connection failed: " . $link->connect_error);
 }
 
+// returns balance
+function calculateOutstandingDues($safe_member_id) {
+  global $link;
+  
+  $selectQuery = "SELECT * FROM `debit_credit` WHERE `member_id`='" . $safe_member_id . "' AND `kind` LIKE 'Membership%'";
+  $transactions = assocArraySelectQuery($selectQuery, $link, "Failed to select debit_credit from calculateOutstandingDues");
+  
+  $balance = 0;
+  foreach( $transactions as $t ) {
+    $balance += $t['amount'];
+  }
+  return $balance;
+}
+
 function checkedInToday($safeId, $link) {
   $selectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND DATE(`date_time`) = DATE(NOW())";
   $checkins = assocArraySelectQuery($selectQuery, $link, "Failed to select from checkin");
@@ -145,21 +159,33 @@ function memberAllowedToCheckIn($safeId, $link) {
   $membershipArray = assocArraySelectQuery($membershipSelectQuery, $link, "Failed to select membership in memberAllowedToCheckIn");
   assert(count($membershipArray) < 2, "Multiple memberships: (member_id, term) = (". $safeId . ", " . $CURRENT_TERM . ")");
   
+  $toReturn = array( "permitted" => false, "reason" => "" );
+  
   if ( count($membershipArray) == 1 ) {
     $kind = $membershipArray[0]['kind'];
     if ( $kind == 'Competition' ) {
-      return true;
+      $toReturn['permitted'] = true;
+      $toReturn['reason'] = "Competition Team";
     } else {
       // note: week of year starts monday which is OK for us
-      $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND WEEKOFYEAR(`date_time`)=WEEKOFYEAR(NOW())";
-      $checkinsThisWeek = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select checkins for this week in memberAllowedToCheckIn");
-      return count($checkinsThisWeek) < $CHECKINS_PER_WEEK;
+      if ( calculateOutstandingDues($safeId) < 0 ) {
+        $toReturn['permitted'] = false;
+        $toReturn['reason'] = "Outstanding dues";
+      } else {
+        $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND WEEKOFYEAR(`date_time`)=WEEKOFYEAR(NOW())";
+        $checkinsThisWeek = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select checkins for this week in memberAllowedToCheckIn");
+        $toReturn['permitted'] = count($checkinsThisWeek) < $CHECKINS_PER_WEEK[$kind];
+        $toReturn['reason'] = $kind . " Membership allowed " . $CHECKINS_PER_WEEK[$kind] . " check-ins per week";
+      }
     }
   } else { // no membership
     $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND DATE(`date_time`) BETWEEN '" . $CURRENT_START_DATE . "' AND '" . $CURRENT_END_DATE . "'";
     $checkinsThisTerm = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select checkins for this term in memberAllowedToCheckIn");
-    return count($checkinsThisTerm) < $NUMBER_OF_FREE_CHECKINS;
+    $toReturn['permitted'] = count($checkinsThisTerm) < $NUMBER_OF_FREE_CHECKINS;
+    $toReturn['reason'] = $NUMBER_OF_FREE_CHECKINS . " free check-ins";
   }
+  
+  return $toReturn;
 }
 
 function hasHadMembership($safeId) {
@@ -233,19 +259,6 @@ function insertPayment($member_id, $amount, $method, $kind) {
       "'" . $method . "'",
       "'" . $kind . "'");
   safeQuery($insertQuery, $link, "Failed to insert new payment");
-}
-
-function calculateOutstandingDues($safe_member_id) {
-  global $link;
-  
-  $selectQuery = "SELECT * FROM `debit_credit` WHERE `member_id`='" . $safe_member_id . "' AND `kind` LIKE 'Membership%'";
-  $transactions = assocArraySelectQuery($selectQuery, $link, "Failed to select debit_credit from calculateOutstandingDues");
-  
-  $balance = 0;
-  foreach( $transactions as $t ) {
-    $balance += $t['amount'];
-  }
-  return $balance;
 }
 
 function getMembershipAndFeeStatus($safe_member_id, $term) {
@@ -405,7 +418,8 @@ if ( $_POST['type'] == "environment" ) {
   $id = mysql_escape_string($_POST['id']);
   $override = array_key_exists('override', $_POST) && $_POST['override'] == "true";
   
-  if ( $override || memberAllowedToCheckIn($id, $link) ) {  
+  $allowedResponse = memberAllowedToCheckIn($id, $link);
+  if ( $override || $allowedResponse['permitted'] ) {  
     $data['permitted'] = true;
     if ( !checkedInToday($id, $link) ) {
       $insertQuery = "INSERT INTO `checkin`(`member_id`, `date_time`) VALUES ('" . $id . "',CURRENT_TIMESTAMP)";
@@ -416,6 +430,7 @@ if ( $_POST['type'] == "environment" ) {
     }
   } else {
     $data['permitted'] = false;
+    $data['permission_reason'] = $allowedResponse['reason'];
   }
 } else if ( $_POST['type'] == "checkedIn?" ) {
   $id = mysql_escape_string($_POST['id']);
