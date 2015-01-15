@@ -18,7 +18,9 @@
     <link href="bootstrap/css/sticky-footer-navbar.css" rel="stylesheet">
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="js/jquery.cookie.js"></script>
     
+    <script src="js/auth.js"></script>
     <script src="js/member.js"></script>
 
     <!-- Custom styles for this template -->
@@ -86,6 +88,7 @@
     <?php include "modals/waiverModal.php"; ?>
     <?php include "modals/membershipModal.php"; ?>
     <?php include "modals/checkinErrorModal.php"; ?>
+    <?php include "modals/loginModal.php"; ?>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
@@ -93,22 +96,26 @@
     <script src="bootstrap/js/bootstrap.min.js"></script>
     
     <script type="text/javascript">
-      setEnvironment(false);
-      
       function showHome() {
         $("#memberContainer").hide();
         $("#memberListContainer").hide();
         history.pushState({page: "home"},"Home","?");
       }
       
-      <?php if ( $_GET['member_id'] ) { ?>
-        showMember(<?php echo $_GET['member_id']; ?>);
-      <?php } else if ( $_GET['search'] ) { ?>        
-        $("#memberSearch").val("<?php echo $_GET['search']; ?>");
-        runSearch();
-      <?php } else { ?>
-        showHome();
-      <?php } ?>
+      if ( $.cookie('auth_token') ) {
+        setEnvironment(false);
+      
+        <?php if ( $_GET['member_id'] ) { ?>
+          showMember(<?php echo $_GET['member_id']; ?>);
+        <?php } else if ( $_GET['search'] ) { ?>        
+          $("#memberSearch").val("<?php echo $_GET['search']; ?>");
+          runSearch();
+        <?php } else { ?>
+          showHome();
+        <?php } ?>
+      } else {
+        $("#loginModal").modal('show');
+      }
       
       function onpopstate(e) {
         if ( e.state.page == "home" ) {

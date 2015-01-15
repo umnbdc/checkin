@@ -17,7 +17,7 @@ function setEnvironment(async) {
     alert("There was an issue retrieving environment info. Please try again.");
   }
   
-  $.ajax({
+  authAjax({
     async: async,
     type: "POST",
     url: apiURL,
@@ -73,7 +73,7 @@ function addNewMember() {
   
   var data = {type: "newMember", member: memberObject};
   
-  $.ajax({
+  authAjax({
     type: "POST",
     url: apiURL,
     data: data,
@@ -152,7 +152,7 @@ function updateMember(id) {
     alert("There was an issue updating this member's info. Please try again.");
   }
   
-  $.ajax({
+  authAjax({
     type: "POST",
     url: apiURL,
     data: {
@@ -184,7 +184,7 @@ function updateMembershipAndFeeStatus(id) {
     alert("There was an issue updating this membership and fee status. Please try again.");
   }
   
-  $.ajax({
+  authAjax({
     type: "POST",
     url: apiURL,
     data: {
@@ -227,7 +227,7 @@ function payDialogSubmit(id) {
     alert("There was an issue submitting this payment. Please try again.");
   }
   
-  $.ajax({
+  authAjax({
     type: "POST",
     url: apiURL,
     data: {type: "payment", kind: kind, method: method, amount: amount, member_id: id},
@@ -255,7 +255,7 @@ function volunteerPointsDialogSubmit(member_id) {
     alert("There was an issue submitting this payment. Please try again.");
   }
   
-  $.ajax({
+  authAjax({
     type: "POST",
     url: apiURL,
     data: {type: "addVolunteerPoints", member_id: member_id, points: points},
@@ -279,7 +279,7 @@ function waiverDialogSumbit(member_id) {
     alert("There was an issue updating this user's waiver status. Please try again.");
   }
   
-  $.ajax({
+  authAjax({
     type: "POST",
     url: apiURL,
     data: {type: "updateWaiver", member_id: member_id, completed: completed, term: CURRENT_TERM},
@@ -301,7 +301,7 @@ function claimReward(reward) {
       alert("There was an issue claiming this reward. Please try again.");
     }
   
-    $.ajax({
+    authAjax({
       type: "POST",
       url: apiURL,
       data: {type: "claimReward", reward: reward},
@@ -513,7 +513,7 @@ function getMember(id) {
     alert("There was an issue retrieving member with id " + id + ". Please try again.");
   }
 
-  $.ajax({
+  authAjax({
     async: false,
     type: "POST",
     url: apiURL,
@@ -546,7 +546,7 @@ function isCheckedInToday(id, async, yesAction, noAction) {
     console.log("Member 'is checked in?' failed: ", data, textStatus, jqXHR);
   }
   
-  $.ajax({
+  authAjax({
     async: async,
     type: "POST",
     url: apiURL,
@@ -602,7 +602,7 @@ function checkInMember(id, button, override) { // override is optional
     alert("There was an issue checking in member with id " + id + ". Please try again.");
   }
   
-  $.ajax({
+  authAjax({
     type: "POST",
     url: apiURL,
     data: {type: "checkInMember", id: id, override: override},
@@ -664,7 +664,7 @@ function getMembers(query) {
     alert("There was an issue retrieving members. Please try again.");
   }
   
-  $.ajax({
+  authAjax({
     async: false,
     type: "POST",
     url: apiURL,
