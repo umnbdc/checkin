@@ -108,7 +108,7 @@
         history.pushState({page: "home"},"Home","?");
       }
       
-      if ( $.cookie('auth_token') && $.cookie('auth_username') ) {
+      if ( $.cookie('auth_token') && $.cookie('auth_username') && $.cookie('auth_role') ) {
         $("#loggedInAs").html($.cookie('auth_username'));
         setEnvironment(false);
       

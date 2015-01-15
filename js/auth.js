@@ -4,6 +4,7 @@ function logout() {
     console.log("Logout successful: ", data, textStatus, jqXHR);
     $.removeCookie("auth_token");
     $.removeCookie("auth_username");
+    $.removeCookie("auth_role");
     location.reload();
   }
   
@@ -28,7 +29,7 @@ function authAjax(ajaxArgObj) {
   
   function error(data, textStatus, jqXHR) {
     if ( data.unauthorized ) {
-      console.log("Unauthorized api access. Deleting cookie \"auth_token\"");
+      console.log("Unauthorized api access. Deleting auth cookies");
       logout();
     } else if ( originalErrorFn ) {
       originalErrorFn(data, textStatus, jqXHR);
@@ -39,14 +40,14 @@ function authAjax(ajaxArgObj) {
     if ( data.unauthorized ) {
       error(data, textStatus, jqXHR);
       return;
-    }
-    if ( originalSuccessFn ) {
+    } else if ( originalSuccessFn ) {
       originalSuccessFn(data, textStatus, jqXHR);
     }
   }
   
   ajaxArgObj.data.auth_token = $.cookie("auth_token");
   ajaxArgObj.data.auth_username = $.cookie("auth_username");
+  ajaxArgObj.data.auth_role = $.cookie("auth_role");
   ajaxArgObj.success = success;
   ajaxArgObj.error = error;
   
@@ -64,6 +65,7 @@ function login() {
       var seconds = data.seconds_to_expiry ? data.seconds_to_expiry : 60*60*4;
       expiryDate.setTime(expiryDate.getTime() + (seconds * 1000));
       $.cookie("auth_token", data.auth_token, { expires: expiryDate });
+      $.cookie("auth_role", data.auth_role, { expires: expiryDate });
       $.cookie("auth_username", username, { expires: expiryDate });
       location.reload();
     } else {

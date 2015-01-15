@@ -2,13 +2,20 @@
 // from data.php:
 //// $data = $_POST;
 
-function isAuthorized($type, $auth_username, $auth_token, $link) {
+function isAuthorized($type, $auth_username, $auth_role, $auth_token, $link) {
   global $link;
   $publicTypes = ["createUser", "login", "logout"];
   
   if ( in_array($_POST['type'],$publicTypes) ) {
     return true;
   }
+  
+  $selectQuery = "SELECT * FROM `user` WHERE `role`='" . $auth_role . "' AND `username`='" . $auth_username . "'";
+  $selectResult = assocArraySelectQuery($selectQuery, $link, "Failed to select user in isAuthorized");
+  if ( $selectResult == [] ) {
+    return false;
+  }
+  
   $selectQuery = "SELECT * FROM `auth_token` WHERE `token`='" . $auth_token . "' AND `username`='" . $auth_username . "'";
   $selectResult = assocArraySelectQuery($selectQuery, $link, "Failed to select auth_token in isAuthorized");
   if ( $selectResult == [] ) {
@@ -35,7 +42,7 @@ function generateAuthToken($safeUsername) {
   return $token;
 }
 
-if ( !isAuthorized($_POST['type'], $_POST['auth_username'], $_POST['auth_token'], $link) ) {
+if ( !isAuthorized($_POST['type'], $_POST['auth_username'], $_POST['auth_role'], $_POST['auth_token'], $link) ) {
   header('Content-Type: application/json');
   exit(json_encode(array("unauthorized" => true)));
 }
@@ -80,6 +87,7 @@ if ( $_POST['type'] == "createUser" ) {
       $data["succeeded"] = false;
     } else {
       $data["auth_token"] = generateAuthToken($username);
+      $data["auth_role"] = $userData['role'];
       $data["succeeded"] = true;
     }
   }
