@@ -2,6 +2,8 @@
 // from data.php:
 //// $data = $_POST;
 
+require "lib/password.php";
+
 function isAuthorized($type, $auth_username, $auth_role, $auth_token, $link) {
   global $link;
   $publicTypes = ["createUser", "login", "logout"];
@@ -56,6 +58,7 @@ if ( !isAuthorized($_POST['type'], $_POST['auth_username'], $_POST['auth_role'],
 }
 
 if ( $_POST['type'] == "createUser" ) {
+  // assert(0); // comment this out when you want to allow user creation, check the DB when you're done
   $data = array("succeeded" => false, "reason" => "");
   
   $username = mysql_escape_string($_POST['username']);

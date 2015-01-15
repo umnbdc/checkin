@@ -463,7 +463,7 @@ function showMember(id, untrack) { // untrack optional, default: false
   $("#updateMembershipButton").click(function() { updateMembershipAndFeeStatus(member.id) });
   
   // setup waiver modal
-  if ( $.cookie("auth_role") == "SafetyAndFacilities" ) {
+  if ( $.cookie("auth_role") == "SafetyAndFacilities" || $.cookie("auth_role") == "Admin" ) {
     $("#inputWaiverStatus").val( currentWaiverStatus ? currentWaiverStatus.completed : 0 );
     $("#waiverModalCurrentTerm").html(CURRENT_TERM);
     $("#updateWaiverButton").off();
@@ -488,7 +488,7 @@ function showMember(id, untrack) { // untrack optional, default: false
   $("#payButton").click(function() { payDialogSubmit(member.id) });
   
   // setup volunteer points modal
-  if ( $.cookie("auth_role") == "Fundraising" && currentMembership && currentMembership.kind == 'Competition' ) {
+  if ( ($.cookie("auth_role") == "Fundraising" || $.cookie("auth_role") == "Admin") && currentMembership && currentMembership.kind == 'Competition' ) {
     $("#volunteerPointsModalCurrentOutstanding").html(formatAmount(currentOutstandingMembershipDues));
     $("#inputPointsAmount").val("");
     $("#volunteerPointsButton").off();
