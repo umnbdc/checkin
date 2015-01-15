@@ -1,7 +1,5 @@
 <?php
 
-include('auth.php');
-
 date_default_timezone_set('America/Chicago');
 
 // Environment
@@ -128,10 +126,6 @@ $dbname = "php";
 $link = new mysqli($servername, $username, $password, $dbname);
 if ($link->connect_error) {
     die("Connection failed: " . $link->connect_error);
-}
-
-if ( !isAuthorized($_POST['auth_token'],$link) ) {
-  exit(json_encode(array("unauthorized" => true)));
 }
 
 // returns balance
@@ -342,6 +336,8 @@ function updateCompetitionLateFees($safe_member_id, $term) {
 }
 
 $data = $_POST;
+
+include('auth.php');
 
 if ( $_POST['type'] == "environment" ) {
   $data = [];

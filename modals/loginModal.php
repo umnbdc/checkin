@@ -6,12 +6,12 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label for="inputUsername">Username</label>
-          <input type="text" class="form-control" id="inputFirstName" placeholder="First name">
+          <label for="inputLoginUsername">Username</label>
+          <input type="text" class="form-control" id="inputLoginUsername" placeholder="First name">
         </div>
         <div class="form-group">
-          <label for="inputPassword">Password</label>
-          <input type="password" class="form-control" id="inputLastName" placeholder="Last name">
+          <label for="inputLoginPassword">Password</label>
+          <input type="password" class="form-control" id="inputLoginPassword" placeholder="Last name">
         </div>
       </div>
       <div class="modal-footer">

@@ -6,6 +6,7 @@ function authAjax(ajaxArgObj) {
     if ( data.unauthorized ) {
       console.log("Unauthorized api access. Deleting cookie \"auth_token\"");
       $.removeCookie("auth_token");
+      $.removeCookie("auth_username");
       location.reload();
     } else if ( originalErrorFn ) {
       originalErrorFn(data, textStatus, jqXHR);
@@ -23,6 +24,7 @@ function authAjax(ajaxArgObj) {
   }
   
   ajaxArgObj.data.auth_token = $.cookie("auth_token");
+  ajaxArgObj.data.auth_username = $.cookie("auth_username");
   ajaxArgObj.success = success;
   ajaxArgObj.error = error;
   
@@ -30,9 +32,73 @@ function authAjax(ajaxArgObj) {
 }
 
 function login() {
-  var date = new Date();
-  var minutes = 30;
-  date.setTime(date.getTime() + (minutes * 60 * 1000));
-  $.cookie("auth_token", "1234", { expires: date });
-  location.reload();
+  var username = $("#inputLoginUsername").val();
+  var password = $("#inputLoginPassword").val();
+
+  function loginSuccess(data, textStatus, jqXHR) {
+    console.log("Login successful: ", data, textStatus, jqXHR);
+    if ( data.succeeded ) {
+      var expiryDate = new Date();
+      var seconds = data.seconds_to_expiry ? data.seconds_to_expiry : 60*60*4;
+      expiryDate.setTime(expiryDate.getTime() + (seconds * 1000));
+      $.cookie("auth_token", data.auth_token, { expires: expiryDate });
+      $.cookie("auth_username", username, { expires: expiryDate });
+      location.reload();
+    } else {
+      alert("Username and password do not match");
+    }
+  }
+  
+  function loginError(data, textStatus, jqXHR) {
+    console.log("Login failed: ", data, textStatus, jqXHR);
+    alert("There was an issue logging in. Please try again.");
+  }
+  
+  $.ajax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "login", username: username, passwordHash: md5(password)},
+    success: loginSuccess,
+    error: loginError,
+    dataType: 'json'
+  });
+}
+
+function createUser() {
+  var username = $("#inputCreateUserUsername").val();
+  var role = $("#inputCreateUserRole").val();
+  var password = $("#inputCreateUserPassword").val();
+  var password_confirm = $("#inputCreateUserPasswordConfirm").val();
+  
+  if ( !username || !role || !password ) {
+    alert("Missing information. Username, role, and password are required.");
+    return;
+  }
+  if ( password != password_confirm ) {
+    alert("Passwords do not match.");
+    return;
+  }
+  
+  function createUserSuccess(data, textStatus, jqXHR) {
+    console.log("User creation successful: ", data, textStatus, jqXHR);
+    if ( data.succeeded ) {
+      location.reload();
+    } else {
+      alert(data.reason);
+    }
+  }
+  
+  function createUserError(data, textStatus, jqXHR) {
+    console.log("User creation failed: ", data, textStatus, jqXHR);
+    alert("There was an issue creating a new user. Please try again.");
+  }
+  
+  $.ajax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "createUser", username: username, role: role, passwordHash: md5(password)},
+    success: createUserSuccess,
+    error: createUserError,
+    dataType: 'json'
+  });
 }

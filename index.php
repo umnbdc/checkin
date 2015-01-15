@@ -19,6 +19,7 @@
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="js/jquery.cookie.js"></script>
+    <script src="js/md5.js"></script>
     
     <script src="js/auth.js"></script>
     <script src="js/member.js"></script>
@@ -89,6 +90,7 @@
     <?php include "modals/membershipModal.php"; ?>
     <?php include "modals/checkinErrorModal.php"; ?>
     <?php include "modals/loginModal.php"; ?>
+    <?php include "modals/createUserModal.php"; ?>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->

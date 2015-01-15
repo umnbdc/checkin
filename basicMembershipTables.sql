@@ -166,3 +166,35 @@ CREATE TABLE checkin (
     REFERENCES member(id)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table user
+--
+DROP TABLE IF EXISTS user;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE user (
+  id int(10) NOT NULL AUTO_INCREMENT,
+  username varchar(255) NOT NULL,
+  role varchar(255) NOT NULL,
+  hash varbinary(255) NOT NULL,
+  salt varchar(255) NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table auth_token
+--
+DROP TABLE IF EXISTS auth_token;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE auth_token (
+  id int(10) NOT NULL AUTO_INCREMENT,
+  username varchar(255) NOT NULL,
+  token varchar(255) NOT NULL,
+  issue_date_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  period int(10) NOT NULL DEFAULT 14400,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
