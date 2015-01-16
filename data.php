@@ -529,7 +529,7 @@ if ( $_POST['type'] == "environment" ) {
   $kind = "Membership (VolunteerPoints x " . $points . ")";
   $amount = $points*1200;
   
-  if ( $_POST['auth_role'] == "Fundraising" ) {
+  if ( $_POST['auth_role'] == "Fundraising" || $_POST['auth_role'] == "Admin" ) {
     insertPayment($member_id, $amount, $method, $kind);
     $data['succeeded'] = true;
   } else {
@@ -542,11 +542,40 @@ if ( $_POST['type'] == "environment" ) {
   $term = mysql_escape_string($_POST['term']);
   assert($completed == 0 || $completed == 1);
   
-  if ( $_POST['auth_role'] == "SafetyAndFacilities" ) {  
+  if ( $_POST['auth_role'] == "SafetyAndFacilities" || $_POST['auth_role'] == "Admin" ) {  
     $deleteQuery = "DELETE FROM `waiver_status` WHERE `member_id`='" . $member_id . "' AND `term`='" . $term . "'";
     safeQuery($deleteQuery, $link, "Failed to delete waiver status in updateWaiver");
     $insertQuery = "INSERT INTO `waiver_status`(`member_id`, `term`, `completed`) VALUES ('" . $member_id . "','" . $term . "','" . $completed . "')";
     safeQuery($insertQuery, $link, "Failed to insert new waiver status in updateWaiver");
+    $data['succeeded'] = true;
+  } else {
+    $data['succeeded'] = false;
+    $data['reason'] = "Only the safety and facilities officer can modify waiver information.";
+  }
+} else if ( $_POST['type'] == "getPresentWaiverlessMembers" ) {
+
+  if ( $_POST['auth_role'] == "SafetyAndFacilities" || $_POST['auth_role'] == "Admin" ) {
+    $checkinSelectQuery = "SELECT * FROM `checkin` WHERE DATE(`date_time`) = DATE(NOW())";
+    $todaysCheckins = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select today's checkins in getPresentWaiverlessMembers");
+  
+    $memberIds = [];
+    foreach ( $todaysCheckins as $c ) {
+      $waiverSelectQuery = "SELECT * FROM `waiver_status` WHERE `member_id`='" . $c['member_id'] . "' AND `term`='" . $CURRENT_TERM . "'";
+      $waiverStatusArray = assocArraySelectQuery($waiverSelectQuery, $link, "Failed to select waiver_status in getPresentWaiverlessMembers");
+      if ( $waiverStatusArray == [] || $waiverStatusArray[0]['completed'] != 1 ) {
+        $memberIds[] = $c['member_id'];
+      }
+    }
+  
+    $memberObjects = [];
+    foreach( $memberIds as $id ) {
+      $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $id . "'";
+      $memberArray = assocArraySelectQuery($memberSelectQuery, $link, "Failed to select member in getPresentWaiverlessMembers");
+      assert(count($memberArray) == 1);
+      $memberObjects[] = $memberArray[0];
+    }
+  
+    $data['members'] = $memberObjects;
     $data['succeeded'] = true;
   } else {
     $data['succeeded'] = false;

@@ -48,6 +48,7 @@
             <li><a href="">Reports</a></li>
             <li><a href="">Help</a></li>
             -->
+            <li id="waiverListLink" style="display: none" data-toggle="modal" data-target="#waiverListModal"><a style="cursor: pointer">Waiver List</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
             <li><a id="loggedInAs"></a></li>
@@ -91,6 +92,7 @@
     <?php include "modals/payModal.php"; ?>
     <?php include "modals/volunteerPointsModal.php"; ?>
     <?php include "modals/waiverModal.php"; ?>
+    <?php include "modals/waiverListModal.php"; ?>
     <?php include "modals/membershipModal.php"; ?>
     <?php include "modals/checkinErrorModal.php"; ?>
     <?php include "modals/loginModal.php"; ?>
@@ -152,13 +154,20 @@
 
       // clear the new member form every time it's shown
       $('#newMemberModal').on('shown.bs.modal', function() {
-          $('#inputFirstName').val("");
-          $('#inputLastName').val("");
-          $('#inputNickname').val("");
-          $('#inputEmail').val("");
-          $('#referSearch').val("");
-          $("#newMemberReferForm").empty();
+        $('#inputFirstName').val("");
+        $('#inputLastName').val("");
+        $('#inputNickname').val("");
+        $('#inputEmail').val("");
+        $('#referSearch').val("");
+        $("#newMemberReferForm").empty();
       });
+      
+      if ( $.cookie('auth_role') == 'SafetyAndFacilities' || $.cookie('auth_role') == 'Admin' ) {
+        $("#waiverListLink").show();
+      } else {
+        $("#waiverListLink").hide();
+      }
+      $('#waiverListModal').on('shown.bs.modal', setupWaiverListModal);
     </script>
   </body>
 </html>

@@ -296,6 +296,42 @@ function waiverDialogSumbit(member_id) {
     success: updateWaiverSuccess,
     error: updateWaiverError,
     dataType: 'json'
+  });
+}
+
+function setupWaiverListModal() {
+  
+  function success(data, textStatus, jqXHR) {
+    console.log("Present, waiver-less members retrieval successful: ", data, textStatus, jqXHR);
+    if ( data.succeeded ) {
+      var members = data.members;
+      $("#waiverListModalTable tbody").empty();
+      members.forEach(function (m) {
+        var row = $("<tr>", {html: m.first_name + " " + m.last_name, style: "cursor: pointer"});
+        row.click(function() {
+          showMember(m.id);
+          $('#waiverListModal').modal('hide');
+        });
+        $("#waiverListModalTable tbody").append(row);
+      });
+    } else if ( data.reason ) {
+      alert(data.reason);
+      $('#waiverListModal').modal('hide');
+    }
+  }
+  
+  function error(data, textStatus, jqXHR) {
+    console.log("Present, waiver-less members retrieval failed: ", data, textStatus, jqXHR);
+    alert("There was an issue retrieving present, waiver-less members. Please try again.");
+  }
+  
+  authAjax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "getPresentWaiverlessMembers"},
+    success: success,
+    error: error,
+    dataType: 'json'
   }); 
 }
 
