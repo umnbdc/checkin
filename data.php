@@ -588,6 +588,23 @@ if ( $_POST['type'] == "environment" ) {
     $updateQuery = "UPDATE `reward` SET `claim_date_time`=CURRENT_TIMESTAMP,`claimed`=1 WHERE `id`='" . $rewardId . "'";
     safeQuery($updateQuery, $link, "Failed to update reward in claimReward");
   }
+} else if ( $_POST['type'] == "getCompetitionTeamList" ) {
+  $membershipSelectQuery = "SELECT * FROM `membership` WHERE `kind`='Competition' AND `term`='" . $CURRENT_TERM . "'";
+  $membershipArray = assocArraySelectQuery($membershipSelectQuery, $link, "Failed to select memberships in getCompetitionTeamList");
+  
+  $memberObjects = [];
+  foreach($membershipArray as $membership) {
+    $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $membership['member_id'] . "'";
+    $memberArray = assocArraySelectQuery($memberSelectQuery, $link, "Failed to select member in getPresentWaiverlessMembers");
+    assert(count($memberArray) == 1);
+    $memberObjects[] = $memberArray[0];
+  }
+  
+  for ( $i = 0; $i < count($memberObjects); $i++ ) {
+    $memberObjects[$i]['balance'] = calculateOutstandingDues($memberObjects[$i]['id']);
+  }
+  
+  $data = $memberObjects;
 }
 
 $link->close();

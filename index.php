@@ -49,6 +49,7 @@
             <li><a href="">Help</a></li>
             -->
             <li id="waiverListLink" style="display: none" data-toggle="modal" data-target="#waiverListModal"><a style="cursor: pointer">Waiver List</a></li>
+            <li id="competitionTeamLink" data-toggle="modal" data-target="#competitionTeamModal"><a style="cursor: pointer">Competition Team</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
             <li><a id="loggedInAs"></a></li>
@@ -97,6 +98,7 @@
     <?php include "modals/checkinErrorModal.php"; ?>
     <?php include "modals/loginModal.php"; ?>
     <?php include "modals/createUserModal.php"; ?>
+    <?php include "modals/competitionTeamModal.php"; ?>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
@@ -168,6 +170,8 @@
         $("#waiverListLink").hide();
       }
       $('#waiverListModal').on('shown.bs.modal', setupWaiverListModal);
+      
+      $('#competitionTeamModal').on('shown.bs.modal', setupCompetitionTeamModal);
     </script>
   </body>
 </html>

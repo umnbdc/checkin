@@ -305,6 +305,7 @@ function setupWaiverListModal() {
     console.log("Present, waiver-less members retrieval successful: ", data, textStatus, jqXHR);
     if ( data.succeeded ) {
       var members = data.members;
+      members.sort(function(a,b) { return a.last_name < b.last_name ? -1 : 1; });
       $("#waiverListModalTable tbody").empty();
       members.forEach(function (m) {
         var row = $("<tr>", {html: m.first_name + " " + m.last_name, style: "cursor: pointer"});
@@ -329,6 +330,53 @@ function setupWaiverListModal() {
     type: "POST",
     url: apiURL,
     data: {type: "getPresentWaiverlessMembers"},
+    success: success,
+    error: error,
+    dataType: 'json'
+  }); 
+}
+
+function setupCompetitionTeamModal() {
+  
+  function success(data, textStatus, jqXHR) {
+    console.log("Competition team members retrieval successful: ", data, textStatus, jqXHR);
+    var members = data;
+    members.sort(function(a,b) { return a.last_name < b.last_name ? -1 : 1; });
+    $("#competitionTeamModalTable tbody").empty();
+    members.forEach( function (m) {
+      var row = $("<tr>");
+      
+      var nameCol = $("<td>", {html: m.last_name + ", " + m.first_name, style: "cursor: pointer"});
+      nameCol.click(function() {
+        showMember(m.id);
+        $('#competitionTeamModal').modal('hide');
+      });
+      row.append(nameCol);
+      
+      var buttonCol = $("<td>");
+      var button = $("<button class='btn btn-xs btn-primary'>Mark present</button>");
+      buttonCol.append(button);
+      button.click(function(e) {
+        checkInMember(m.id, button);
+        e.stopPropagation();
+      });
+      row.append(buttonCol);
+      isCheckedInToday(m.id, true, function() {button.prop('disabled',true)}, null);
+      
+      row.append($("<td>", {html: formatAmount(m.balance)}));
+      $("#competitionTeamModalTable tbody").append(row);
+    });
+  }
+  
+  function error(data, textStatus, jqXHR) {
+    console.log("Present, waiver-less members retrieval failed: ", data, textStatus, jqXHR);
+    alert("Competition team members retrieval failed. Please try again.");
+  }
+  
+  authAjax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "getCompetitionTeamList"},
     success: success,
     error: error,
     dataType: 'json'
