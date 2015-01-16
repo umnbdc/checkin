@@ -344,17 +344,32 @@ if ( $_POST['type'] == "environment" ) {
   $data['CURRENT_TERM'] = $CURRENT_TERM;
 } else if ( $_POST['type'] == "newMember" ) {
   $member = $_POST['member'];
+  $escapedEmail = mysql_escape_string($member['email']);
   
-  $insertQuery = sprintf("INSERT INTO `member`(`first_name`, `last_name`, `nick_name`, `email`, `join_date`, `referred_by`) VALUES (%s,%s,%s,%s,CURRENT_TIMESTAMP,%s)",
-      "'" . mysql_escape_string($member['firstName']) . "'",
-      "'" . mysql_escape_string($member['lastName']) . "'",
-      $member['nickname'] ? "'" . mysql_escape_string($member['nickname']) . "'" : 'NULL',
-      "'" . mysql_escape_string($member['email']) . "'",
-      $member['referredBy'] ? mysql_escape_string($member['referredBy']) : 'NULL');
-  safeQuery($insertQuery, $link, "Failed to insert new member");
+  $data = array("succeeded" => false, "reason" => "", member => null);
   
-  $selectQuery = sprintf("SELECT * FROM `member` WHERE `email`='%s'", $member['email']);
-  $data = assocArraySelectQuery($selectQuery, $link, "Failed to fetch the new member");
+  // prevent duplicate emails
+  $selectQuery = sprintf("SELECT * FROM `member` WHERE `email`='%s'", $escapedEmail);
+  $members = assocArraySelectQuery($selectQuery, $link, "Failed to check for a member with the same email in newMember");
+  if ( count($members) != 0 ) {
+    assert(count($members) == 1);
+    $data['reason'] = "A member with the given email already exists.";
+    $data['member'] = $members[0];
+  } else {
+    $insertQuery = sprintf("INSERT INTO `member`(`first_name`, `last_name`, `nick_name`, `email`, `join_date`, `referred_by`) VALUES (%s,%s,%s,%s,CURRENT_TIMESTAMP,%s)",
+        "'" . mysql_escape_string($member['firstName']) . "'",
+        "'" . mysql_escape_string($member['lastName']) . "'",
+        $member['nickname'] ? "'" . mysql_escape_string($member['nickname']) . "'" : 'NULL',
+        "'" . $escapedEmail . "'",
+        $member['referredBy'] ? mysql_escape_string($member['referredBy']) : 'NULL');
+    safeQuery($insertQuery, $link, "Failed to insert new member in newMember");
+  
+    $selectQuery = sprintf("SELECT * FROM `member` WHERE `email`='%s'", $escapedEmail);
+    $members = assocArraySelectQuery($selectQuery, $link, "Failed to fetch the new member in newMember");
+    assert(count($members) == 1);
+    $data['succeeded'] = true;
+    $data['member'] = $members[0];
+  }
 } else if ( $_POST['type'] == "updateMember" ) {
   $id = mysql_escape_string($_POST['id']);
   $firstName = mysql_escape_string($_POST['firstName']);
@@ -368,13 +383,21 @@ if ( $_POST['type'] == "environment" ) {
 } else if ( $_POST['type'] == "getMembers" ) {
   $likeConditions = "";
   $searchTermParts = explode(" ", $_POST['query']);
+  $conditionCount = 0;
   foreach ($searchTermParts as $s) {
-    $s = "%" . mysql_escape_string($s) . "%";
-    $likeConditions = $linkConditions . " LIKE '" . $s . "' OR `last_name` LIKE '" . $s . "' OR `nick_name` LIKE '" . $s . "'";
+    if ( !preg_match('/^\s*$/', $s) ) {
+      $s = "%" . mysql_escape_string($s) . "%";
+      $likeConditions = $likeConditions . " AND (`first_name` LIKE '" . $s . "' OR `last_name` LIKE '" . $s . "' OR `nick_name` LIKE '" . $s . "' OR `email` LIKE '" . $s . "')";
+      $conditionCount++;
+    }
   }
-    
-  $selectQuery = "SELECT * FROM `member` WHERE `first_name`" . $likeConditions . " ORDER BY `last_name`";
-  $data = assocArraySelectQuery($selectQuery, $link, "Failed to search members");
+  
+  if ( $conditionCount > 0 ) {
+    $selectQuery = "SELECT * FROM `member` WHERE 1" . $likeConditions . " ORDER BY `last_name`";
+    $data = assocArraySelectQuery($selectQuery, $link, "Failed to search members");
+  } else {
+    $data = [];
+  }
 } else if ( $_POST['type'] == "getMemberInfo" ) {
   $id = mysql_escape_string($_POST['id']);
   
@@ -605,6 +628,16 @@ if ( $_POST['type'] == "environment" ) {
   }
   
   $data = $memberObjects;
+} else if ( $_POST['type'] == "getTransactions" ) {
+  $methods = $_POST['methods'];
+  for ( $i = 0; $i < count($methods); $i++ ) {
+    $methods[$i] = mysql_escape_string($methods[$i]);
+  }
+  
+  $startDate = array_key_exists('startDate', $_POST) ?  $_POST['startDate'] : $CURRENT_START_DATE;
+  $endDate = array_key_exists('endDate', $_POST) ?  $_POST['endDate'] : $CURRENT_END_DATE;
+  
+  // do queries
 }
 
 $link->close();

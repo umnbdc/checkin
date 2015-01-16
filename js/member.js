@@ -62,8 +62,14 @@ function addNewMember() {
   
   function addNewMemberSuccess(data, textStatus, jqXHR) {
     console.log("New member submission successful: ", data, textStatus, jqXHR);
-    $('#newMemberModal').modal('hide');
-    showMember(data[0].id);
+    if ( data.succeeded ) {
+      $('#newMemberModal').modal('hide');
+      showMember(data.member.id);
+    } else if ( data.reason ) {
+      alert(data.reason);
+    } else {
+      addNewMemberError(data, textStatus, jqXHR);
+    }
   }
   
   function addNewMemberError(data, textStatus, jqXHR) {
@@ -252,6 +258,8 @@ function volunteerPointsDialogSubmit(member_id) {
     } else if ( data.reason ) {
       alert(data.reason);
       $('#volunteerPointsModal').modal('hide');
+    } else {
+      addVolunteerPointsError(data, textStatus, jqXHR);
     }
   }
   
@@ -281,6 +289,8 @@ function waiverDialogSumbit(member_id) {
     } else if ( data.reason ) {
       alert(data.reason);
       $('#waiverModal').modal('hide');
+    } else {
+      updateWaiverError(data, textStatus, jqXHR);
     }
   }
   
@@ -318,6 +328,8 @@ function setupWaiverListModal() {
     } else if ( data.reason ) {
       alert(data.reason);
       $('#waiverListModal').modal('hide');
+    } else {
+      error(data, textStatus, jqXHR);
     }
   }
   
