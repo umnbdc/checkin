@@ -399,8 +399,10 @@ function setupTransactionsModal() {
   
   function success(data, textStatus, jqXHR) {
     console.log("Transactions retrieval successful: ", data, textStatus, jqXHR);
+    $("#transactionsModalTable tbody").empty();
     data.transactions.forEach(function(t) {
       var row = $("<tr>");
+      row.append($("<td>", {html: t.member_name}));
       row.append($("<td>", {html: parseInt(t.amount) > 0 ? "Credit" : "Debit"}));
       row.append($("<td>", {html: formatAmount(parseInt(t.amount))}));
       row.append($("<td>", {html: t.kind}));
@@ -411,6 +413,8 @@ function setupTransactionsModal() {
     if ( data.transactions.length == 0 ) {
       $("#transactionsModalTable tbody").append("<tr><td colspan='5'>No debits or credits</td></tr>");
     }
+    $("#transactionCSVFormObjectsField").val(JSON.stringify(data.transactions));
+    $("#transactionCSVFormKeysField").val(JSON.stringify(['member_name', 'member_id', 'amount', 'kind', 'method', 'date_time']));
   }
   
   function error(data, textStatus, jqXHR) {
@@ -421,11 +425,11 @@ function setupTransactionsModal() {
   authAjax({
     type: "POST",
     url: apiURL,
-    data: {type: "getTransactions", methods: ['Cash', 'Check']},
+    data: {type: "getTransactions", methods: ['Cash','Check']},
     success: success,
     error: error,
     dataType: 'json'
-  }); 
+  });
 }
 
 function claimReward(reward) {

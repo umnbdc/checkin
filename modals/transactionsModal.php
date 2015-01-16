@@ -10,6 +10,7 @@
         <table id="transactionsModalTable" class="table table-condensed">
           <thead>
             <tr>
+              <th>Member</th>
               <th>Credit/Debit</th>
               <th>Amount</th>
               <th>Kind</th>
@@ -20,10 +21,17 @@
           <tbody>
           </tbody>
         </table>
+        <form id="transactionCSVForm" action="lib/csv.php" method="POST">
+          <textarea id="transactionCSVFormObjectsField" name="objects" style="display: none"></textarea>
+          <textarea id="transactionCSVFormKeysField" name="keys" style="display: none"></textarea>
+        </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button id="transactionsModalButton" class="btn btn-primary">Export to CSV</button>
+        <script type="text/javascript">
+          $("#transactionsModalButton").click(function() { $("#transactionCSVForm").submit(); });
+        </script>
       </div>
     </div>
   </div>

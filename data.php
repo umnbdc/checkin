@@ -645,6 +645,15 @@ if ( $_POST['type'] == "environment" ) {
   
   $query = "SELECT * FROM `debit_credit` WHERE `date_time` BETWEEN '" . $startDate . "' AND '" . $endDate . "'" . $methodConditions . " ORDER BY `date_time`";
   $transactions = assocArraySelectQuery($query, $link, "Failed to select from debit_credit in getTransactions");
+  
+  for ( $i = 0; $i < count($transactions); $i++ ) {
+    $query = "SELECT * FROM `member` WHERE `id`='" . $transactions[$i]['member_id'] . "'";
+    $memberArray = assocArraySelectQuery($query, $link, "Failed to select member in getTransactions");
+    assert(count($memberArray)==1);
+    $member = $memberArray[0];
+    $transactions[$i]['member_name'] = $member['first_name'] . " " . $member['last_name'];
+  }
+  
   $data = array("transactions" => $transactions);
 }
 
