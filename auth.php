@@ -111,6 +111,10 @@ if ( $_POST['type'] == "createUser" ) {
   safeQuery($deleteQuery, $link, "Failed to delete auth_token in logout");
 }
 
+if ( $_POST['type'] != "login" ) {
+  unset($data['auth_token']);
+}
+
 // from data.php:
 //// header('Content-Type: application/json');
 //// exit(json_encode($data));
