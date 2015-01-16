@@ -1,10 +1,12 @@
+var PROTOCOL_IS_HTTPS = window.location.protocol == "https:";
+
 function logout() {
   
   function logoutSuccess(data, textStatus, jqXHR) {
     console.log("Logout successful: ", data, textStatus, jqXHR);
-    $.removeCookie("auth_token");
-    $.removeCookie("auth_username");
-    $.removeCookie("auth_role");
+    $.removeCookie("auth_token", {secure: PROTOCOL_IS_HTTPS});
+    $.removeCookie("auth_username", {secure: PROTOCOL_IS_HTTPS});
+    $.removeCookie("auth_role", {secure: PROTOCOL_IS_HTTPS});
     location.reload();
   }
   
@@ -64,9 +66,9 @@ function login() {
       var expiryDate = new Date();
       var seconds = data.seconds_to_expiry ? data.seconds_to_expiry : 60*60*4;
       expiryDate.setTime(expiryDate.getTime() + (seconds * 1000));
-      $.cookie("auth_token", data.auth_token, { expires: expiryDate });
-      $.cookie("auth_role", data.auth_role, { expires: expiryDate });
-      $.cookie("auth_username", username, { expires: expiryDate });
+      $.cookie("auth_token", data.auth_token, { expires: expiryDate, secure: PROTOCOL_IS_HTTPS });
+      $.cookie("auth_role", data.auth_role, { expires: expiryDate, secure: PROTOCOL_IS_HTTPS });
+      $.cookie("auth_username", username, { expires: expiryDate, secure: PROTOCOL_IS_HTTPS });
       location.reload();
     } else {
       alert("Username and password do not match");
