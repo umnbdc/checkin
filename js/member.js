@@ -395,6 +395,39 @@ function setupCompetitionTeamModal() {
   }); 
 }
 
+function setupTransactionsModal() {
+  
+  function success(data, textStatus, jqXHR) {
+    console.log("Transactions retrieval successful: ", data, textStatus, jqXHR);
+    data.transactions.forEach(function(t) {
+      var row = $("<tr>");
+      row.append($("<td>", {html: parseInt(t.amount) > 0 ? "Credit" : "Debit"}));
+      row.append($("<td>", {html: formatAmount(parseInt(t.amount))}));
+      row.append($("<td>", {html: t.kind}));
+      row.append($("<td>", {html: t.method}));
+      row.append($("<td>", {html: t.date_time}));
+      $("#transactionsModalTable tbody").append(row);
+    });
+    if ( data.transactions.length == 0 ) {
+      $("#transactionsModalTable tbody").append("<tr><td colspan='5'>No debits or credits</td></tr>");
+    }
+  }
+  
+  function error(data, textStatus, jqXHR) {
+    console.log("Transactions retrieval failed: ", data, textStatus, jqXHR);
+    alert("Transactions retrieval failed. Please try again.");
+  }
+  
+  authAjax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "getTransactions", methods: ['Cash', 'Check']},
+    success: success,
+    error: error,
+    dataType: 'json'
+  }); 
+}
+
 function claimReward(reward) {
   if ( reward.claimed == "0" ) {
     function claimRewardSuccess(data, textStatus, jqXHR) {

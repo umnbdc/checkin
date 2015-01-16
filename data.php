@@ -629,15 +629,23 @@ if ( $_POST['type'] == "environment" ) {
   
   $data = $memberObjects;
 } else if ( $_POST['type'] == "getTransactions" ) {
-  $methods = $_POST['methods'];
-  for ( $i = 0; $i < count($methods); $i++ ) {
-    $methods[$i] = mysql_escape_string($methods[$i]);
+  $methodConditions = "";
+  if ( array_key_exists('methods', $_POST) ) {
+    $methods = $_POST['methods'];
+    foreach($methods as $m) {
+      $methodConditions = $methodConditions . " OR `method`='" . mysql_escape_string($m) . "'";
+    }
+    if ( count($methods) > 0 ) {
+      $methodConditions = " AND (0" . $methodConditions . ")";
+    }
   }
   
   $startDate = array_key_exists('startDate', $_POST) ?  $_POST['startDate'] : $CURRENT_START_DATE;
   $endDate = array_key_exists('endDate', $_POST) ?  $_POST['endDate'] : $CURRENT_END_DATE;
   
-  // do queries
+  $query = "SELECT * FROM `debit_credit` WHERE `date_time` BETWEEN '" . $startDate . "' AND '" . $endDate . "'" . $methodConditions . " ORDER BY `date_time`";
+  $transactions = assocArraySelectQuery($query, $link, "Failed to select from debit_credit in getTransactions");
+  $data = array("transactions" => $transactions);
 }
 
 $link->close();

@@ -50,6 +50,7 @@
             -->
             <li id="waiverListLink" style="display: none" data-toggle="modal" data-target="#waiverListModal"><a style="cursor: pointer">Waiver List</a></li>
             <li id="competitionTeamLink" data-toggle="modal" data-target="#competitionTeamModal"><a style="cursor: pointer">Competition Team</a></li>
+            <li id="transactionsLink" data-toggle="modal" data-target="#transactionsModal"><a style="cursor: pointer">Transactions</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
             <li><a id="loggedInAs"></a></li>
@@ -99,6 +100,7 @@
     <?php include "modals/loginModal.php"; ?>
     <?php include "modals/createUserModal.php"; ?>
     <?php include "modals/competitionTeamModal.php"; ?>
+    <?php include "modals/transactionsModal.php"; ?>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
@@ -172,6 +174,7 @@
       $('#waiverListModal').on('shown.bs.modal', setupWaiverListModal);
       
       $('#competitionTeamModal').on('shown.bs.modal', setupCompetitionTeamModal);
+      $('#transactionsModal').on('shown.bs.modal', setupTransactionsModal);
     </script>
   </body>
 </html>
