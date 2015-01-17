@@ -92,13 +92,9 @@ function addNewMember() {
 function runSearch(untrack) { // untrack optional, default: false
   var query = $("#memberSearch").val();
   var members = getMembers(query);
-  if ( typeof members === 'undefined' ) {
-    alert("Failed to search for members.");
-  } else {
-    showMemberList(members);
-    if ( isUndefined(untrack) || untrack == false ) { 
-      history.pushState({page: "list", query: query}, "Member Search", "?search="+query);
-    }
+  showMemberList(members);
+  if ( isUndefined(untrack) || untrack == false ) { 
+    history.pushState({page: "list", query: query}, "Member Search", "?search="+query);
   }
 }
 
@@ -822,5 +818,5 @@ function getMembers(query) {
     dataType: 'json'
   });
   
-  return responseData;
+  return responseData ? responseData : [];
 }
