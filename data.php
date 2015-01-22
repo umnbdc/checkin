@@ -655,6 +655,39 @@ if ( $_POST['type'] == "environment" ) {
   }
   
   $data = array("transactions" => $transactions);
+} else if ( $_POST['type'] == "getSummaryData" ) {
+  $summary_kind = $_POST['summary_kind'];
+  
+  $day = $_POST['day'] ? "'" . $_POST['day'] . "'" : "NOW()";
+  // defaults to "term"
+  if ( $summary_kind == "day" ) {
+    $dateCondition = " DATE(`date_time`) = DATE(" . $day . ")";
+  } else if ( $summary_kind == "week" ) {
+    $dateCondition = " WEEKOFYEAR(`date_time`)=WEEKOFYEAR(" . $day . ")";
+  } else {
+    $dateCondition = " DATE(`date_time`) BETWEEN '" . $CURRENT_START_DATE . "' AND '" . $CURRENT_END_DATE . "'";
+  }
+  
+  // collect checkins
+  $query = "SELECT * FROM `checkin` WHERE" . $dateCondition;
+  $checkins = assocArraySelectQuery($query, $link, "Failed to select checkins in getSummaryData");
+  // associate membership with checkin
+  for ($i = 0; $i < count($checkins); $i++) {
+    $query = "SELECT * FROM `membership` WHERE `member_id`='" . $checkins[$i]['member_id'] . "' AND `term`='" . $CURRENT_TERM . "'";
+    $membershipArray = assocArraySelectQuery($query, $link, "Failed to select membership for checkin in getSummaryData");
+    assert(count($membershipArray) < 2);
+    $checkins[$i]['membership'] = count($membershipArray) > 0 ? $membershipArray[0]['kind'] : 'None';
+    $checkins[$i]['membership_id'] = count($membershipArray) > 0 ? $membershipArray[0]['id'] : 0;
+  }
+  $data['checkins'] = $checkins;
+  
+  // collect new memberships, does not include updated memberships
+  $query = "SELECT * FROM `membership` WHERE" . $dateCondition;
+  $data['newMemberships'] = assocArraySelectQuery($query, $link, "Failed to select memberships in getSummaryData");
+  
+  // collect income
+  $query = "SELECT * FROM `debit_credit` WHERE (`method`='Cash' OR `method`='Check') AND `amount`>0 AND" . $dateCondition;
+  $data['credits'] = assocArraySelectQuery($query, $link, "Failed to select credits in getSummaryData");
 }
 
 $link->close();

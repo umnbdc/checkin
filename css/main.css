@@ -18,3 +18,14 @@ body {
 #loggedInAs:hover {
   color: #9d9d9d;
 }
+
+.summaryChartBox {
+  height: 250px;
+  width: 400px;
+  margin: 12px;
+  display: inline-block;
+}
+
+.summaryChartBox:empty {
+  display: none;
+}

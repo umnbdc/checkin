@@ -102,9 +102,151 @@ function runSearch(untrack) { // untrack optional, default: false
   }
 }
 
+function getSummaryData(summary_kind, day) {
+  var responseData = undefined;
+  
+  function success(data, textStatus, jqXHR) {
+    console.log("Summary data retrieval successful: ", data, textStatus, jqXHR);
+    responseData = data;
+  }
+
+  function error(data, textStatus, jqXHR) {
+    console.log("Summary data retrieval failed: ", data, textStatus, jqXHR);
+    alert("There was an issue retrieving summary data. Please try again.");
+  }
+  
+  authAjax({
+    async: false,
+    type: "POST",
+    url: apiURL,
+    data: {type: "getSummaryData", summary_kind: summary_kind, day: day},
+    success: success,
+    error: error,
+    dataType: 'json'
+  });
+  
+  return responseData;
+}
+
+function formatDayString(string) {
+  var day = isUndefined(string) ? new Date() : new Date(string);
+  var toReturn = {};
+  toReturn.weekday = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][day.getDay()];
+  toReturn.dateString = day.getFullYear() + "-" + (day.getMonth()+1) + "-" + day.getDate();
+  return toReturn;
+}
+
+function fillDaySummaryTab(dayString) {
+  var day = formatDayString(dayString);
+  $("#daySummaryTab h3").html(day.weekday + " " + day.dateString);
+  var summaryData = getSummaryData('day', day.dateString);
+  
+  $("#daySummaryTableCheckins").html(summaryData.checkins.length);
+  $("#daySummaryTableNewMemberships").html(summaryData.newMemberships.length);
+  $("#daySummaryTableIncome").html(formatAmount(summaryData.credits.reduce(function(accum,credit) { return accum + parseInt(credit.amount); },0)));
+  
+  var charts = [];
+  
+  if ( summaryData.checkins.length > 0 ) {
+    var checkinMembershipCounts = {};
+    var keys = [];
+    summaryData.checkins.forEach(function (c) {
+      if ( c.membership in checkinMembershipCounts ) {
+        checkinMembershipCounts[c.membership] += 1;
+      } else {
+        checkinMembershipCounts[c.membership] = 1;
+        keys.push(c.membership);
+      }
+    });
+    var checkinsByMembershipDataPoints = [];
+    keys.forEach(function (k) {
+      checkinsByMembershipDataPoints.push({name: k, y: checkinMembershipCounts[k]});
+    });
+    
+    charts.push(new CanvasJS.Chart("checkinsByMembershipPie", {
+      title: {text: "Checkins by Membership"},
+      animationEnabled: false,
+      legend: {
+        verticalAlign: "bottom",
+        horizontalAlign: "center",
+        fontSize: 16
+      },
+      theme: "theme1",
+      data: [{        
+        type: "doughnut",      
+        indexLabelFontSize: 16,
+        startAngle:0,
+        indexLabelFontColor: "black",       
+        indexLabelLineColor: "darkgrey", 
+        indexLabelPlacement: "outside", 
+        toolTipContent: "{name}: {y} checkins",
+        showInLegend: true,
+        indexLabel: "{y} (#percent%)", 
+        dataPoints: checkinsByMembershipDataPoints
+      }]
+    }));
+  }
+  
+  if ( summaryData.newMemberships.length > 0 ) {
+    var newMembershipCounts = {};
+    var keys = [];
+    summaryData.newMemberships.forEach(function (m) {
+      if ( m.kind in newMembershipCounts ) {
+        newMembershipCounts[m.kind] += 1;
+      } else {
+        newMembershipCounts[m.kind] = 1;
+        keys.push(m.kind);
+      }
+    });
+    var newMembershipDataPoints = [];
+    keys.forEach(function (k) {
+      newMembershipDataPoints.push({name: k, y: newMembershipCounts[k]});
+    });
+    
+    charts.push(new CanvasJS.Chart("newMembershipsPie", {
+      title: {text: "New Memberships"},
+      animationEnabled: false,
+      legend: {
+        verticalAlign: "bottom",
+        horizontalAlign: "center",
+        fontSize: 16
+      },
+      theme: "theme1",
+      data: [{        
+        type: "doughnut",      
+        indexLabelFontSize: 16,
+        startAngle:0,
+        indexLabelFontColor: "black",       
+        indexLabelLineColor: "darkgrey", 
+        indexLabelPlacement: "outside", 
+        toolTipContent: "{name}: {y} checkins",
+        showInLegend: true,
+        indexLabel: "{y} (#percent%)", 
+        dataPoints: newMembershipDataPoints
+      }]
+    }));
+  }
+  
+//   return function() { charts.forEach(function(c) { c.render(); }); };
+  charts.forEach(function(c) { c.render(); });
+}
+
+function fillWeekSummaryTab(dayString) {
+}
+
+function fillTermSummaryTab() {
+}
+
 function showSummaryContainer(untrack) { // untrack optional, default: false
+  $('#daySummaryTab').on('shown.bs.tab', function() {fillDaySummaryTab();});
+  $('#daySummaryTab').on('shown.bs.tab', function() {fillWeekSummaryTab();});
+  $('#daySummaryTab').on('shown.bs.tab', function() {fillTermSummaryTab();});
+
   hidePrimaryContainers();
   $("#summaryContainer").show();
+  
+  fillDaySummaryTab();
+  
   if ( isUndefined(untrack) || untrack == false ) { 
     history.pushState({page: "summary"}, "Summary", "?summary=true");
   }
