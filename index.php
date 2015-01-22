@@ -57,6 +57,7 @@
             <li id="competitionTeamLink" data-toggle="modal" data-target="#competitionTeamModal"><a style="cursor: pointer">Competition Team</a></li>
             <li id="transactionsLink" data-toggle="modal" data-target="#transactionsModal"><a style="cursor: pointer">Transactions</a></li>
             <li id="summaryLink" onclick="showSummaryContainer()"><a style="cursor: pointer">Summary</a></li>
+            <li id="createUserLink" style="display: none" data-toggle="modal" data-target="#createUserModal"><a style="cursor: pointer">New User</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
             <li><a id="loggedInAs"></a></li>
@@ -184,6 +185,12 @@
       
       $('#competitionTeamModal').on('shown.bs.modal', setupCompetitionTeamModal);
       $('#transactionsModal').on('shown.bs.modal', setupTransactionsModal);
+      
+      if ( $.cookie('auth_role') == 'Admin' ) {
+        $("#createUserLink").show();
+      } else {
+        $("#createUserLink").hide();
+      }
     </script>
   </body>
 </html>
