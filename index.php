@@ -133,6 +133,7 @@
           showSummaryContainer();
         <?php } else { ?>
           showHome();
+          $("#memberSearch").focus();
         <?php } ?>
       } else {
         $("#loginModal").modal('show');
@@ -151,8 +152,6 @@
         }
       }
       window.addEventListener("popstate", onpopstate);
-      
-      $("#memberSearch").focus();
       
       $(".navbar-brand").click(function(e) {
         showHome();
