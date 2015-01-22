@@ -14,6 +14,17 @@
     <div class="tab-content">
       <div role="tabpanel" class="tab-pane active" id="daySummaryPanel">
         <h3></h3>
+        <div class="form-group">
+          <div class="input-group">
+            <input type="text" class="form-control" id="daySummaryDatepicker" placeholder="Select a different date">
+            <span class="input-group-btn">
+              <button class="btn btn-default" id="daySummaryDatepickerButton" type="button" onclick="loadDaySummaryTabFromInput()">Load</button>
+            </span>
+          </div>
+          <script type="text/javascript">
+            $("#daySummaryDatepicker").datepicker({format: 'yyyy-mm-dd'});
+          </script>
+        </div>
         <table id="daySummaryTable" class="table table-condensed">
           <thead>
             <tr>

@@ -22,6 +22,10 @@
     <script src="js/md5.js"></script>
     <script src="js/jquery.canvasjs.min.js"></script>
     
+    <!-- Bootstrap Datepicker -->
+    <link href="bootstrap/datepicker/css/datepicker.css" rel="stylesheet">
+    <script src="bootstrap/datepicker/js/bootstrap-datepicker.js"></script>
+    
     <script src="js/auth.js"></script>
     <script src="js/member.js"></script>
 

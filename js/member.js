@@ -145,6 +145,9 @@ function fillDaySummaryTab(dayString) {
   $("#daySummaryTableNewMemberships").html(summaryData.newMemberships.length);
   $("#daySummaryTableIncome").html(formatAmount(summaryData.credits.reduce(function(accum,credit) { return accum + parseInt(credit.amount); },0)));
   
+  // empty charts
+  $("#daySummaryPanel .summaryChartBox").empty();
+  
   var charts = [];
   
   if ( summaryData.checkins.length > 0 ) {
@@ -254,6 +257,15 @@ function fillWeekSummaryTab(dayString) {
 }
 
 function fillTermSummaryTab() {
+}
+
+function loadDaySummaryTabFromInput() {
+  var dateString = $("#daySummaryDatepicker").val() + " CST";
+  if ( !isNaN(Date.parse(dateString)) ) {
+    fillDaySummaryTab(dateString);
+  } else {
+    alert("Invalid date");
+  }
 }
 
 function showSummaryContainer(untrack) { // untrack optional, default: false
