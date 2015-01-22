@@ -33,6 +33,7 @@
         <div style="text-align: center; overflow: hidden">
           <div id="checkinsByMembershipPie" class="summaryChartBox"></div>
           <div id="newMembershipsPie" class="summaryChartBox"></div>
+          <div id="checkinsByTimeAreaChart" class="summaryChartBox"></div>
         </div>
       </div>
       <div role="tabpanel" class="tab-pane" id="weekSummaryPanel"></div>

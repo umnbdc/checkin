@@ -669,7 +669,7 @@ if ( $_POST['type'] == "environment" ) {
   }
   
   // collect checkins
-  $query = "SELECT * FROM `checkin` WHERE" . $dateCondition;
+  $query = "SELECT * FROM `checkin` WHERE" . $dateCondition . " ORDER BY `date_time`";
   $checkins = assocArraySelectQuery($query, $link, "Failed to select checkins in getSummaryData");
   // associate membership with checkin
   for ($i = 0; $i < count($checkins); $i++) {

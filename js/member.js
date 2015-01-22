@@ -164,7 +164,7 @@ function fillDaySummaryTab(dayString) {
     });
     
     charts.push(new CanvasJS.Chart("checkinsByMembershipPie", {
-      title: {text: "Checkins by Membership"},
+      title: {text: "Check-ins by Membership"},
       animationEnabled: false,
       legend: {
         verticalAlign: "bottom",
@@ -183,6 +183,26 @@ function fillDaySummaryTab(dayString) {
         showInLegend: true,
         indexLabel: "{y} (#percent%)", 
         dataPoints: checkinsByMembershipDataPoints
+      }]
+    }));
+    
+    var checkinsByTimeDataPoints = [];
+    summaryData.checkins.forEach(function (c,i) {
+      checkinsByTimeDataPoints.push({x: new Date(c.date_time), y: i+1});
+    });
+    charts.push(new CanvasJS.Chart("checkinsByTimeAreaChart", {
+      title: {text: "Check-ins over time"},
+      animationEnabled: false,
+      axisX:{
+        title: "Time"
+      },
+      axisY: {
+        title: "Total check-ins"
+      },
+      theme: "theme1",
+      data: [{        
+        type: "area",
+        dataPoints: checkinsByTimeDataPoints
       }]
     }));
   }
