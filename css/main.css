@@ -28,3 +28,11 @@ body {
 .summaryChartBox:empty {
   display: none;
 }
+
+@media (max-width: 800px) {
+  .summaryChartBox {
+    width: 100%;
+    margin-left: 0px;
+    margin-right: 0px;
+  }
+}
