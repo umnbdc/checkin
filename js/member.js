@@ -39,6 +39,10 @@ function isPositiveIntegerString(string) {
   return /^[1-9][0-9]*$/.test(string);
 }
 
+function hidePrimaryContainers() {
+  $(".primary-container").hide();
+}
+
 function addNewMember() {
   var firstName = $('#inputFirstName').val();
   var lastName = $('#inputLastName').val();
@@ -95,6 +99,14 @@ function runSearch(untrack) { // untrack optional, default: false
   showMemberList(members);
   if ( isUndefined(untrack) || untrack == false ) { 
     history.pushState({page: "list", query: query}, "Member Search", "?search="+query);
+  }
+}
+
+function showSummaryContainer(untrack) { // untrack optional, default: false
+  hidePrimaryContainers();
+  $("#summaryContainer").show();
+  if ( isUndefined(untrack) || untrack == false ) { 
+    history.pushState({page: "summary"}, "Summary", "?summary=true");
   }
 }
 
@@ -627,7 +639,7 @@ function showMember(id, untrack) { // untrack optional, default: false
     $("#memberInfoVolunteerPointsButton").hide();
   }
   
-  $("#memberListContainer").hide();
+  hidePrimaryContainers();
   $("#memberContainer").show();
   
   // prompt payment if member needs to pay dues (except for Competition which can be on a plan)
@@ -791,7 +803,7 @@ function showMemberList(members) {
   }
   members.forEach(addRow);
   
-  $("#memberContainer").hide();
+  hidePrimaryContainers();
   $("#memberListContainer").show();
 }
 

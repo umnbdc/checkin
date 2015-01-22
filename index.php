@@ -51,6 +51,7 @@
             <li id="waiverListLink" style="display: none" data-toggle="modal" data-target="#waiverListModal"><a style="cursor: pointer">Waiver List</a></li>
             <li id="competitionTeamLink" data-toggle="modal" data-target="#competitionTeamModal"><a style="cursor: pointer">Competition Team</a></li>
             <li id="transactionsLink" data-toggle="modal" data-target="#transactionsModal"><a style="cursor: pointer">Transactions</a></li>
+            <li id="summaryLink" onclick="showSummaryContainer()"><a style="cursor: pointer">Summary</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
             <li><a id="loggedInAs"></a></li>
@@ -81,6 +82,7 @@
     <!-- include Containers -->
     <?php include "containers/memberContainer.php"; ?>
     <?php include "containers/memberListContainer.php"; ?>
+    <?php include "containers/summaryContainer.php"; ?>
 
     <footer class="footer">
       <div class="container">
@@ -109,8 +111,7 @@
     
     <script type="text/javascript">
       function showHome() {
-        $("#memberContainer").hide();
-        $("#memberListContainer").hide();
+        hidePrimaryContainers();
         history.pushState({page: "home"},"Home","?");
       }
       
@@ -123,6 +124,8 @@
         <?php } else if ( $_GET['search'] ) { ?>        
           $("#memberSearch").val("<?php echo $_GET['search']; ?>");
           runSearch();
+        <?php } else if ( $_GET['summary'] ) { ?>
+          showSummaryContainer();
         <?php } else { ?>
           showHome();
         <?php } ?>
@@ -138,6 +141,8 @@
         } else if ( e.state.page == "list" ) {
           $("#memberSearch").val(e.state.query);
           runSearch(true); // untrack = true
+        } else if ( e.state.page == "summary" ) {
+          showSummaryContainer(true);
         }
       }
       window.addEventListener("popstate", onpopstate);

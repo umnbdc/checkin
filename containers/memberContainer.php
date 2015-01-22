@@ -1,4 +1,4 @@
-<div class="container" id="memberContainer" style="display: none">
+<div class="container primary-container" id="memberContainer" style="display: none">
   <h2>
     <span class="firstName"></span>
     <span class="lastName"></span>

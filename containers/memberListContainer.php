@@ -1,4 +1,4 @@
-<div class="container" id="memberListContainer" style="display: none">
+<div class="container primary-container" id="memberListContainer" style="display: none">
   <h2>Member Search Results</h2>
   <table id="memberListTable" class="table table-condensed table-hover">
     <thead>
