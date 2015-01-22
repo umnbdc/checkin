@@ -138,7 +138,7 @@ function formatDayString(string) {
 
 function fillDaySummaryTab(dayString) {
   var day = formatDayString(dayString);
-  $("#daySummaryTab h3").html(day.weekday + " " + day.dateString);
+  $("#daySummaryPanel h3").html(day.weekday + " " + day.dateString);
   var summaryData = getSummaryData('day', day.dateString);
   
   $("#daySummaryTableCheckins").html(summaryData.checkins.length);
@@ -227,7 +227,6 @@ function fillDaySummaryTab(dayString) {
     }));
   }
   
-//   return function() { charts.forEach(function(c) { c.render(); }); };
   charts.forEach(function(c) { c.render(); });
 }
 
