@@ -138,6 +138,7 @@
         <?php } ?>
       } else {
         $("#loginModal").modal('show');
+        $("#inputLoginUsername").focus()
       }
       
       function onpopstate(e) {
