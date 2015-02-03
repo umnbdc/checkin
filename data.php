@@ -575,14 +575,18 @@ if ( $_POST['type'] == "environment" ) {
     $data['succeeded'] = false;
     $data['reason'] = "Only the safety and facilities officer can modify waiver information.";
   }
-} else if ( $_POST['type'] == "getPresentWaiverlessMembers" ) {
+} else if ( $_POST['type'] == "getWaiverlessMembers" ) {
 
   if ( $_POST['auth_role'] == "SafetyAndFacilities" || $_POST['auth_role'] == "Admin" ) {
-    $checkinSelectQuery = "SELECT * FROM `checkin` WHERE DATE(`date_time`) = DATE(NOW())";
-    $todaysCheckins = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select today's checkins in getPresentWaiverlessMembers");
+    if ( $_POST['when'] == 'today' ) {
+      $checkinSelectQuery = "SELECT DISTINCT `member_id` FROM `checkin` WHERE DATE(`date_time`) = DATE(NOW())";
+    } else {
+      $checkinSelectQuery = "SELECT DISTINCT `member_id` FROM `checkin` WHERE DATE(`date_time`) BETWEEN DATE('" . $CURRENT_START_DATE . "') AND DATE('" . $CURRENT_END_DATE . "')";
+    }
+    $checkins = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select checkins in getWaiverlessMembers");
   
     $memberIds = [];
-    foreach ( $todaysCheckins as $c ) {
+    foreach ( $checkins as $c ) {
       $waiverSelectQuery = "SELECT * FROM `waiver_status` WHERE `member_id`='" . $c['member_id'] . "' AND `term`='" . $CURRENT_TERM . "'";
       $waiverStatusArray = assocArraySelectQuery($waiverSelectQuery, $link, "Failed to select waiver_status in getPresentWaiverlessMembers");
       if ( $waiverStatusArray == [] || $waiverStatusArray[0]['completed'] != 1 ) {

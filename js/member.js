@@ -490,6 +490,50 @@ function waiverDialogSumbit(member_id) {
   });
 }
 
+function makeToggleWaiverButton(member_id, startState) {
+  if ( isUndefined(startState) ) {
+    startState = 0;
+  }
+  var STRINGS = {0: "Mark as Completed", 1: "Undo"};
+  var button = $("<button>", {'class': 'btn btn-xs btn-primary', html: STRINGS[startState]});
+  button.waiverState = startState;
+  
+  button.click(function(e) {
+    e.stopPropagation();
+    
+    var preState = button.waiverState;
+    var postState = (button.waiverState + 1)%2;
+    
+    function error(data, textStatus, jqXHR) {
+      console.log("Waiver toggle failed: ", data, textStatus, jqXHR);
+      alert("There was an issue toggling this user's waiver status. Please try again.");
+    }
+    
+    function success(data, textStatus, jqXHR) {
+      console.log("Waiver toggle successful: ", data, textStatus, jqXHR);
+      if ( data.succeeded ) {
+        button.waiverState = postState;
+        button.html(STRINGS[postState]);
+      } else if ( data.reason ) {
+        alert(data.reason);
+      } else {
+        error(data, textStatus, jqXHR);
+      }
+    }
+    
+    authAjax({
+      type: "POST",
+      url: apiURL,
+      data: {type: "updateWaiver", member_id: member_id, completed: postState, term: CURRENT_TERM},
+      success: success,
+      error: error,
+      dataType: 'json'
+    });
+  });
+  
+  return button;
+}
+
 function setupWaiverListModal() {
   
   function success(data, textStatus, jqXHR) {
@@ -499,7 +543,11 @@ function setupWaiverListModal() {
       members.sort(function(a,b) { return a.last_name < b.last_name ? -1 : 1; });
       $("#waiverListModalTable tbody").empty();
       members.forEach(function (m) {
-        var row = $("<tr>", {html: m.first_name + " " + m.last_name, style: "cursor: pointer"});
+        var row = $("<tr>", {style: "cursor: pointer"});
+        row.append($("<td>", {html: m.first_name + " " + m.last_name,}));
+        var buttonCol = $("<td>");
+        buttonCol.append(makeToggleWaiverButton(m.id, 0));
+        row.append(buttonCol);
         row.click(function() {
           showMember(m.id);
           $('#waiverListModal').modal('hide');
@@ -522,7 +570,7 @@ function setupWaiverListModal() {
   authAjax({
     type: "POST",
     url: apiURL,
-    data: {type: "getPresentWaiverlessMembers"},
+    data: {type: "getWaiverlessMembers", when: "today"},
     success: success,
     error: error,
     dataType: 'json'
