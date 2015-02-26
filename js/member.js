@@ -1053,3 +1053,33 @@ function getMembers(query) {
   
   return responseData ? responseData : [];
 }
+
+function getComplexMembers(query) {
+  var members = undefined;
+  
+  function success(data, textStatus, jqXHR) {
+    console.log("Complex members retrieval successful: ", data, textStatus, jqXHR);
+    members = data.members;
+  }
+
+  function error(data, textStatus, jqXHR) {
+    console.log("Complex members retrieval failed: ", data, textStatus, jqXHR);
+    alert("There was an issue retrieving complex members. Please try again.");
+  }
+  
+  authAjax({
+    async: false,
+    type: "POST",
+    url: apiURL,
+    data: {type: "getComplexMembers", thisTerm: true},
+    success: success,
+    error: error,
+    dataType: 'json'
+  });
+  
+  return members ? members : [];
+}
+
+var _nowaiverfilter = function(m) { return m.waiver_status.length == 0 || m.waiver_status[0].completed == "0"; }
+var _hasmembership = function(m) { return m.membership.length > 0; }
+

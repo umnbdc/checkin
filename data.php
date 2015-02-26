@@ -692,6 +692,43 @@ if ( $_POST['type'] == "environment" ) {
   // collect income
   $query = "SELECT * FROM `debit_credit` WHERE (`method`='Cash' OR `method`='Check') AND `amount`>0 AND" . $dateCondition;
   $data['credits'] = assocArraySelectQuery($query, $link, "Failed to select credits in getSummaryData");
+} else if ( $_POST['type'] == "getComplexMembers" ) {
+  $query = "SELECT * FROM `member`";
+  $members = assocArraySelectQuery($query, $link, "Failed to select from member in getComplexMembers");
+  
+  $thisTerm = $_POST['thisTerm'] ? true : false;
+  $termConstraint = $thisTerm ? " AND `term`='" . $CURRENT_TERM . "'" : "";
+  $dateConstraint = $thisTerm ? " AND DATE(`date_time`) BETWEEN '" . $CURRENT_START_DATE . "' AND '" . $CURRENT_END_DATE . "'" : "";
+  
+  $memberDict = [];
+  foreach($members as $member) {
+    $mid = $member['id'];
+    
+    $query = "SELECT * FROM `membership` WHERE `member_id`='" . $mid . "'" . $termConstraint;
+    $member['membership'] = assocArraySelectQuery($query, $link, "Failed to select membership in getComplexMembers");
+    
+    $query = "SELECT * FROM `fee_status` WHERE `member_id`='" . $mid . "'" . $termConstraint;
+    $member['fee_status'] = assocArraySelectQuery($query, $link, "Failed to select fee_status in getComplexMembers");
+    
+    $query = "SELECT * FROM `waiver_status` WHERE `member_id`='" . $mid . "'" . $termConstraint;
+    $member['waiver_status'] = assocArraySelectQuery($query, $link, "Failed to select waiver_status in getComplexMembers");
+    
+    $query = "SELECT * FROM `referral` WHERE `referrer_id`='" . $mid . "'" . $termConstraint;
+    $member['referral'] = assocArraySelectQuery($query, $link, "Failed to select referral in getComplexMembers");
+    
+    $query = "SELECT * FROM `reward` WHERE `member_id`='" . $mid . "'" . $termConstraint;
+    $member['reward'] = assocArraySelectQuery($query, $link, "Failed to select reward in getComplexMembers");
+    
+    $query = "SELECT * FROM `checkin` WHERE `member_id`='" . $mid . "'" . $dateConstraint;
+    $member['checkin'] = assocArraySelectQuery($query, $link, "Failed to select checkin in getComplexMembers");
+    
+    $query = "SELECT * FROM `debit_credit` WHERE `member_id`='" . $mid . "'" . $dateConstraint;
+    $member['debit_credit'] = assocArraySelectQuery($query, $link, "Failed to select debit_credit in getComplexMembers");
+    
+    $memberDict[$mid] = $member;
+  }
+  
+  $data['members'] = array_values($memberDict);
 }
 
 $link->close();
