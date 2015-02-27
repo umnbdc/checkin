@@ -18,6 +18,7 @@
           <select class="form-control" id="inputCreditMethod">
             <option value="Cash">Cash</option>
             <option value="Check">Check</option>
+            <option id="creditMethodForgivenessOption" style="display: none" value="Forgiveness">Forgiveness</option>
           </select>
         </div>
         <div class="form-group">

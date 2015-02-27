@@ -403,13 +403,19 @@ function payDialogSubmit(id) {
   }
   amount = amount * 100; // amount needs to be in cents
   
-  function addPaymentSuccess(data, textStatus, jqXHR) {
+  function success(data, textStatus, jqXHR) {
     console.log("Payment submission successful: ", data, textStatus, jqXHR);
-    $('#payModal').modal('hide');
-    refreshMember(id);
+    if ( data.succeeded ) {
+      $('#payModal').modal('hide');
+      refreshMember(id);
+    } else if ( data.reason ) {
+      alert(data.reason);
+    } else {
+      error(data, textStatus, jqXHR);
+    }
   }
   
-  function addPaymentError(data, textStatus, jqXHR) {
+  function error(data, textStatus, jqXHR) {
     console.log("Payment submission failed: ", data, textStatus, jqXHR);
     alert("There was an issue submitting this payment. Please try again.");
   }
@@ -418,8 +424,8 @@ function payDialogSubmit(id) {
     type: "POST",
     url: apiURL,
     data: {type: "payment", kind: kind, method: method, amount: amount, member_id: id},
-    success: addPaymentSuccess,
-    error: addPaymentError,
+    success: success,
+    error: error,
     dataType: 'json'
   }); 
 }
@@ -876,6 +882,11 @@ function showMember(id, untrack) { // untrack optional, default: false
   
   // setup pay modal
   $("#payModalCurrentOutstanding").html(formatAmount(currentOutstandingMembershipDues));
+  if ( $.cookie("auth_role") == "President" || $.cookie("auth_role") == "Treasurer" || $.cookie("auth_role") == "Admin" ) {
+    $("#creditMethodForgivenessOption").show();
+  } else {
+    $("#creditMethodForgivenessOption").hide();
+  }
   $("#inputCreditAmount").val("");
   $("#payButton").off();
   $("#payButton").click(function() { payDialogSubmit(member.id) });

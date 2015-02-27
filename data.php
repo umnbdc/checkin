@@ -549,7 +549,15 @@ if ( $_POST['type'] == "environment" ) {
   $method = mysql_escape_string($_POST['method']);
   $amount = mysql_escape_string($_POST['amount']); // should be in cents
   
-  insertPayment($member_id, $amount, $method, $kind);
+  $authorized = $_POST['auth_role'] == "President" || $_POST['auth_role'] == "Treasurer" || $_POST['auth_role'] == "Admin";
+  if ( $method == "Cash" || $method == "Check" || ($authorized && $method == "Forgiveness") ) {  
+    $method = $method . " (" . $_POST['auth_role'] . ")";
+    insertPayment($member_id, $amount, $method, $kind);
+    $data['succeeded'] = true;
+  } else {
+    $data['succeeded'] = false;
+    $data['reason'] = "Payment method not accepted";
+  }
 } else if ( $_POST['type'] == "purchase" ) {
   $member_id = mysql_escape_string($_POST['member_id']);
   $kind = mysql_escape_string($_POST['kind']);
