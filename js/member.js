@@ -424,6 +424,37 @@ function payDialogSubmit(id) {
   }); 
 }
 
+function purchaseDialogSubmit(id) {
+  var kind = $("#inputPurchaseKind").val();
+  var method = $("#inputPurchaseMethod").val();
+  
+  function success(data, textStatus, jqXHR) {
+    console.log("Purchase submission successful: ", data, textStatus, jqXHR);
+    if ( data.succeeded ) {
+      $('#purchaseModal').modal('hide');
+      refreshMember(id);
+    } else if ( data.reason ) {
+      alert(data.reason);
+    } else {
+      error(data, textStatus, jqXHR);
+    }
+  }
+  
+  function error(data, textStatus, jqXHR) {
+    console.log("Purchase submission failed: ", data, textStatus, jqXHR);
+    alert("There was an issue submitting this payment. Please try again.");
+  }
+  
+  authAjax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "purchase", kind: kind, method: method, member_id: id},
+    success: success,
+    error: error,
+    dataType: 'json'
+  }); 
+}
+
 function volunteerPointsDialogSubmit(member_id) {
   var points = $("#inputPointsAmount").val();
   if ( !isPositiveIntegerString(points) ) {
@@ -848,6 +879,10 @@ function showMember(id, untrack) { // untrack optional, default: false
   $("#inputCreditAmount").val("");
   $("#payButton").off();
   $("#payButton").click(function() { payDialogSubmit(member.id) });
+  
+  // setup purchase modal
+  $("#purchaseButton").off();
+  $("#purchaseButton").click(function() { purchaseDialogSubmit(member.id) });
   
   // setup volunteer points modal
   if ( ($.cookie("auth_role") == "Fundraising" || $.cookie("auth_role") == "Admin") && currentMembership && currentMembership.kind == 'Competition' ) {

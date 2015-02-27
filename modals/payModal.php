@@ -21,7 +21,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label for="inputCreditAmount">Payment method:</label>
+          <label for="inputCreditAmount">Payment amount:</label>
           <div class="input-group">
             <span class="input-group-addon">$</span>
             <input type="text" class="form-control" id="inputCreditAmount" aria-label="Amount (to the nearest dollar)">

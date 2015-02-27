@@ -47,6 +47,12 @@ $COMP_PRACTICES_TABLE = array(
                         
 );
 
+$PURCHASE_TABLE = array(
+  "Jacket" => 4500,
+  "Shoes_Men" => 3000,
+  "Shoes_Women" => 2500
+);
+
 // Safeguard against forgetting to change the current term start and end
 if ( strtotime($CURRENT_START_DATE) > strtotime('today') || strtotime($CURRENT_END_DATE) < strtotime('today') ) {
   die("Current term (range) is out of date.");
@@ -544,6 +550,20 @@ if ( $_POST['type'] == "environment" ) {
   $amount = mysql_escape_string($_POST['amount']); // should be in cents
   
   insertPayment($member_id, $amount, $method, $kind);
+} else if ( $_POST['type'] == "purchase" ) {
+  $member_id = mysql_escape_string($_POST['member_id']);
+  $kind = mysql_escape_string($_POST['kind']);
+  $method = mysql_escape_string($_POST['method']);
+  
+  if ( array_key_exists($kind, $PURCHASE_TABLE) ) {
+    $amount = $PURCHASE_TABLE[$kind];
+    insertPayment($member_id, $amount, $method, $kind); // credit
+    insertPayment($member_id, -1*$amount, "", $kind); // debit
+    $data['succeeded'] = true;
+  } else {
+    $data['succeeded'] = false;
+    $data['reason'] = "Cost of item \"" . $kind . "\" could not be found.";
+  }
 } else if ( $_POST['type'] == "addVolunteerPoints" ) {
   $member_id = mysql_escape_string($_POST['member_id']);
   $points = mysql_escape_string($_POST['points']);

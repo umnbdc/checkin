@@ -100,6 +100,7 @@
     <?php include "modals/newMemberModal.php"; ?>
     <?php include "modals/editMemberModal.php"; ?>
     <?php include "modals/payModal.php"; ?>
+    <?php include "modals/purchaseModal.php"; ?>
     <?php include "modals/volunteerPointsModal.php"; ?>
     <?php include "modals/waiverModal.php"; ?>
     <?php include "modals/waiverListModal.php"; ?>
