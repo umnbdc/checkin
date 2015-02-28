@@ -48,7 +48,7 @@ $COMP_PRACTICES_TABLE = array(
 );
 
 $PURCHASE_TABLE = array(
-  "Jacket" => 4500,
+  "Jacket" => 4600,
   "Shoes_Men" => 3000,
   "Shoes_Women" => 2500
 );

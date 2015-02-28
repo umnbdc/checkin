@@ -9,7 +9,7 @@
         <div class="form-group">
           <label for="inputPurchaseKind">Purchase:</label>
           <select class="form-control" id="inputPurchaseKind">
-            <option value="Jacket">Jacket ($45)</option>
+            <option value="Jacket">Jacket ($46)</option>
             <option value="Shoes_Men">Men's Shoes ($30)</option>
             <option value="Shoes_Women">Women's Shoes ($25)</option>
           </select>
