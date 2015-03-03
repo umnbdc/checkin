@@ -57,6 +57,7 @@
             <li id="competitionTeamLink" data-toggle="modal" data-target="#competitionTeamModal"><a style="cursor: pointer">Competition Team</a></li>
             <li id="transactionsLink" data-toggle="modal" data-target="#transactionsModal"><a style="cursor: pointer">Transactions</a></li>
             <li id="summaryLink" onclick="showSummaryContainer()"><a style="cursor: pointer">Summary</a></li>
+            <li id="widgetsLink" data-toggle="modal" data-target="#widgetsModal"><a style="cursor: pointer">Widgets</a></li>
             <li id="createUserLink" style="display: none" data-toggle="modal" data-target="#createUserModal"><a style="cursor: pointer">New User</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
@@ -110,6 +111,7 @@
     <?php include "modals/createUserModal.php"; ?>
     <?php include "modals/competitionTeamModal.php"; ?>
     <?php include "modals/transactionsModal.php"; ?>
+    <?php include "modals/widgetsModal.php"; ?>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
