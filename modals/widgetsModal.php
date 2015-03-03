@@ -16,8 +16,18 @@
               alert(members.join("\n"));
             }
           }
+          function widget_urcmembership_alert() {
+            var members = getComplexMembers().filter(function(m) { return m.fee_status.length > 0 && m.fee_status[0].kind == "URCMembership" });
+            members = members.map(function(m) { return m.first_name + " " + m.last_name + ": " + m.email });
+            if ( members.length == 0 ) {
+              alert("None");
+            } else {
+              alert(members.join("\n"));
+            }
+          }
         </script>
         <p><a style="cursor: pointer" onclick="widget_nowaiver_hasmembership_alert()">Members with memberships this term who have not filled a waiver</a></p>
+        <p><a style="cursor: pointer" onclick="widget_urcmembership_alert()">Members with fee status: URC Membership</a></p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
