@@ -25,7 +25,7 @@ $COMP_DUE_DATE_TABLE = array(
     "URCMembership" => array(
       "2015-02-12" => -9000,
       "2015-03-06" => -4500,
-      "2015-04-03" => 0
+      "2015-04-07" => 0
     ),
     "Affiliate" => array(
       "2015-02-12" => 0
