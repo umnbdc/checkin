@@ -3,14 +3,15 @@
 date_default_timezone_set('America/Chicago');
 
 // Environment
-$CURRENT_TERM = "Spring2015";
-$CURRENT_START_DATE = "2015-01-01";
-$CURRENT_END_DATE = "2015-05-31";
+$CURRENT_TERM = "Fall2015";
+$CURRENT_START_DATE = "2015-09-01";
+$CURRENT_END_DATE = "2015-12-31";
 $CHECKINS_PER_WEEK = array(
   "Single" => 1,
   "Standard" => 2,
   "Social" => 2,
   "Competition" => INF,
+  "Full" => INF,
   "Summer" => INF,
 );
 $NUMBER_OF_FREE_CHECKINS = 2;
@@ -30,7 +31,17 @@ $COMP_DUE_DATE_TABLE = array(
     "Affiliate" => array(
       "2015-02-12" => 0
     )
-  )
+  ),
+  "Fall2015" => array(
+    "StudentServicesFees" => array(
+      "2015-09-25" => -9000,
+      "2015-10-16" => -4500,
+      "2015-11-06" => 0
+    ),
+    "Affiliate" => array(
+      "2015-09-25" => 0
+    )
+  ),
 );
 $LATE_FEE_AMOUNT = 200;
 $COMP_PRACTICES_TABLE = array(
@@ -48,8 +59,22 @@ $COMP_PRACTICES_TABLE = array(
     "2015-04-07", "2015-04-09", "2015-04-10",
     "2015-04-14", "2015-04-16", "2015-04-17",
     "2015-04-21", "2015-04-23", "2015-04-24"
-  )
-                        
+  ),
+  "Fall2015" => array(
+    "2015-09-22", "2015-09-24", "2015-09-24",
+    "2015-09-29", "2015-10-01", "2015-10-02",
+    "2015-10-06", "2015-10-08", "2015-10-09",
+    "2015-10-13", "2015-10-15", "2015-10-16",
+    "2015-10-20", "2015-10-22", "2015-10-23",
+    "2015-10-27", "2015-10-29", "2015-10-30",
+    "2015-11-03", "2015-11-05", "2015-11-06",
+    "2015-11-10", "2015-11-12", "2015-11-13",
+    "2015-11-17", "2015-11-19", "2015-11-20",
+    "2015-11-24", // Thanksgiving
+    "2015-12-01", "2015-12-03", "2015-12-04",
+    "2015-12-08", "2015-12-10", "2015-12-11",
+    "2015-12-15", "2015-12-17", "2015-12-18",
+  )                     
 );
 
 $PURCHASE_TABLE = array(
@@ -72,6 +97,7 @@ function calculateDues($membership, $feeStatus, $term) {
   $feeTable['StudentServicesFees']['Single'] = 2500;
   $feeTable['StudentServicesFees']['Social'] = 1500;
   $feeTable['StudentServicesFees']['Competition'] = 20000;
+  $feeTable['StudentServicesFees']['Full'] = 3900;
   
   $feeTable['URCMembership'] = [];
   $feeTable['URCMembership']['Standard'] = 6000;
@@ -81,6 +107,7 @@ function calculateDues($membership, $feeStatus, $term) {
   
   $feeTable['Affiliate'] = [];
   $feeTable['Affiliate']['Competition'] = 6000;
+  $feeTable['Affiliate']['Full'] = 6900;
   
   // Summer membership/feeStatus should only be available in during summer terms
   if ( strpos($term, "Summer") === 0 ) {
@@ -565,6 +592,13 @@ if ( $_POST['type'] == "environment" ) {
     $data['succeeded'] = false;
     $data['reason'] = "Payment method not accepted";
   }
+} else if ( $_POST['type'] == "debit" ) {
+  $member_id = mysql_escape_string($_POST['member_id']);
+  $kind = mysql_escape_string($_POST['kind']);
+  $amount = mysql_escape_string($_POST['amount']); // should be in cents
+  
+  insertPayment($member_id, $amount, $method, $kind);
+  $data['succeeded'] = true;
 } else if ( $_POST['type'] == "purchase" ) {
   $member_id = mysql_escape_string($_POST['member_id']);
   $kind = mysql_escape_string($_POST['kind']);

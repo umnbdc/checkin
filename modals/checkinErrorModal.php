@@ -11,6 +11,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button id="onePassButton" type="button" class="btn btn-warning">One Lesson Pass</button>
         <button id="overrideButton" type="button" class="btn btn-danger">Override</button>
       </div>
     </div>

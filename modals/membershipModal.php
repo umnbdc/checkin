@@ -10,18 +10,13 @@
           <label for="inputFeeStatus">Fee Status</label>
           <select class="form-control" id="inputFeeStatus">
             <option value="StudentServicesFees">Student Services Fees</option>
-            <option value="URCMembership">URC Membership</option>
             <option value="Affiliate">Affiliate</option>
-            <option value="Summer">Summer</option>
           </select>
         </div>
         <div class="form-group">
           <label for="inputMembership">Membership</label>
           <select class="form-control" id="inputMembership">
-            <option value="Standard">Standard</option>
-            <option value="Single">Single</option>
-            <option value="Social">Social</option>
-            <option value="Summer">Summer</option>
+            <option value="Full">Full</option>
             <option value="Competition">Competition</option>
           </select>
         </div>

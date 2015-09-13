@@ -910,8 +910,10 @@ function showMember(id, untrack) { // untrack optional, default: false
   $("#memberContainer").show();
   
   // prompt payment if member needs to pay dues (except for Competition which can be on a plan)
-  if ( currentOutstandingMembershipDues < 0 && currentMembership && currentMembership.kind != 'Competition' ) {
-    $("#payModal").modal('show');
+  if ( currentOutstandingMembershipDues < 0 ) {
+    if (!currentMembership || (currentMembership && currentMembership.kind != 'Competition')) {
+      $("#payModal").modal('show');
+    }
   }
   
   if ( isUndefined(untrack) || untrack == false ) {
@@ -997,8 +999,41 @@ function showCheckinErrorModal(id, reason, button) {
       }
     }
   });
+  $("#onePassButton").click(function() {
+    var confirmation = confirm("This pass costs $10 dollars. Have you confirmed this charge with the customer?");
+    if ( confirmation ) {
+      checkInMember(id, null, true);
+      debitOneLessonPass(id);
+      $("#checkinErrorModal").modal('hide');
+      if ( button ) {
+        button.prop('disabled', true);
+      }
+    }
+  });
   
   $("#checkinErrorModal").modal('show');
+}
+
+function debitOneLessonPass(id) {
+  
+  function success(data, textStatus, jqXHR) {
+    console.log("One lesson pass debit successful: ", data, textStatus, jqXHR);
+    showMember(id);
+  }
+  
+  function error(data, textStatus, jqXHR) {
+    console.log("One lesson pass debit failed: ", data, textStatus, jqXHR);
+    alert("There was an issue charging member with id " + id + ". Please try again.");
+  }
+  
+  authAjax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "debit", member_id: id, kind: "Membership One Lesson Pass", amount: -1000},
+    success: success,
+    error: error,
+    dataType: 'json'
+  });
 }
 
 function checkInMember(id, button, override) { // override is optional
