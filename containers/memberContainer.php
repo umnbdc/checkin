@@ -10,6 +10,7 @@
         <th>Last</th>
         <th>Nickname</th>
         <th>Email</th>
+        <th>Proficiency</th>
         <th>Membership</th>
         <th>Fee Status</th>
         <th>Waiver</th>

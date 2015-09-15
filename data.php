@@ -15,6 +15,11 @@ $CHECKINS_PER_WEEK = array(
   "Summer" => INF,
 );
 $NUMBER_OF_FREE_CHECKINS = 2;
+
+$BEGINNER_LESSON_TIME = "8:00pm";
+$INTERMEDIATE_LESSON_TIME = "7:15pm";
+$CHECK_IN_PERIOD = 30; // minutes
+
 $COMP_DUE_DATE_TABLE = array(
   // term -> fee_status -> date -> min_outstanding_at_date (i.e. cumulative)
   "Spring2015" => array(
@@ -192,6 +197,8 @@ function memberAllowedToCheckIn($safeId, $link) {
   global $CURRENT_END_DATE;
   global $CHECKINS_PER_WEEK;
   global $NUMBER_OF_FREE_CHECKINS;
+  global $CHECK_IN_PERIOD;
+  global $BEGINNER_LESSON_TIME;
   
   $membershipSelectQuery = "SELECT `kind` FROM `membership` WHERE `member_id`='" . $safeId . "' AND `term`='" . $CURRENT_TERM . "'";
   $membershipArray = assocArraySelectQuery($membershipSelectQuery, $link, "Failed to select membership in memberAllowedToCheckIn");
@@ -221,6 +228,15 @@ function memberAllowedToCheckIn($safeId, $link) {
     $checkinsThisTerm = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select checkins for this term in memberAllowedToCheckIn");
     $toReturn['permitted'] = count($checkinsThisTerm) < $NUMBER_OF_FREE_CHECKINS;
     $toReturn['reason'] = $NUMBER_OF_FREE_CHECKINS . " free check-ins";
+  }
+  
+  if ($toReturn['permitted']) {
+    $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $safeId . "'";
+    $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to get member in memberAllowedToCheckIn")[0];
+    if ( $member['proficiency'] == 'Beginner' && (time() + $CHECK_IN_PERIOD * 60) < strtotime($BEGINNER_LESSON_TIME) ) {
+      $toReturn['permitted'] = false;
+      $toReturn['reason'] = "Beginner members may not check in earlier than ".$CHECK_IN_PERIOD." minutes before the beginner lesson.";
+    }
   }
   
   return $toReturn;
@@ -414,8 +430,9 @@ if ( $_POST['type'] == "environment" ) {
   $lastName = mysql_escape_string($_POST['lastName']);
   $nickName = mysql_escape_string($_POST['nickName']);
   $email = mysql_escape_string($_POST['email']);
+  $proficiency = mysql_escape_string($_POST['proficiency']);
   
-  $updateQuery = "UPDATE `member` SET `first_name`='" . $firstName . "',`nick_name`='" . $nickName . "',`last_name`='" . $lastName . "',`email`='" . $email . "' WHERE `id`='" . $id . "'";
+  $updateQuery = "UPDATE `member` SET `first_name`='" . $firstName . "',`nick_name`='" . $nickName . "',`last_name`='" . $lastName . "',`email`='" . $email . "',`proficiency`='" . $proficiency . "' WHERE `id`='" . $id . "'";
   $data['updateQuery'] = $updateQuery;
   safeQuery($updateQuery, $link, "Failed to update member info");
 } else if ( $_POST['type'] == "getMembers" ) {

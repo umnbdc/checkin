@@ -327,6 +327,7 @@ function updateMember(id) {
   lastName = $("#inputEditLastName").val();
   nickName = $("#inputEditNickname").val();
   email = $("#inputEditEmail").val();
+  proficiency = $("#inputEditProficiency").val();
   
   function updateMemberSuccess(data, textStatus, jqXHR) {
     console.log("Update member info successful: ", data, textStatus, jqXHR);
@@ -348,7 +349,8 @@ function updateMember(id) {
       firstName: firstName,
       lastName: lastName,
       nickName: nickName,
-      email: email
+      email: email,
+      proficiency: proficiency
     },
     success: updateMemberSuccess,
     error: updateMemberError,
@@ -760,6 +762,7 @@ function showMember(id, untrack) { // untrack optional, default: false
   infoRow.append($("<td>", {html: member.last_name}));
   infoRow.append($("<td>", {html: member.nick_name}));
   infoRow.append($("<td>", {html: member.email}));
+  infoRow.append($("<td>", {html: member.proficiency}));
   var currentMembership = getElementOfTerm(memberships,CURRENT_TERM);
   infoRow.append($("<td>", {html: currentMembership ? currentMembership.kind : 'None'}));
   var currentFeeStatus = getElementOfTerm(feeStatus,CURRENT_TERM);
@@ -877,6 +880,7 @@ function showMember(id, untrack) { // untrack optional, default: false
   $("#inputEditLastName").val(member.last_name);
   $("#inputEditNickname").val(member.nick_name);
   $("#inputEditEmail").val(member.email);
+  $("#inputEditProficiency").val(member.proficiency);
   $("#editMemberButton").off();
   $("#editMemberButton").click(function() { updateMember(member.id) });
   

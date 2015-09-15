@@ -22,6 +22,13 @@
           <label for="inputEmail">Email</label>
           <input type="email" class="form-control" id="inputEditEmail" placeholder="Email">
         </div>
+        <div class="form-group">
+          <label for="inputProficiency">Proficiency</label>
+          <select class="form-control" id="inputEditProficiency">
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+          </select>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
