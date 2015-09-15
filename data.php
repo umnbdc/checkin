@@ -435,6 +435,11 @@ if ( $_POST['type'] == "environment" ) {
   $updateQuery = "UPDATE `member` SET `first_name`='" . $firstName . "',`nick_name`='" . $nickName . "',`last_name`='" . $lastName . "',`email`='" . $email . "',`proficiency`='" . $proficiency . "' WHERE `id`='" . $id . "'";
   $data['updateQuery'] = $updateQuery;
   safeQuery($updateQuery, $link, "Failed to update member info");
+} else if ( $_POST['type'] == "designateIntermediate" ) {
+  $id = mysql_escape_string($_POST['member_id']);
+  $updateQuery = "UPDATE `member` SET `proficiency`='Intermediate' WHERE `id`='" . $id . "'";
+  $data['updateQuery'] = $updateQuery;
+  safeQuery($updateQuery, $link, "Failed to designate intermediate member");
 } else if ( $_POST['type'] == "getMembers" ) {
   $likeConditions = "";
   $searchTermParts = explode(" ", $_POST['query']);

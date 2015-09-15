@@ -1003,6 +1003,7 @@ function showCheckinErrorModal(id, reason, button) {
       }
     }
   });
+  $("#onePassButton").off();
   $("#onePassButton").click(function() {
     var confirmation = confirm("This pass costs $10 dollars. Have you confirmed this charge with the customer?");
     if ( confirmation ) {
@@ -1014,8 +1015,41 @@ function showCheckinErrorModal(id, reason, button) {
       }
     }
   });
+  $("#intermediateButton").off();
+  $("#intermediateButton").click(function() {
+    var confirmation = confirm("Please check with an informed officer before designating an intermediate member. Are you sure you want to do this?");
+    if ( confirmation ) {
+      checkInMember(id, null, true);
+      designateIntermediateMember(id);
+      $("#checkinErrorModal").modal('hide');
+      if ( button ) {
+        button.prop('disabled', true);
+      }
+    }
+  });
   
   $("#checkinErrorModal").modal('show');
+}
+
+function designateIntermediateMember(id) {
+  function success(data, textStatus, jqXHR) {
+    console.log("Intermediate member designation successful: ", data, textStatus, jqXHR);
+    showMember(id);
+  }
+  
+  function error(data, textStatus, jqXHR) {
+    console.log("Intermediate member designation failed: ", data, textStatus, jqXHR);
+    alert("There was an issue designating intermediate member with id " + id + ". Please try again.");
+  }
+  
+  authAjax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "designateIntermediate", member_id: id},
+    success: success,
+    error: error,
+    dataType: 'json'
+  });
 }
 
 function debitOneLessonPass(id) {
