@@ -3,9 +3,9 @@
 date_default_timezone_set('America/Chicago');
 
 // Environment
-$CURRENT_TERM = "Fall2015";
-$CURRENT_START_DATE = "2015-09-01";
-$CURRENT_END_DATE = "2015-12-31";
+$CURRENT_TERM = "Spring2016";
+$CURRENT_START_DATE = "2016-01-01";
+$CURRENT_END_DATE = "2016-5-31";
 $CHECKINS_PER_WEEK = array(
   "Single" => 1,
   "Standard" => 2,
@@ -47,6 +47,16 @@ $COMP_DUE_DATE_TABLE = array(
       "2015-09-25" => 0
     )
   ),
+  "Fall2016" => array(
+    "StudentServicesFees" => array(
+      "2016-01-29" => -9000,
+      "2016-02-19" => -4500,
+      "2016-03-11" => 0
+    ),
+    "Affiliate" => array(
+      "2015-01-29" => 0
+    )
+  ),
 );
 $LATE_FEE_AMOUNT = 200;
 $COMP_PRACTICES_TABLE = array(
@@ -66,7 +76,7 @@ $COMP_PRACTICES_TABLE = array(
     "2015-04-21", "2015-04-23", "2015-04-24"
   ),
   "Fall2015" => array(
-    "2015-09-22", "2015-09-24", "2015-09-24",
+    "2015-09-22", "2015-09-24", "2015-09-25",
     "2015-09-29", "2015-10-01", "2015-10-02",
     "2015-10-06", "2015-10-08", "2015-10-09",
     "2015-10-13", "2015-10-15", "2015-10-16",
@@ -79,7 +89,24 @@ $COMP_PRACTICES_TABLE = array(
     "2015-12-01", "2015-12-03", "2015-12-04",
     "2015-12-08", "2015-12-10", "2015-12-11",
     "2015-12-15", "2015-12-17", "2015-12-18",
-  )                     
+  ),
+  "Spring2016" => array(
+    "2016-01-26", "2016-01-28", "2016-01-29", // Jan
+    "2016-02-02", "2016-02-04", "2016-02-05", // Feb
+    "2016-02-09", "2016-02-11", "2016-02-12",
+    "2016-02-16", "2016-02-18", "2016-02-19",
+    "2016-02-23", "2016-02-25", "2016-02-26",
+    "2016-03-01", "2016-03-03", "2016-03-04", // March
+    "2016-03-08", "2016-03-10", "2016-03-11",
+    // Spring Break
+    "2016-03-22", "2016-03-24", "2016-03-25",
+    "2016-03-29", "2016-03-31",
+                                "2016-04-01", // April
+    "2016-04-05", "2016-04-07", // MichComp
+    "2016-04-12", "2016-04-14", "2016-04-15",
+    "2016-04-19", "2016-04-21", "2016-04-22",
+    "2016-04-26", "2016-04-28", "2016-04-29",
+  ),
 );
 
 $PURCHASE_TABLE = array(
@@ -101,8 +128,6 @@ function calculateDues($membership, $feeStatus, $term) {
   $feeTable['StudentServicesFees']['Standard'] = 5000;
   $feeTable['StudentServicesFees']['Single'] = 2500;
   $feeTable['StudentServicesFees']['Social'] = 1500;
-  $feeTable['StudentServicesFees']['Competition'] = 20000;
-  $feeTable['StudentServicesFees']['Full'] = 3900;
   
   $feeTable['URCMembership'] = [];
   $feeTable['URCMembership']['Standard'] = 6000;
@@ -111,8 +136,12 @@ function calculateDues($membership, $feeStatus, $term) {
   $feeTable['URCMembership']['Competition'] = 20000;
   
   $feeTable['Affiliate'] = [];
-  $feeTable['Affiliate']['Competition'] = 6000;
+  
+  $feeTable['StudentServicesFees']['Full'] = 3900;
   $feeTable['Affiliate']['Full'] = 6900;
+  
+  $feeTable['StudentServicesFees']['Competition'] = 20000;
+  $feeTable['Affiliate']['Competition'] = 6000;
   
   // Summer membership/feeStatus should only be available in during summer terms
   if ( strpos($term, "Summer") === 0 ) {
