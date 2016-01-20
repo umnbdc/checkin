@@ -49,8 +49,8 @@ $COMP_DUE_DATE_TABLE = array(
   ),
   "Spring2016" => array(
     "StudentServicesFees" => array(
-      "2016-02-05" => -9000,
-      "2016-02-19" => -4500,
+      "2016-02-05" => -10000,
+      "2016-02-19" => -5000,
       "2016-03-04" => 0
     ),
     "Affiliate" => array(
@@ -140,7 +140,7 @@ function calculateDues($membership, $feeStatus, $term) {
   $feeTable['StudentServicesFees']['Full'] = 3900;
   $feeTable['Affiliate']['Full'] = 6900;
   
-  $feeTable['StudentServicesFees']['Competition'] = 20000;
+  $feeTable['StudentServicesFees']['Competition'] = 22000;
   $feeTable['Affiliate']['Competition'] = 6000;
   
   // Summer membership/feeStatus should only be available in during summer terms
