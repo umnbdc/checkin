@@ -251,21 +251,21 @@ function memberAllowedToCheckIn($safeId, $link) {
         $toReturn['permitted'] = count($checkinsThisWeek) < $CHECKINS_PER_WEEK[$kind];
         $toReturn['reason'] = $kind . " Membership allowed " . $CHECKINS_PER_WEEK[$kind] . " check-ins per week";
       }
+  
+      if ($toReturn['permitted']) {
+        $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $safeId . "'";
+        $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to get member in memberAllowedToCheckIn")[0];
+        if ( $member['proficiency'] == 'Beginner' && (time() + $CHECK_IN_PERIOD * 60) < strtotime($BEGINNER_LESSON_TIME) ) {
+          $toReturn['permitted'] = false;
+          $toReturn['reason'] = "Beginner members may not check in earlier than ".$CHECK_IN_PERIOD." minutes before the beginner lesson.";
+        }
+      }
     }
   } else { // no membership
     $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND DATE(`date_time`) BETWEEN '" . $CURRENT_START_DATE . "' AND '" . $CURRENT_END_DATE . "'";
     $checkinsThisTerm = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select checkins for this term in memberAllowedToCheckIn");
     $toReturn['permitted'] = count($checkinsThisTerm) < $NUMBER_OF_FREE_CHECKINS;
     $toReturn['reason'] = $NUMBER_OF_FREE_CHECKINS . " free check-ins";
-  }
-  
-  if ($toReturn['permitted']) {
-    $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $safeId . "'";
-    $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to get member in memberAllowedToCheckIn")[0];
-    if ( $member['proficiency'] == 'Beginner' && (time() + $CHECK_IN_PERIOD * 60) < strtotime($BEGINNER_LESSON_TIME) ) {
-      $toReturn['permitted'] = false;
-      $toReturn['reason'] = "Beginner members may not check in earlier than ".$CHECK_IN_PERIOD." minutes before the beginner lesson.";
-    }
   }
   
   return $toReturn;
@@ -461,14 +461,26 @@ if ( $_POST['type'] == "environment" ) {
   $email = mysql_escape_string($_POST['email']);
   $proficiency = mysql_escape_string($_POST['proficiency']);
   
-  $updateQuery = "UPDATE `member` SET `first_name`='" . $firstName . "',`nick_name`='" . $nickName . "',`last_name`='" . $lastName . "',`email`='" . $email . "',`proficiency`='" . $proficiency . "' WHERE `id`='" . $id . "'";
-  $data['updateQuery'] = $updateQuery;
-  safeQuery($updateQuery, $link, "Failed to update member info");
+  if (isVolunteer()) {
+    $data['succeeded'] = false;
+    $data['reason'] = "Volunteers cannot change update member information.";
+  } else {    
+    $updateQuery = "UPDATE `member` SET `first_name`='" . $firstName . "',`nick_name`='" . $nickName . "',`last_name`='" . $lastName . "',`email`='" . $email . "',`proficiency`='" . $proficiency . "' WHERE `id`='" . $id . "'";
+    $data['updateQuery'] = $updateQuery;
+    safeQuery($updateQuery, $link, "Failed to update member info");
+    $data['succeeded'] = true;
+  }
 } else if ( $_POST['type'] == "designateIntermediate" ) {
-  $id = mysql_escape_string($_POST['member_id']);
-  $updateQuery = "UPDATE `member` SET `proficiency`='Intermediate' WHERE `id`='" . $id . "'";
-  $data['updateQuery'] = $updateQuery;
-  safeQuery($updateQuery, $link, "Failed to designate intermediate member");
+  if ( isVolunteer() ) {
+    $data['succeeded'] = false;
+    $data['reason'] = "Volunteers cannot designate intermediate status";
+  } else {
+    $id = mysql_escape_string($_POST['member_id']);
+    $updateQuery = "UPDATE `member` SET `proficiency`='Intermediate' WHERE `id`='" . $id . "'";
+    $data['updateQuery'] = $updateQuery;
+    safeQuery($updateQuery, $link, "Failed to designate intermediate member");
+    $data['succeeded'] = true;
+  }
 } else if ( $_POST['type'] == "getMembers" ) {
   $likeConditions = "";
   $searchTermParts = explode(" ", $_POST['query']);
@@ -557,74 +569,80 @@ if ( $_POST['type'] == "environment" ) {
   
   $data = [];
   
-  $oldFeeStatus = '';
-  $oldMembership = '';
-  
-  // we don't want to generate the referral before in case something fails
-  // but we need to check for previous membership before memberships are inserted into the DB
-  // also only generate referral for paid memberships
-  // Note:
-  // Also if the new combination is invalid, it will error out before DB changes are made
-  $generateReferralAtEnd = !hasHadMembership($id) && calculateDues($membership, $feeStatus, $term) > 0;
-  
-  // update/insert fee status
-  $feeStatusSelectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
-  $feeStatusResult = assocArraySelectQuery($feeStatusSelectQuery, $link, "Failed to select fee status");
-  if ( $feeStatusResult ) {
-    $fee_status_id = $feeStatusResult[0]['id'];
-    $oldFeeStatus = $feeStatusResult[0]['kind'];
-    $feeStatusUpdateQuery = "UPDATE `fee_status` SET `kind`='" . $feeStatus . "' WHERE `id`='" . $fee_status_id . "'";
-    safeQuery($feeStatusUpdateQuery, $link, "Failed to update new fee status");
+  if (isVolunteer() && $membership == 'Competition') {
+    $data['succeeded'] = false;
+    $data['reason'] = 'Volunteers cannot assign competition team membership';
   } else {
-    $feeStatusInsertQuery = sprintf("INSERT INTO `fee_status`(`member_id`, `term`, `kind`) VALUES (%s,%s,%s)",
-      "'" . $id . "'",
-      "'" . $term . "'",
-      "'" . $feeStatus . "'");
-    safeQuery($feeStatusInsertQuery, $link, "Failed to insert new fee status");
-  }
+    $oldFeeStatus = '';
+    $oldMembership = '';
   
-  // update/insert membership
-  $membershipSelectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
-  $membershipResult = assocArraySelectQuery($membershipSelectQuery, $link, "Failed to select membership");
-  if ( $membershipResult ) {
-    $membership_id = $membershipResult[0]['id'];
-    $oldMembership = $membershipResult[0]['kind'];
-    $membershipUpdateQuery = "UPDATE `membership` SET `kind`='" . $membership . "' WHERE `id`='" . $membership_id . "'";
-    safeQuery($membershipUpdateQuery, $link, "Failed to update new membership");
-  } else {
-    $membershipInsertQuery = sprintf("INSERT INTO `membership`(`member_id`, `term`, `kind`) VALUES (%s,%s,%s)",
-      "'" . $id . "'",
-      "'" . $term . "'",
-      "'" . $membership . "'");
-    safeQuery($membershipInsertQuery, $link, "Failed to insert new membership");
-  }
+    // we don't want to generate the referral before in case something fails
+    // but we need to check for previous membership before memberships are inserted into the DB
+    // also only generate referral for paid memberships
+    // Note:
+    // Also if the new combination is invalid, it will error out before DB changes are made
+    $generateReferralAtEnd = !hasHadMembership($id) && calculateDues($membership, $feeStatus, $term) > 0;
   
-  // update dues?
-  if ( $oldFeeStatus != $feeStatus || $oldMembership != $membership ) {
-    // was there an old feeStatus-membership debit
-    if ( $oldFeeStatus && $oldMembership ) {
-      // Note, could be done less precisely using LIKE keyword to wildcard membership and feeStatus
-      $oldDueKind = createMembershipDueKind($oldMembership, $oldFeeStatus, $term);
-      $duesDeleteQuery = "DELETE FROM `debit_credit` WHERE `member_id`='" . $id . "' AND `kind`='" . $oldDueKind . "'";
-      safeQuery($duesDeleteQuery, $link, "Failed to delete old membership debit");
-      $data['duesDeleteQuery'] = $duesDeleteQuery;
+    // update/insert fee status
+    $feeStatusSelectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
+    $feeStatusResult = assocArraySelectQuery($feeStatusSelectQuery, $link, "Failed to select fee status");
+    if ( $feeStatusResult ) {
+      $fee_status_id = $feeStatusResult[0]['id'];
+      $oldFeeStatus = $feeStatusResult[0]['kind'];
+      $feeStatusUpdateQuery = "UPDATE `fee_status` SET `kind`='" . $feeStatus . "' WHERE `id`='" . $fee_status_id . "'";
+      safeQuery($feeStatusUpdateQuery, $link, "Failed to update new fee status");
+    } else {
+      $feeStatusInsertQuery = sprintf("INSERT INTO `fee_status`(`member_id`, `term`, `kind`) VALUES (%s,%s,%s)",
+        "'" . $id . "'",
+        "'" . $term . "'",
+        "'" . $feeStatus . "'");
+      safeQuery($feeStatusInsertQuery, $link, "Failed to insert new fee status");
     }
-    $newDueKind = createMembershipDueKind($membership, $feeStatus, $term);
-    $amount = -1 * calculateDues($membership, $feeStatus, $term);
-    $duesInsertQuery = sprintf("INSERT INTO `debit_credit`(`member_id`, `amount`, `kind`, `date_time`) VALUES (%s,%s,%s,CURRENT_TIMESTAMP)",
-      "'" . $id . "'",
-      "'" . $amount . "'",
-      "'" . $newDueKind . "'");
-    safeQuery($duesInsertQuery, $link, "Failed to insert new membership debit");
-  }
   
-  $data['oldFeeStatus'] = $oldFeeStatus;
-  $data['oldMembership'] = $oldMembership;
-  $data['newFeeStatus'] = $feeStatus;
-  $data['newMembership'] = $membership;
+    // update/insert membership
+    $membershipSelectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
+    $membershipResult = assocArraySelectQuery($membershipSelectQuery, $link, "Failed to select membership");
+    if ( $membershipResult ) {
+      $membership_id = $membershipResult[0]['id'];
+      $oldMembership = $membershipResult[0]['kind'];
+      $membershipUpdateQuery = "UPDATE `membership` SET `kind`='" . $membership . "' WHERE `id`='" . $membership_id . "'";
+      safeQuery($membershipUpdateQuery, $link, "Failed to update new membership");
+    } else {
+      $membershipInsertQuery = sprintf("INSERT INTO `membership`(`member_id`, `term`, `kind`) VALUES (%s,%s,%s)",
+        "'" . $id . "'",
+        "'" . $term . "'",
+        "'" . $membership . "'");
+      safeQuery($membershipInsertQuery, $link, "Failed to insert new membership");
+    }
   
-  if ( generateReferralAtEnd ) {
-    generateReferral($id);
+    // update dues?
+    if ( $oldFeeStatus != $feeStatus || $oldMembership != $membership ) {
+      // was there an old feeStatus-membership debit
+      if ( $oldFeeStatus && $oldMembership ) {
+        // Note, could be done less precisely using LIKE keyword to wildcard membership and feeStatus
+        $oldDueKind = createMembershipDueKind($oldMembership, $oldFeeStatus, $term);
+        $duesDeleteQuery = "DELETE FROM `debit_credit` WHERE `member_id`='" . $id . "' AND `kind`='" . $oldDueKind . "'";
+        safeQuery($duesDeleteQuery, $link, "Failed to delete old membership debit");
+        $data['duesDeleteQuery'] = $duesDeleteQuery;
+      }
+      $newDueKind = createMembershipDueKind($membership, $feeStatus, $term);
+      $amount = -1 * calculateDues($membership, $feeStatus, $term);
+      $duesInsertQuery = sprintf("INSERT INTO `debit_credit`(`member_id`, `amount`, `kind`, `date_time`) VALUES (%s,%s,%s,CURRENT_TIMESTAMP)",
+        "'" . $id . "'",
+        "'" . $amount . "'",
+        "'" . $newDueKind . "'");
+      safeQuery($duesInsertQuery, $link, "Failed to insert new membership debit");
+    }
+  
+    $data['oldFeeStatus'] = $oldFeeStatus;
+    $data['oldMembership'] = $oldMembership;
+    $data['newFeeStatus'] = $feeStatus;
+    $data['newMembership'] = $membership;
+  
+    if ( generateReferralAtEnd ) {
+      generateReferral($id);
+    }
+    $data['succeeded'] = true;
   }
 } else if ( $_POST['type'] == "payment" ) {
   $member_id = mysql_escape_string($_POST['member_id']);
@@ -633,7 +651,10 @@ if ( $_POST['type'] == "environment" ) {
   $amount = mysql_escape_string($_POST['amount']); // should be in cents
   
   $authorized = $_POST['auth_role'] == "President" || $_POST['auth_role'] == "Treasurer" || $_POST['auth_role'] == "Admin";
-  if ( $method == "Cash" || $method == "Check" || ($authorized && $method == "Forgiveness") ) {
+  if ( isVolunteer() ) {
+    $data['succeeded'] = false;
+    $data['reason'] = "Volunteers cannot process payments.";
+  } else if ( $method == "Cash" || $method == "Check" || ($authorized && $method == "Forgiveness") ) {
     if ($method == "Forgiveness") {
       $method = $method . " (" . $_POST['auth_role'] . ")";
     }
@@ -655,7 +676,10 @@ if ( $_POST['type'] == "environment" ) {
   $kind = mysql_escape_string($_POST['kind']);
   $method = mysql_escape_string($_POST['method']);
   
-  if ( array_key_exists($kind, $PURCHASE_TABLE) ) {
+  if ( isVolunteer() ) {
+    $data['succeeded'] = false;
+    $data['reason'] = "Volunteers cannot process purchases.";
+  } else if ( array_key_exists($kind, $PURCHASE_TABLE) ) {
     $amount = $PURCHASE_TABLE[$kind];
     insertPayment($member_id, $amount, $method, $kind); // credit
     insertPayment($member_id, -1*$amount, "", $kind); // debit

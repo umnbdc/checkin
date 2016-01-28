@@ -330,9 +330,15 @@ function updateMember(id) {
   proficiency = $("#inputEditProficiency").val();
   
   function updateMemberSuccess(data, textStatus, jqXHR) {
-    console.log("Update member info successful: ", data, textStatus, jqXHR);
-    $("#editMemberModal").modal('hide');
-    refreshMember(id);
+    if (data.succeeded) {
+      console.log("Update member info successful: ", data, textStatus, jqXHR);
+      $("#editMemberModal").modal('hide');
+      refreshMember(id);
+    } else if (data.reason) {
+      alert(data.reason);
+    } else {
+      updateMemberError(data, textStatus, jqXHR);
+    }
   }
   
   function updateMemberError(data, textStatus, jqXHR) {
@@ -363,9 +369,15 @@ function updateMembershipAndFeeStatus(id) {
   var membership = $("#inputMembership").val();
   
   function updateMembershipSuccess(data, textStatus, jqXHR) {
-    console.log("Update membership successful: ", data, textStatus, jqXHR);
-    $("#membershipModal").modal('hide');
-    refreshMember(id);
+    if (data.succeeded) {
+      console.log("Update membership successful: ", data, textStatus, jqXHR);
+      $("#membershipModal").modal('hide');
+      refreshMember(id);
+    } else if (data.reason) {
+      alert(data.reason);
+    } else {
+      updateMembershipError(data, textStatus, jqXHR);
+    }
   }
   
   function updateMembershipError(data, textStatus, jqXHR) {
@@ -1033,8 +1045,14 @@ function showCheckinErrorModal(id, reason, button) {
 
 function designateIntermediateMember(id) {
   function success(data, textStatus, jqXHR) {
-    console.log("Intermediate member designation successful: ", data, textStatus, jqXHR);
-    showMember(id);
+    if ( data.succeeded ) {
+      console.log("Intermediate member designation successful: ", data, textStatus, jqXHR);
+      showMember(id);
+    } else if ( data.reason ) {
+      alert(data.reason);
+    } else {
+      error(data, textStatus, jqXHR);
+    }
   }
   
   function error(data, textStatus, jqXHR) {

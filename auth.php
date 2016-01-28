@@ -53,6 +53,10 @@ function returnUnauthorized() {
   exit(json_encode(array("unauthorized" => true)));
 }
 
+function isVolunteer() {
+  return $_POST['auth_role'] == 'Volunteer';
+}
+
 if ( !isAuthorized($_POST['type'], $_POST['auth_username'], $_POST['auth_role'], $_POST['auth_token'], $link) ) {
   returnUnauthorized();
 }
@@ -65,7 +69,7 @@ if ( $_POST['type'] == "createUser" ) {
   $passwordHash = mysql_escape_string($_POST['passwordHash']);
 
   if ( $_POST['auth_role'] == 'Admin' ) {  
-    if ( $username == '' || $passwordHash == '' || !in_array($role, array("President", "VicePresident", "Treasurer", "Secretary", "Travel", "SafetyAndFacilities", "Fundraising", "Dance", "Music", "Publicity", "Web")) ) {
+    if ( $username == '' || $passwordHash == '' || !in_array($role, array("President", "VicePresident", "Treasurer", "Secretary", "Travel", "SafetyAndFacilities", "Fundraising", "Dance", "Music", "Publicity", "Web", "Volunteer")) ) {
       $data["reason"] = "Invalid fields";
     } else {  
       // confirm no other user with username

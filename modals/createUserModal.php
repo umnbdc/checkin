@@ -24,6 +24,7 @@
             <option value="Music">Music Coordinator</option>
             <option value="Publicity">Publicity Coordinator</option>
             <option value="Web">Web Coordinator</option>
+            <option value="Volunteer">Volunteer</option>
           </select>
         </div>
         <div class="form-group">
