@@ -178,7 +178,7 @@ function calculateDues($membership, $feeStatus, $term) {
   
   $feeTable['Affiliate'] = [];
   
-  $feeTable['StudentServicesFees']['Full'] = 3900;
+  $feeTable['StudentServicesFees']['Full'] = 4000;
   $feeTable['Affiliate']['Full'] = 6900;
   
   $feeTable['StudentServicesFees']['Competition'] = 22000;
