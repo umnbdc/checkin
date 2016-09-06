@@ -3,9 +3,9 @@
 date_default_timezone_set('America/Chicago');
 
 // Environment
-$CURRENT_TERM = "Spring2016";
-$CURRENT_START_DATE = "2016-01-01";
-$CURRENT_END_DATE = "2016-5-31";
+$CURRENT_TERM = "Fall2016";
+$CURRENT_START_DATE = "2016-09-01";
+$CURRENT_END_DATE = "2016-12-31";
 $CHECKINS_PER_WEEK = array(
   "Single" => 1,
   "Standard" => 2,
@@ -20,6 +20,10 @@ $BEGINNER_LESSON_TIME = "8:00pm";
 $INTERMEDIATE_LESSON_TIME = "7:15pm";
 $CHECK_IN_PERIOD = 30; // minutes
 
+/*
+ * Due dates for fees, based on maximum owed at certain dates
+ * (These must be input manually before the start of the semester)
+ */
 $COMP_DUE_DATE_TABLE = array(
   // term -> fee_status -> date -> min_outstanding_at_date (i.e. cumulative)
   "Spring2015" => array(
@@ -57,8 +61,23 @@ $COMP_DUE_DATE_TABLE = array(
       "2015-02-05" => 0
     )
   ),
+  "Fall2016" => array(
+    "StudentServicesFees" => array(
+      "2015-09-23" => -10000,
+      "2016-10-14" => -5000,
+      "2016-11-04" => 0,
+    ),
+    "Affiliate" => array(
+      "2016-09-22" => 0
+    )
+  )
 );
 $LATE_FEE_AMOUNT = 200;
+
+/*
+ * Schedule of Competition team practices
+ * (These must be input manually before the start of the semester)
+ */
 $COMP_PRACTICES_TABLE = array(
   "Spring2015" => array(
     "2015-02-03", "2015-02-05", "2015-02-06", // Feb
@@ -107,8 +126,23 @@ $COMP_PRACTICES_TABLE = array(
     "2016-04-19", "2016-04-21", "2016-04-22",
     "2016-04-26", "2016-04-28", "2016-04-29",
   ),
+  "Fall2016" => array(
+    "2015-09-20", "2015-09-22", "2015-09-23", // Sept
+    "2015-09-27", "2015-09-29", "2015-09-30",
+    "2015-10-04", "2015-10-06", "2015-10-07", // Oct
+    "2015-10-11", "2015-10-13", "2015-10-14",
+    "2015-10-18", "2015-10-20", "2015-10-21",
+    "2015-10-25", "2015-10-27", "2015-10-28",
+    "2015-11-01", "2015-11-03", "2015-11-04", // Nov
+    "2015-11-08", "2015-11-10", "2015-11-11",
+    "2015-11-15", "2015-11-17", "2015-11-18",
+    "2015-11-22", // Thanksgiving
+    "2015-11-29", "2015-12-01", "2015-12-02", // Dec
+    "2015-12-06", "2015-12-08", "2015-12-09",
+  ),
 );
 
+// Prices for apparel
 $PURCHASE_TABLE = array(
   "Jacket" => 4600,
   "Shoes_Men" => 3000,
@@ -351,7 +385,7 @@ function getMembershipAndFeeStatus($safe_member_id, $term) {
     'membership' => '',
     'fee_status' => ''
   );
-  
+
   $selectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $safe_member_id . "' AND `term`='" . $term . "'";
   $membershipArray = assocArraySelectQuery($selectQuery, $link, "Failed to select membership in getMembershipAndFeeStatus");
   if ( $membershipArray != [] ) {
