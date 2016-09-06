@@ -35,9 +35,11 @@
 
   <body>
 
+    <!-- NAVIGATION BAR -->
     <nav class="navbar navbar-inverse navbar-fixed-top" style="margin-bottom: 0px; position: static">
       <div class="container">
         <div class="navbar-header">
+          <!-- When the space for the navigation bar is too small, show a button to collapse/uncollapse -->
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
@@ -117,7 +119,8 @@
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="bootstrap/js/bootstrap.min.js"></script>
-    
+
+    <!-- Our main JS for interface setup -->
     <script type="text/javascript">
       function showHome() {
         hidePrimaryContainers();
@@ -143,7 +146,8 @@
         $("#loginModal").modal('show');
         $("#inputLoginUsername").focus()
       }
-      
+
+      // Handle the state (what page you're viewing)
       function onpopstate(e) {
         if ( e.state.page == "home" ) {
           showHome();
@@ -157,7 +161,8 @@
         }
       }
       window.addEventListener("popstate", onpopstate);
-      
+
+      // The "brand" button should navigate to home
       $(".navbar-brand").click(function(e) {
         showHome();
       });
@@ -179,7 +184,8 @@
         $('#referSearch').val("");
         $("#newMemberReferForm").empty();
       });
-      
+
+      // Only show the "Waiver List" option to SafetyAndFacilities and Admin roles
       if ( $.cookie('auth_role') == 'SafetyAndFacilities' || $.cookie('auth_role') == 'Admin' ) {
         $("#waiverListLink").show();
       } else {
@@ -189,7 +195,8 @@
       
       $('#competitionTeamModal').on('shown.bs.modal', setupCompetitionTeamModal);
       $('#transactionsModal').on('shown.bs.modal', setupTransactionsModal);
-      
+
+      // Only show the "New User" option to admins
       if ( $.cookie('auth_role') == 'Admin' ) {
         $("#createUserLink").show();
       } else {

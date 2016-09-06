@@ -4,6 +4,8 @@
 
 require "lib/password.php";
 
+/* BEGIN HELPER FUNCTIONS */
+
 function isAuthorized($type, $auth_username, $auth_role, $auth_token, $link) {
   global $link;
   $publicTypes = ["login", "logout"];
@@ -60,6 +62,9 @@ function isVolunteer() {
 if ( !isAuthorized($_POST['type'], $_POST['auth_username'], $_POST['auth_role'], $_POST['auth_token'], $link) ) {
   returnUnauthorized();
 }
+
+/* END HELPER FUNCTIONS */
+/* BEGIN POST REQUEST HANDLING */
 
 if ( $_POST['type'] == "createUser" ) {
   $data = array("succeeded" => false, "reason" => "");

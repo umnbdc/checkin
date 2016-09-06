@@ -2,7 +2,8 @@
 
 date_default_timezone_set('America/Chicago');
 
-// Environment
+/* BEGIN ENVIRONMENT SETUP */
+
 $CURRENT_TERM = "Fall2016";
 $CURRENT_START_DATE = "2016-09-01";
 $CURRENT_END_DATE = "2016-12-31";
@@ -19,6 +20,9 @@ $NUMBER_OF_FREE_CHECKINS = 2;
 $BEGINNER_LESSON_TIME = "8:00pm";
 $INTERMEDIATE_LESSON_TIME = "7:15pm";
 $CHECK_IN_PERIOD = 30; // minutes
+
+/* END ENVIRONMENT SETUP */
+/* BEGIN SEMESTER SCHEDULES */
 
 /*
  * Due dates for fees, based on maximum owed at certain dates
@@ -142,17 +146,20 @@ $COMP_PRACTICES_TABLE = array(
   ),
 );
 
+// Safeguard against forgetting to change the current term start and end
+if ( strtotime($CURRENT_START_DATE) > strtotime('today') || strtotime($CURRENT_END_DATE) < strtotime('today') ) {
+  die("Current term (range) is out of date.");
+}
+
+/* END SEMESTER SCHEDULES */
+/* BEGIN DUES, FEES, CHECK INS */
+
 // Prices for apparel
 $PURCHASE_TABLE = array(
   "Jacket" => 4600,
   "Shoes_Men" => 3000,
   "Shoes_Women" => 2500
 );
-
-// Safeguard against forgetting to change the current term start and end
-if ( strtotime($CURRENT_START_DATE) > strtotime('today') || strtotime($CURRENT_END_DATE) < strtotime('today') ) {
-  die("Current term (range) is out of date.");
-}
 
 // return positive integer, number of cents
 function calculateDues($membership, $feeStatus, $term) {
@@ -247,6 +254,8 @@ function calculateOutstandingDues($safe_member_id) {
   }
   return $balance;
 }
+
+
 
 function checkedInToday($safeId, $link) {
   $selectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND DATE(`date_time`) = DATE(NOW())";
@@ -451,6 +460,9 @@ function updateCompetitionLateFees($safe_member_id, $term) {
     }
   }
 }
+
+/* END DUES, FEES, CHECK INS */
+/* BEGIN POST REQUEST HANDLING */
 
 $data = $_POST;
 
