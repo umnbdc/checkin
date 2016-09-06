@@ -25,7 +25,7 @@ $CHECK_IN_PERIOD = 30; // minutes
 /* BEGIN SEMESTER SCHEDULES */
 
 /*
- * Due dates for fees, based on maximum owed at certain dates
+ * Due dates for comp team fees, based on maximum owed at certain dates
  * (These must be input manually before the start of the semester)
  */
 $COMP_DUE_DATE_TABLE = array(
@@ -67,9 +67,9 @@ $COMP_DUE_DATE_TABLE = array(
   ),
   "Fall2016" => array(
     "StudentServicesFees" => array(
-      "2015-09-23" => -10000,
+      "2015-09-30" => -10000,
       "2016-10-14" => -5000,
-      "2016-11-04" => 0,
+      "2016-11-28" => 0,
     ),
     "Affiliate" => array(
       "2016-09-22" => 0
