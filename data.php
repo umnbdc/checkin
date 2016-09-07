@@ -755,7 +755,7 @@ if ( $_POST['type'] == "environment" ) {
 } else if ( $_POST['type'] == "addNewCompMemberDiscount" ) {
   $member_id = mysql_escape_string($_POST['member_id']);
   $method = "NewCompMember (" . $_POST['auth_role'] . ")";
-  $kind = "NewCompMember";
+  $kind = "Membership (NewCompMember)";
   $amount = $NEW_COMP_MEMBER_DISCOUNT;
 
   if (
