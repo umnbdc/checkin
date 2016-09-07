@@ -510,6 +510,35 @@ function volunteerPointsDialogSubmit(member_id) {
   }); 
 }
 
+function newCompMemberDiscountDialogSubmit(member_id) {
+  function newCompMemberDiscountSuccess(data, textStatus, jqXHR) {
+    console.log("New comp member discount submission successful: ", data, textStatus, jqXHR);
+    if ( data.succeeded ) {
+      $('#newCompMemberDiscountModal').modal('hide');
+      refreshMember(member_id);
+    } else if ( data.reason ) {
+      alert(data.reason);
+      $('#newCompMemberDiscountModal').modal('hide');
+    } else {
+      newCompMemberDiscountError(data, textStatus, jqXHR);
+    }
+  }
+
+  function newCompMemberDiscountError(data, textStatus, jqXHR) {
+    console.log("New comp member discount failed: ", data, textStatus, jqXHR);
+    alert("There was an issue submitting this payment. Please try again.");
+  }
+
+  authAjax({
+    type: "POST",
+    url: apiURL,
+    data: {type: "addNewCompMemberDiscount", member_id: member_id},
+    success: newCompMemberDiscountSuccess,
+    error: newCompMemberDiscountError,
+    dataType: 'json'
+  });
+}
+
 function waiverDialogSumbit(member_id) {
   var completed = $("#inputWaiverStatus").val();
   
@@ -920,6 +949,18 @@ function showMember(id, untrack) { // untrack optional, default: false
     $("#memberInfoVolunteerPointsButton").show();
   } else {
     $("#memberInfoVolunteerPointsButton").hide();
+  }
+
+  if (
+      ($.cookie("auth_role") == "President" || $.cookie("auth_role") == "Fundraising" || $.cookie("auth_role") == "Treasurer" || $.cookie("auth_role") == "Admin") &&
+      currentMembership && currentMembership.kind == 'Competition'
+  ) {
+    $("#newCompMemberDiscountModalCurrentOutstanding").html(formatAmount(currentOutstandingMembershipDues));
+    $("#newCompMemberDiscountButton").off();
+    $("#newCompMemberDiscountButton").click(function() { newCompMemberDiscountDialogSubmit(member.id) });
+    $("#memberInfoNewCompMemberDiscountButton").show();
+  } else {
+    $("#memberInfoNewCompMemberDiscountButton").hide();
   }
   
   hidePrimaryContainers();

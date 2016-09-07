@@ -19,7 +19,6 @@
             <option value="Cash">Cash</option>
             <option value="Check">Check</option>
             <option id="creditMethodForgivenessOption" style="display: none" value="Forgiveness">Forgiveness</option>
-            <option value="NewCompMember">New Comp Member (ignores amount)</option>
           </select>
         </div>
         <div class="form-group">

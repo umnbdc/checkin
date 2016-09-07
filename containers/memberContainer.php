@@ -1,4 +1,5 @@
 <div class="container primary-container" id="memberContainer" style="display: none">
+  <!-- Member Information -->
   <h2>
     <span class="firstName"></span>
     <span class="lastName"></span>
@@ -20,6 +21,8 @@
     <tbody>
     </tbody>
   </table>
+
+  <!-- Buttons for actions -->
   <p>
     <div class="btn-group">
       <button type="button" id="memberInfoCheckinButton" class="btn btn-primary">Check in</button>
@@ -27,11 +30,13 @@
       <button type="button" id="memberInfoPayButton" class="btn btn-default" data-toggle="modal" data-target="#payModal">Pay</button>
       <button type="button" id="memberInfoPurchaseButton" class="btn btn-default" data-toggle="modal" data-target="#purchaseModal">Purchase</button>
       <button type="button" id="memberInfoVolunteerPointsButton" style="display: none" class="btn btn-default" data-toggle="modal" data-target="#volunteerPointsModal">Volunteer Points</button>
+      <button type="button" id="memberInfoNewCompMemberDiscountButton" style="display: none" class="btn btn-default" data-toggle="modal" data-target="#newCompMemberDiscountModal">New Comp Member Discount</button>
       <button type="button" id="memberInfoWaiverButton" style="display: none" class="btn btn-default" data-toggle="modal" data-target="#waiverModal">Waiver</button>
       <button type="button" id="memberInfoMembershipButton" class="btn btn-default" data-toggle="modal" data-target="#membershipModal">Membership and Fee Status</button>
     </div>
   </p>
-  
+
+  <!-- Collapsible tabs for more info -->
   <div class="panel-group" id="memberPanels" role="tablist" aria-multiselectable="true">
     <div class="panel panel-default">
       <div class="panel-heading" role="tab" id="creditsAndDebitsPanelHeading">

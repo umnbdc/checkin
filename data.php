@@ -703,17 +703,9 @@ if ( $_POST['type'] == "environment" ) {
   if ( isVolunteer() ) {
     $data['succeeded'] = false;
     $data['reason'] = "Volunteers cannot process payments.";
-  } else if (
-      $method == "Cash" ||
-      $method == "Check" ||
-      ($authorized && $method == "Forgiveness") ||
-      ($authorized && $method == "NewCompMember")
-  ) {
+  } else if ( $method == "Cash" || $method == "Check" || ($authorized && $method == "Forgiveness") ) {
     if ($method == "Forgiveness") {
       $method = $method . " (" . $_POST['auth_role'] . ")";
-    } else if ($method == "NewCompMember") {
-      $method = $method . " (" . $_POST['auth_role'] . ")";
-      $amount = $NEW_COMP_MEMBER_DISCOUNT;
     }
     insertPayment($member_id, $amount, $method, $kind);
     $data['succeeded'] = true;
@@ -759,6 +751,24 @@ if ( $_POST['type'] == "environment" ) {
   } else {
     $data['succeeded'] = false;
     $data['reason'] = "Only the fundraising officer can add volunteer points.";
+  }
+} else if ( $_POST['type'] == "addNewCompMemberDiscount" ) {
+  $member_id = mysql_escape_string($_POST['member_id']);
+  $method = "NewCompMember (" . $_POST['auth_role'] . ")";
+  $kind = "NewCompMember";
+  $amount = $NEW_COMP_MEMBER_DISCOUNT;
+
+  if (
+      $_POST['auth_role'] == "President" ||
+      $_POST['auth_role'] == "Fundraising" ||
+      $_POST['auth_role'] == "Treasurer" ||
+      $_POST['auth_role'] == "Admin"
+  ) {
+    insertPayment($member_id, $amount, $method, $kind);
+    $data['succeeded'] = true;
+  } else {
+    $data['succeeded'] = false;
+    $data['reason'] = "Only the president, fundraising officer, treasurer, or admin can add the new team member discount.";
   }
 } else if ( $_POST['type'] == "updateWaiver" ) {
   $member_id = mysql_escape_string($_POST['member_id']);

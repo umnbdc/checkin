@@ -114,6 +114,7 @@
     <?php include "modals/competitionTeamModal.php"; ?>
     <?php include "modals/transactionsModal.php"; ?>
     <?php include "modals/widgetsModal.php"; ?>
+    <?php include "modals/newCompMemberDiscountModal.php"; ?>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
