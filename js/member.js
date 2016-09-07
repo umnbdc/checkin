@@ -767,21 +767,21 @@ function showMember(id, untrack) { // untrack optional, default: false
   
   $("#memberContainer h2 .firstName").html(member.first_name);
   $("#memberContainer h2 .lastName").html(member.last_name);
-  
+
   // fill info table
+  var currentMembership = getElementOfTerm(memberships,CURRENT_TERM);
+  var currentFeeStatus = getElementOfTerm(feeStatus,CURRENT_TERM);
+  var currentWaiverStatus = getElementOfTerm(waiverStatus,CURRENT_TERM);
+  var currentOutstandingMembershipDues = calculateMembershipDuesBalance(debitCredits);
   var infoRow = $("<tr>");
   infoRow.append($("<td>", {html: member.first_name}));
   infoRow.append($("<td>", {html: member.last_name}));
   infoRow.append($("<td>", {html: member.nick_name}));
   infoRow.append($("<td>", {html: member.email}));
   infoRow.append($("<td>", {html: member.proficiency}));
-  var currentMembership = getElementOfTerm(memberships,CURRENT_TERM);
   infoRow.append($("<td>", {html: currentMembership ? currentMembership.kind : 'None'}));
-  var currentFeeStatus = getElementOfTerm(feeStatus,CURRENT_TERM);
   infoRow.append($("<td>", {html: currentFeeStatus ? currentFeeStatus.kind : 'None'}));
-  var currentWaiverStatus = getElementOfTerm(waiverStatus,CURRENT_TERM);
   infoRow.append($("<td>", {html: currentWaiverStatus && currentWaiverStatus.completed != 0 ? 'Yes' : 'No'}));
-  var currentOutstandingMembershipDues = calculateMembershipDuesBalance(debitCredits);
   infoRow.append($("<td>", {html: formatAmount(currentOutstandingMembershipDues)}));
   $("#memberInfoTable tbody").append(infoRow);
   
@@ -876,7 +876,7 @@ function showMember(id, untrack) { // untrack optional, default: false
   $("#updateMembershipButton").off();
   $("#updateMembershipButton").click(function() { updateMembershipAndFeeStatus(member.id) });
   
-  // setup waiver modal
+  // setup waiver modal (only show for SafetyAndFacilities and Admin roles)
   if ( $.cookie("auth_role") == "SafetyAndFacilities" || $.cookie("auth_role") == "Admin" ) {
     $("#inputWaiverStatus").val( currentWaiverStatus ? currentWaiverStatus.completed : 0 );
     $("#waiverModalCurrentTerm").html(CURRENT_TERM);
@@ -896,7 +896,7 @@ function showMember(id, untrack) { // untrack optional, default: false
   $("#editMemberButton").off();
   $("#editMemberButton").click(function() { updateMember(member.id) });
   
-  // setup pay modal
+  // setup pay modal (only show forgiveness option for president, treasurer, and admin roles)
   $("#payModalCurrentOutstanding").html(formatAmount(currentOutstandingMembershipDues));
   if ( $.cookie("auth_role") == "President" || $.cookie("auth_role") == "Treasurer" || $.cookie("auth_role") == "Admin" ) {
     $("#creditMethodForgivenessOption").show();
@@ -911,7 +911,7 @@ function showMember(id, untrack) { // untrack optional, default: false
   $("#purchaseButton").off();
   $("#purchaseButton").click(function() { purchaseDialogSubmit(member.id) });
   
-  // setup volunteer points modal
+  // setup volunteer points modal (only show for fundraising and admin roles)
   if ( ($.cookie("auth_role") == "Fundraising" || $.cookie("auth_role") == "Admin") && currentMembership && currentMembership.kind == 'Competition' ) {
     $("#volunteerPointsModalCurrentOutstanding").html(formatAmount(currentOutstandingMembershipDues));
     $("#inputPointsAmount").val("");

@@ -197,6 +197,9 @@ function calculateDues($membership, $feeStatus, $term) {
   }
 }
 
+// Discount for new competition team members
+$NEW_COMP_MEMBER_DISCOUNT = 3000;
+
 function createMembershipDueKind($membership, $feeStatus, $term) {
   return "Membership (" . $membership . ", " . $feeStatus . ", " . $term . ")";
 }
@@ -700,9 +703,17 @@ if ( $_POST['type'] == "environment" ) {
   if ( isVolunteer() ) {
     $data['succeeded'] = false;
     $data['reason'] = "Volunteers cannot process payments.";
-  } else if ( $method == "Cash" || $method == "Check" || ($authorized && $method == "Forgiveness") ) {
+  } else if (
+      $method == "Cash" ||
+      $method == "Check" ||
+      ($authorized && $method == "Forgiveness") ||
+      ($authorized && $method == "NewCompMember")
+  ) {
     if ($method == "Forgiveness") {
       $method = $method . " (" . $_POST['auth_role'] . ")";
+    } else if ($method == "NewCompMember") {
+      $method = $method . " (" . $_POST['auth_role'] . ")";
+      $amount = $NEW_COMP_MEMBER_DISCOUNT;
     }
     insertPayment($member_id, $amount, $method, $kind);
     $data['succeeded'] = true;
