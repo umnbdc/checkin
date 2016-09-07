@@ -1,6 +1,6 @@
 # PHP Member Check-in System
 
-Originally created by Kevin Viratyosin?
+Originally created by Kevin Viratyosin and Jack O'Leary?
 
 This is the check-in system, which is hosted on OpenShift.
 This readme is a brief overview of the code for the check-in system
