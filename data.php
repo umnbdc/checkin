@@ -737,21 +737,6 @@ if ( $_POST['type'] == "environment" ) {
     $data['succeeded'] = false;
     $data['reason'] = "Cost of item \"" . $kind . "\" could not be found.";
   }
-} else if ( $_POST['type'] == "addVolunteerPoints" ) {
-  $member_id = mysql_escape_string($_POST['member_id']);
-  $points = mysql_escape_string($_POST['points']);
-  
-  $method = "VolunteerPoints";
-  $kind = "Membership (VolunteerPoints x " . $points . ")";
-  $amount = $points*1200;
-  
-  if ( $_POST['auth_role'] == "Fundraising" || $_POST['auth_role'] == "Admin" ) {
-    insertPayment($member_id, $amount, $method, $kind);
-    $data['succeeded'] = true;
-  } else {
-    $data['succeeded'] = false;
-    $data['reason'] = "Only the fundraising officer can add volunteer points.";
-  }
 } else if ( $_POST['type'] == "addNewCompMemberDiscount" ) {
   $member_id = mysql_escape_string($_POST['member_id']);
   $method = "NewCompMember (" . $_POST['auth_role'] . ")";

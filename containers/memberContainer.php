@@ -29,7 +29,6 @@
       <button type="button" id="memberInfoEditButton" class="btn btn-default" data-toggle="modal" data-target="#editMemberModal">Edit info</button>
       <button type="button" id="memberInfoPayButton" class="btn btn-default" data-toggle="modal" data-target="#payModal">Pay</button>
       <button type="button" id="memberInfoPurchaseButton" class="btn btn-default" data-toggle="modal" data-target="#purchaseModal">Purchase</button>
-      <button type="button" id="memberInfoVolunteerPointsButton" style="display: none" class="btn btn-default" data-toggle="modal" data-target="#volunteerPointsModal">Volunteer Points</button>
       <button type="button" id="memberInfoNewCompMemberDiscountButton" style="display: none" class="btn btn-default" data-toggle="modal" data-target="#newCompMemberDiscountModal">New Comp Member Discount</button>
       <button type="button" id="memberInfoWaiverButton" style="display: none" class="btn btn-default" data-toggle="modal" data-target="#waiverModal">Waiver</button>
       <button type="button" id="memberInfoMembershipButton" class="btn btn-default" data-toggle="modal" data-target="#membershipModal">Membership and Fee Status</button>

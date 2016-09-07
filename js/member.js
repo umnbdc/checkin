@@ -475,41 +475,6 @@ function purchaseDialogSubmit(id) {
   }); 
 }
 
-function volunteerPointsDialogSubmit(member_id) {
-  var points = $("#inputPointsAmount").val();
-  if ( !isPositiveIntegerString(points) ) {
-    alert("Points must be a positive integer");
-    return;
-  }
-  
-  function addVolunteerPointsSuccess(data, textStatus, jqXHR) {
-    console.log("Volunteer points submission successful: ", data, textStatus, jqXHR);
-    if ( data.succeeded ) {
-      $('#volunteerPointsModal').modal('hide');
-      refreshMember(member_id);
-    } else if ( data.reason ) {
-      alert(data.reason);
-      $('#volunteerPointsModal').modal('hide');
-    } else {
-      addVolunteerPointsError(data, textStatus, jqXHR);
-    }
-  }
-  
-  function addVolunteerPointsError(data, textStatus, jqXHR) {
-    console.log("Volunteer points failed: ", data, textStatus, jqXHR);
-    alert("There was an issue submitting this payment. Please try again.");
-  }
-  
-  authAjax({
-    type: "POST",
-    url: apiURL,
-    data: {type: "addVolunteerPoints", member_id: member_id, points: points},
-    success: addVolunteerPointsSuccess,
-    error: addVolunteerPointsError,
-    dataType: 'json'
-  }); 
-}
-
 function newCompMemberDiscountDialogSubmit(member_id) {
   function newCompMemberDiscountSuccess(data, textStatus, jqXHR) {
     console.log("New comp member discount submission successful: ", data, textStatus, jqXHR);
@@ -939,17 +904,6 @@ function showMember(id, untrack) { // untrack optional, default: false
   // setup purchase modal
   $("#purchaseButton").off();
   $("#purchaseButton").click(function() { purchaseDialogSubmit(member.id) });
-  
-  // setup volunteer points modal (only show for fundraising and admin roles)
-  if ( ($.cookie("auth_role") == "Fundraising" || $.cookie("auth_role") == "Admin") && currentMembership && currentMembership.kind == 'Competition' ) {
-    $("#volunteerPointsModalCurrentOutstanding").html(formatAmount(currentOutstandingMembershipDues));
-    $("#inputPointsAmount").val("");
-    $("#volunteerPointsButton").off();
-    $("#volunteerPointsButton").click(function() { volunteerPointsDialogSubmit(member.id) });
-    $("#memberInfoVolunteerPointsButton").show();
-  } else {
-    $("#memberInfoVolunteerPointsButton").hide();
-  }
 
   if (
       ($.cookie("auth_role") == "President" || $.cookie("auth_role") == "Fundraising" || $.cookie("auth_role") == "Treasurer" || $.cookie("auth_role") == "Admin") &&
