@@ -498,20 +498,29 @@ function subscribeToMailchimp($member_id) {
     $md5Email = md5(strtolower($member["email"]));
     $url = "https://us11.api.mailchimp.com/3.0/lists/" . $listId . "/members/" . $md5Email;
 
+    // Check if the user is subscribed
     $curl = curl_init($url);
-    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'PUT');
+    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
     curl_setopt($curl, CURLOPT_USERPWD, "user:" . $apiKey);
-
-    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-
-    // curl will break unless we handle the HTTPS somehow.
-    // TODO: setup actual verification (this may be helpful: http://unitstep.net/blog/2009/05/05/using-curl-in-php-to-access-https-ssltls-protected-sites/)
     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-
-    $output[] = curl_exec($curl);
+    $result = curl_exec($curl);
     curl_close($curl);
+
+    if ($result['status'] !== 404 || $result['title'] !== "Resource Not Found") {
+      continue;
+    } else {
+      // The user is not subscribed (or maybe a different error occurred
+      $curl = curl_init($url);
+      curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'PUT');
+      curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+      curl_setopt($curl, CURLOPT_USERPWD, "user:" . $apiKey);
+      curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+
+      curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+      $output[] = curl_exec($curl);
+    }
   }
   return $output;
 }
