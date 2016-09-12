@@ -9,8 +9,8 @@ $CURRENT_START_DATE = "2016-09-01";
 $CURRENT_END_DATE = "2016-12-31";
 $CHECKINS_PER_WEEK = array(
   "Single" => 1,
-  "Standard" => 2,
-  "Social" => 2,
+  "Standard" => 3,
+  "Social" => 3,
   "Competition" => INF,
   "Full" => INF,
   "Summer" => INF,
@@ -312,7 +312,14 @@ function memberAllowedToCheckIn($safeId, $link) {
   if ($toReturn['permitted'] && $toReturn['reason'] != "Competition Team") {
     $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $safeId . "'";
     $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to get member in memberAllowedToCheckIn")[0];
-    if ( $member['proficiency'] == 'Beginner' && (time() + $CHECK_IN_PERIOD * 60) < strtotime($BEGINNER_LESSON_TIME) ) {
+    $dayOfWeek = date("w", time());
+    if ($member['proficiency'] !== 'Advanced') {
+      // Beginner and Intermediate members may only check in on Tuesdays and Thursdays (they can't go to the advanced lessons)
+      if ($dayOfWeek !== 2 && $dayOfWeek !== 4) {
+        $toReturn['permitted'] = false;
+        $toReturn['reason'] = "Non-advanced members may only check in on Tuesdays and Thursdays";
+      }
+    } else if ( $member['proficiency'] == 'Beginner' && (time() + $CHECK_IN_PERIOD * 60) < strtotime($BEGINNER_LESSON_TIME) ) {
       $toReturn['permitted'] = false;
       $toReturn['reason'] = "Beginner members may not check in earlier than ".$CHECK_IN_PERIOD." minutes before the beginner lesson.";
     }
