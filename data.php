@@ -482,7 +482,7 @@ function subscribeToMailchimp($member_id) {
   $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to getMemberInfo member")[0]; // assume only one member with id
 
   // Setup the data for the request
-  $data = array(
+  $data = json_encode([
     "email_address" => $member["email"],
     "status" => "subscribed",
     "merge_fields" => array(
@@ -490,22 +490,21 @@ function subscribeToMailchimp($member_id) {
       "LNAME" => $member["last_name"],
       "MMERGE3" => "Student", // Unsure how we can tell if this is a student... assume student
     ),
-  );
+  ]);
 
   // Subscribe to the master list and the semester list
   $output = array();
   foreach (array($mainListId, $semesterListId) as $listId) {
-    $url = "https://us11.api.mailchimp.com/3.0/" . "lists/" . $listId . "/members/";
+    $md5Email = md5(strtolower($member["email"]));
+    $url = "https://us11.api.mailchimp.com/3.0/lists/" . $listId . "/members/" . $md5Email;
 
-    $curl = curl_init();
-    curl_setopt($curl, CURLOPT_POST, 1);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+    $curl = curl_init($url);
+    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'PUT');
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($curl, CURLOPT_USERPWD, "user:" . $apiKey);
 
-    curl_setopt($curl, CURLOPT_URL, $url);
     curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-
-    curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-    curl_setopt($curl, CURLOPT_USERPWD, "anything:" . $apiKey);
 
     // curl will break unless we handle the HTTPS somehow.
     // TODO: setup actual verification (this may be helpful: http://unitstep.net/blog/2009/05/05/using-curl-in-php-to-access-https-ssltls-protected-sites/)
