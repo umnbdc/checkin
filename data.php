@@ -21,6 +21,10 @@ $BEGINNER_LESSON_TIME = "8:00pm";
 $INTERMEDIATE_LESSON_TIME = "7:15pm";
 $CHECK_IN_PERIOD = 30; // minutes
 
+$MAILCHIMP_API_KEY = "9783f79a384c0b7ecb548bcbd76e827c-us11";
+$MAILCHIMP_MAIN_LIST_ID = "dbe206ba93";
+$MAILCHIMP_SEMESTER_LIST_ID = "345cd2b625";
+
 /* END ENVIRONMENT SETUP */
 /* BEGIN SEMESTER SCHEDULES */
 
@@ -472,10 +476,9 @@ function updateCompetitionLateFees($safe_member_id, $term) {
  */
 function subscribeToMailchimp($member_id) {
   global $link;
-
-  $apiKey = "9783f79a384c0b7ecb548bcbd76e827c-us11";
-  $mainListId = "dbe206ba93";
-  $semesterListId = "345cd2b625";
+  global $MAILCHIMP_API_KEY;
+  global $MAILCHIMP_MAIN_LIST_ID;
+  global $MAILCHIMP_SEMESTER_LIST_ID;
 
   // Get the member info
   $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $member_id . "'";
@@ -493,35 +496,38 @@ function subscribeToMailchimp($member_id) {
   ]);
   $md5Email = md5(strtolower($member["email"]));
 
+  function curlSetupHelper($url, $method, $apiKey) {
+    $curl = curl_init($url);
+    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($curl, CURLOPT_USERPWD, "user:" . $apiKey);
+    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+    return $curl;
+  }
+
+  function getCurlResult($curl) {
+    $result = curl_exec($curl);
+    curl_close($curl);
+    return is_string($result) ? json_decode($result, true) : $result;
+  }
+
   // Subscribe to the master list and the semester list
   $output = array();
-  foreach (array($mainListId, $semesterListId) as $listId) {
+  foreach ([$MAILCHIMP_MAIN_LIST_ID, $MAILCHIMP_SEMESTER_LIST_ID] as $listId) {
     $url = "https://us11.api.mailchimp.com/3.0/lists/" . $listId . "/members/" . $md5Email;
 
     try {
       // Check if the user is subscribed
-      $curl = curl_init($url);
-      curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-      curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-      curl_setopt($curl, CURLOPT_USERPWD, "user:" . $apiKey);
-      curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-      $result = curl_exec($curl);
-      curl_close($curl);
-      $result = is_string($result) ? json_decode($result, true) : $result;
+      $curl = curlSetupHelper($url, 'GET', $MAILCHIMP_API_KEY);
+      $result = getCurlResult($curl);
       $output[] = $result;
 
       if ($result['status'] === 404 || $result['title'] === "Resource Not Found") {
         // The user is not subscribed or the list wasn't found. Try subscribing the user
-        $curl = curl_init($url);
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'PUT');
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        $curl = curlSetupHelper($url, 'PUT', $MAILCHIMP_API_KEY);
         curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($curl, CURLOPT_USERPWD, "user:" . $apiKey);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        $result = curl_exec($curl);
-        curl_close($curl);
-        $output[] = is_string($result) ? json_decode($result, true) : $result;
+        $output[] = getCurlResult($curl);
       }
     } catch (Exception $e) {
       $output[] = "Attempted subscription to list " . $listId . " failed with error: " . $e->getMessage();
