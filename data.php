@@ -491,35 +491,40 @@ function subscribeToMailchimp($member_id) {
       "MMERGE3" => "Student", // Unsure how we can tell if this is a student... assume student
     ),
   ]);
+  $md5Email = md5(strtolower($member["email"]));
 
   // Subscribe to the master list and the semester list
   $output = array();
   foreach (array($mainListId, $semesterListId) as $listId) {
-    $md5Email = md5(strtolower($member["email"]));
     $url = "https://us11.api.mailchimp.com/3.0/lists/" . $listId . "/members/" . $md5Email;
 
-    // Check if the user is subscribed
-    $curl = curl_init($url);
-    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl, CURLOPT_USERPWD, "user:" . $apiKey);
-    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-    $result = curl_exec($curl);
-    curl_close($curl);
-
-    if ($result['status'] !== 404 || $result['title'] !== "Resource Not Found") {
-      continue;
-    } else {
-      // The user is not subscribed (or maybe a different error occurred
+    try {
+      // Check if the user is subscribed
       $curl = curl_init($url);
-      curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'PUT');
+      curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
       curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-      curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
       curl_setopt($curl, CURLOPT_USERPWD, "user:" . $apiKey);
       curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+      $result = curl_exec($curl);
+      curl_close($curl);
+      $result = is_string($result) ? json_decode($result, true) : $result;
+      $output[] = $result;
 
-      curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-      $output[] = curl_exec($curl);
+      if ($result['status'] === 404 || $result['title'] === "Resource Not Found") {
+        // The user is not subscribed or the list wasn't found. Try subscribing the user
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'PUT');
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($curl, CURLOPT_USERPWD, "user:" . $apiKey);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        $result = curl_exec($curl);
+        curl_close($curl);
+        $output[] = is_string($result) ? json_decode($result, true) : $result;
+      }
+    } catch (Exception $e) {
+      $output[] = "Attempted subscription to list " . $listId . " failed with error: " . $e->getMessage();
     }
   }
   return $output;
