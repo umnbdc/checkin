@@ -465,6 +465,59 @@ function updateCompetitionLateFees($safe_member_id, $term) {
 }
 
 /* END DUES, FEES, CHECK INS */
+/* BEGIN MAILCHIMP SIGN-IN */
+
+/**
+ * Attempt to subscribe the member to MailChimp, in case they are not already subscribed
+ */
+function subscribeToMailchimp($member_id) {
+  global $link;
+
+  $apiKey = "9783f79a384c0b7ecb548bcbd76e827c-us11";
+  $mainListId = "dbe206ba93";
+  $semesterListId = "345cd2b625";
+
+  // Get the member info
+  $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $member_id . "'";
+  $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to getMemberInfo member")[0]; // assume only one member with id
+
+  // Setup the data for the request
+  $data = array(
+    "email_address" => $member["email"],
+    "status" => "subscribed",
+    "merge_fields" => array(
+      "FNAME" => $member["first_name"],
+      "LNAME" => $member["last_name"],
+      "MMERGE3" => "Student", // Unsure how we can tell if this is a student... assume student
+    ),
+  );
+
+  // Subscribe to the master list and the semester list
+  $output = array();
+  foreach (array($mainListId, $semesterListId) as $listId) {
+    $url = "https://us11.api.mailchimp.com/3.0/" . "lists/" . $listId . "/members/";
+
+    $curl = curl_init();
+    curl_setopt($curl, CURLOPT_POST, 1);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+    curl_setopt($curl, CURLOPT_URL, $url);
+    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+
+    curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+    curl_setopt($curl, CURLOPT_USERPWD, "anything:" . $apiKey);
+
+    // curl will break unless we handle the HTTPS somehow.
+    // TODO: setup actual verification (this may be helpful: http://unitstep.net/blog/2009/05/05/using-curl-in-php-to-access-https-ssltls-protected-sites/)
+    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+
+    $output[] = curl_exec($curl);
+    curl_close($curl);
+  }
+  return $output;
+}
+
+/* END MAILCHIMP SIGN-IN */
 /* BEGIN POST REQUEST HANDLING */
 
 $data = $_POST;
@@ -600,6 +653,8 @@ if ( $_POST['type'] == "environment" ) {
       $insertQuery = "INSERT INTO `checkin`(`member_id`, `date_time`) VALUES ('" . $id . "',CURRENT_TIMESTAMP)";
       safeQuery($insertQuery, $link, "Failed to insert new checkin");
       $data['wasAlreadyCheckedIn'] = false;
+
+      $data['mailchimpOutput'] = subscribeToMailchimp($id);
     } else {
       $data['wasAlreadyCheckedIn'] = true;
     }
