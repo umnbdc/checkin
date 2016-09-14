@@ -27,7 +27,6 @@
           <select class="form-control" id="inputEditProficiency">
             <option value="Beginner">Beginner</option>
             <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
           </select>
         </div>
       </div>
