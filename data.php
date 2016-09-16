@@ -319,13 +319,13 @@ function memberAllowedToCheckIn($safeId, $link) {
     $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to get member in memberAllowedToCheckIn")[0];
 
     $dayOfWeek = date("w");
-    if ($dayOfWeek === 2 || $dayOfWeek === 4) {
+    if ($dayOfWeek === '2' || $dayOfWeek === '4') {
       // On Tuesdays and Thursdays, beginners can only check in within a certain time before the beginner lesson starts
       if ($member['proficiency'] == 'Beginner' && (time() + $CHECK_IN_PERIOD * 60) < strtotime($BEGINNER_LESSON_TIME)) {
         $toReturn['permitted'] = false;
         $toReturn['reason'] = "Beginner members may not check in earlier than " . $CHECK_IN_PERIOD . " minutes before the beginner lesson.";
       }
-    } else if ($dayOfWeek === 0) {
+    } else if ($dayOfWeek === '0') {
       // Only advanced members can check in on Sundays
       if ($member['proficiency'] !== 'Advanced') {
         $toReturn['permitted'] = false;
