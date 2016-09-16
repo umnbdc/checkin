@@ -21,10 +21,6 @@ $BEGINNER_LESSON_TIME = "8:00pm";
 $INTERMEDIATE_LESSON_TIME = "7:15pm";
 $CHECK_IN_PERIOD = 30; // minutes
 
-$MAILCHIMP_API_KEY = "9783f79a384c0b7ecb548bcbd76e827c-us11";
-$MAILCHIMP_MAIN_LIST_ID = "dbe206ba93";
-$MAILCHIMP_SEMESTER_LIST_ID = "345cd2b625";
-
 /* END ENVIRONMENT SETUP */
 /* BEGIN SEMESTER SCHEDULES */
 
@@ -488,79 +484,12 @@ function updateCompetitionLateFees($safe_member_id, $term) {
 }
 
 /* END DUES, FEES, CHECK INS */
-/* BEGIN MAILCHIMP SIGN-IN */
-
-/**
- * Attempt to subscribe the member to MailChimp, in case they are not already subscribed
- */
-function subscribeToMailchimp($member_id) {
-  global $link;
-  global $MAILCHIMP_API_KEY;
-  global $MAILCHIMP_MAIN_LIST_ID;
-  global $MAILCHIMP_SEMESTER_LIST_ID;
-
-  // Get the member info
-  $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $member_id . "'";
-  $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to getMemberInfo member")[0]; // assume only one member with id
-
-  // Setup the data for the request
-  $data = json_encode([
-    "email_address" => $member["email"],
-    "status" => "subscribed",
-    "merge_fields" => array(
-      "FNAME" => $member["first_name"],
-      "LNAME" => $member["last_name"],
-      "MMERGE3" => "Student", // Unsure how we can tell if this is a student... assume student
-    ),
-  ]);
-  $md5Email = md5(strtolower($member["email"]));
-
-  function curlSetupHelper($url, $method, $apiKey) {
-    $curl = curl_init($url);
-    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl, CURLOPT_USERPWD, "user:" . $apiKey);
-    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-    return $curl;
-  }
-
-  function getCurlResult($curl) {
-    $result = curl_exec($curl);
-    curl_close($curl);
-    return is_string($result) ? json_decode($result, true) : $result;
-  }
-
-  // Subscribe to the master list and the semester list
-  $output = array();
-  foreach ([$MAILCHIMP_MAIN_LIST_ID, $MAILCHIMP_SEMESTER_LIST_ID] as $listId) {
-    $url = "https://us11.api.mailchimp.com/3.0/lists/" . $listId . "/members/" . $md5Email;
-
-    try {
-      // Check if the user is subscribed
-      $curl = curlSetupHelper($url, 'GET', $MAILCHIMP_API_KEY);
-      $result = getCurlResult($curl);
-      $output[] = $result;
-
-      if ($result['status'] === 404 || $result['title'] === "Resource Not Found") {
-        // The user is not subscribed or the list wasn't found. Try subscribing the user
-        $curl = curlSetupHelper($url, 'PUT', $MAILCHIMP_API_KEY);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        $output[] = getCurlResult($curl);
-      }
-    } catch (Exception $e) {
-      $output[] = "Attempted subscription to list " . $listId . " failed with error: " . $e->getMessage();
-    }
-  }
-  return $output;
-}
-
-/* END MAILCHIMP SIGN-IN */
 /* BEGIN POST REQUEST HANDLING */
 
 $data = $_POST;
 
 include('auth.php');
+include('mailchimp.php');
 
 if ( $_POST['type'] == "environment" ) {
   $data = [];
@@ -693,7 +622,17 @@ if ( $_POST['type'] == "environment" ) {
       safeQuery($insertQuery, $link, "Failed to insert new checkin");
       $data['wasAlreadyCheckedIn'] = false;
 
-      $data['mailchimpOutput'] = subscribeToMailchimp($id);
+      // Get the member info
+      $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $member_id . "'";
+      $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to getMemberInfo member")[0]; // assume only one member with id
+      $memberDataForMailchimp = [
+        'email' => $member['email'],
+        'first_name' => $member['first_name'],
+        'last_name' => $member['last_name'],
+      ];
+
+      // Subscribe the user if they are not already subscribed
+      $data['mailchimpOutput'] = subscribeToMailchimp($memberDataForMailchimp);
     } else {
       $data['wasAlreadyCheckedIn'] = true;
     }
