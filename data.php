@@ -223,66 +223,75 @@ switch ( $_POST['type'] ) {
     break;
 
   case "getMembers":
-    $likeConditions = "";
-    $searchTermParts = explode(" ", $_POST['query']);
-    $conditionCount = 0;
-    foreach ($searchTermParts as $s) {
-      if ( !preg_match('/^\s*$/', $s) ) {
-        $s = "%" . mysql_escape_string($s) . "%";
-        $likeConditions = $likeConditions . " AND (`first_name` LIKE '" . $s . "' OR `last_name` LIKE '" . $s . "' OR `nick_name` LIKE '" . $s . "' OR `email` LIKE '" . $s . "')";
-        $conditionCount++;
+    function getMembers($query, $dbLink) {
+      $likeConditions = "";
+      $searchTermParts = explode(" ", $query);
+      $conditionCount = 0;
+      foreach ($searchTermParts as $s) {
+        if ( !preg_match('/^\s*$/', $s) ) {
+          $s = "%" . mysql_escape_string($s) . "%";
+          $likeConditions = $likeConditions . " AND (`first_name` LIKE '" . $s . "' OR `last_name` LIKE '" . $s . "' OR `nick_name` LIKE '" . $s . "' OR `email` LIKE '" . $s . "')";
+          $conditionCount++;
+        }
       }
-    }
 
-    if ( $conditionCount > 0 ) {
-      $selectQuery = "SELECT * FROM `member` WHERE 1" . $likeConditions . " ORDER BY `last_name`";
-      $data = assocArraySelectQuery($selectQuery, $link, "Failed to search members");
-    } else {
-      $data = [];
+      $members = [];
+      if ( $conditionCount > 0 ) {
+        $selectQuery = "SELECT * FROM `member` WHERE 1" . $likeConditions . " ORDER BY `last_name`";
+        $members = assocArraySelectQuery($selectQuery, $dbLink, "Failed to search members");
+      }
+      return $members;
     }
+    $query = $_POST['query'];
+    $data = getMembers($query, $link);
     break;
 
   case "getMemberInfo":
+    function getMemberInfo($id, $dbLink) {
+      global $CURRENT_TERM;
+      $data = [];
+
+      updateCompetitionLateFees($id, $CURRENT_TERM); // function will check if applicable
+
+      $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $id . "'";
+      $data['member'] = assocArraySelectQuery($memberSelectQuery, $dbLink, "Failed to getMemberInfo member")[0]; // assume only one member with id
+      if ( $data['member']['referred_by'] ) {
+        $referredBySelectQuery = "SELECT * FROM `member` WHERE `id`='" . $data['member']['referred_by'] . "'";
+        $referrerMemberObject = assocArraySelectQuery($referredBySelectQuery, $dbLink, "Failed to get referrer member info in getMemberInfo")[0];
+        $data['member']['referred_by_name'] = $referrerMemberObject['first_name'] . " " . $referrerMemberObject['last_name'];
+      }
+
+      $membershipSelectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $id . "'";
+      $data['memberships'] = assocArraySelectQuery($membershipSelectQuery, $dbLink, "Failed to getMemberInfo membership");
+
+      $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $id . "' ORDER BY `date_time`";
+      $data['checkIns'] = assocArraySelectQuery($checkinSelectQuery, $dbLink, "Failed to getMemberInfo checkin");
+
+      $debitCreditSelectQuery = "SELECT * FROM `debit_credit` WHERE `member_id`='" . $id . "' ORDER BY `date_time`";
+      $data['debitCredits'] = assocArraySelectQuery($debitCreditSelectQuery, $dbLink, "Failed to getMemberInfo debit/credit");
+
+      $feeStatusSelectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $id . "'";
+      $data['feeStatus'] = assocArraySelectQuery($feeStatusSelectQuery, $dbLink, "Failed to getMemberInfo fee status");
+
+      $waiverStatusSelectQuery = "SELECT * FROM `waiver_status` WHERE `member_id`='" . $id . "'";
+      $data['waiverStatus'] = assocArraySelectQuery($waiverStatusSelectQuery, $dbLink, "Failed to getMemberInfo waiver status");
+
+      $referralSelectQuery = "SELECT * FROM `referral` WHERE `referrer_id`='" . $id . "'";
+      $references = assocArraySelectQuery($referralSelectQuery, $dbLink, "Failed to getMemberInfo referral");
+      for ( $i = 0; $i < count($references); $i++ ) {
+        $referredSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $references[$i]['referred_id'] . "'";
+        $memberObject = assocArraySelectQuery($referredSelectQuery, $dbLink, "Failed to get referred member info in getMemberInfo")[0];
+        $references[$i]['referred_name'] = $memberObject['first_name'] . " " . $memberObject['last_name'];
+      }
+      $data['references'] = $references;
+
+      $rewardSelectQuery = "SELECT * FROM `reward` WHERE `member_id`='" . $id . "'";
+      $data['rewards'] = assocArraySelectQuery($rewardSelectQuery, $dbLink, "Failed to getMemberInfo rewards");
+
+      return $data;
+    }
     $id = mysql_escape_string($_POST['id']);
-
-    $data = [];
-
-    updateCompetitionLateFees($id, $CURRENT_TERM); // function will check if applicable
-
-    $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $id . "'";
-    $data['member'] = assocArraySelectQuery($memberSelectQuery, $link, "Failed to getMemberInfo member")[0]; // assume only one member with id
-    if ( $data['member']['referred_by'] ) {
-      $referredBySelectQuery = "SELECT * FROM `member` WHERE `id`='" . $data['member']['referred_by'] . "'";
-      $referrerMemberObject = assocArraySelectQuery($referredBySelectQuery, $link, "Failed to get referrer member info in getMemberInfo")[0];
-      $data['member']['referred_by_name'] = $referrerMemberObject['first_name'] . " " . $referrerMemberObject['last_name'];
-    }
-
-    $membershipSelectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $id . "'";
-    $data['memberships'] = assocArraySelectQuery($membershipSelectQuery, $link, "Failed to getMemberInfo membership");
-
-    $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $id . "' ORDER BY `date_time`";
-    $data['checkIns'] = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to getMemberInfo checkin");
-
-    $debitCreditSelectQuery = "SELECT * FROM `debit_credit` WHERE `member_id`='" . $id . "' ORDER BY `date_time`";
-    $data['debitCredits'] = assocArraySelectQuery($debitCreditSelectQuery, $link, "Failed to getMemberInfo debit/credit");
-
-    $feeStatusSelectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $id . "'";
-    $data['feeStatus'] = assocArraySelectQuery($feeStatusSelectQuery, $link, "Failed to getMemberInfo fee status");
-
-    $waiverStatusSelectQuery = "SELECT * FROM `waiver_status` WHERE `member_id`='" . $id . "'";
-    $data['waiverStatus'] = assocArraySelectQuery($waiverStatusSelectQuery, $link, "Failed to getMemberInfo waiver status");
-
-    $referralSelectQuery = "SELECT * FROM `referral` WHERE `referrer_id`='" . $id . "'";
-    $references = assocArraySelectQuery($referralSelectQuery, $link, "Failed to getMemberInfo referral");
-    for ( $i = 0; $i < count($references); $i++ ) {
-      $referredSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $references[$i]['referred_id'] . "'";
-      $memberObject = assocArraySelectQuery($referredSelectQuery, $link, "Failed to get referred member info in getMemberInfo")[0];
-      $references[$i]['referred_name'] = $memberObject['first_name'] . " " . $memberObject['last_name'];
-    }
-    $data['references'] = $references;
-
-    $rewardSelectQuery = "SELECT * FROM `reward` WHERE `member_id`='" . $id . "'";
-    $data['rewards'] = assocArraySelectQuery($rewardSelectQuery, $link, "Failed to getMemberInfo rewards");
+    $data = getMemberInfo($id, $link);
     break;
 
   case "checkInMember":
@@ -374,7 +383,7 @@ switch ( $_POST['type'] ) {
       $data['newFeeStatus'] = $feeStatus;
       $data['newMembership'] = $membership;
 
-      if ( generateReferralAtEnd ) {
+      if ( $generateReferralAtEnd ) {
         generateReferral($id);
       }
       $data['succeeded'] = true;
@@ -514,22 +523,24 @@ switch ( $_POST['type'] ) {
     break;
 
   case "getCompetitionTeamList":
-    $membershipSelectQuery = "SELECT * FROM `membership` WHERE `kind`='Competition' AND `term`='" . $CURRENT_TERM . "'";
-    $membershipArray = assocArraySelectQuery($membershipSelectQuery, $link, "Failed to select memberships in getCompetitionTeamList");
+    function getCompetitionTeamList($term, $dbLink) {
+      $membershipSelectQuery = "SELECT * FROM `membership` WHERE `kind`='Competition' AND `term`='" . $term . "'";
+      $membershipArray = assocArraySelectQuery($membershipSelectQuery, $dbLink, "Failed to select memberships in getCompetitionTeamList");
 
-    $memberObjects = [];
-    foreach($membershipArray as $membership) {
-      $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $membership['member_id'] . "'";
-      $memberArray = assocArraySelectQuery($memberSelectQuery, $link, "Failed to select member in getPresentWaiverlessMembers");
-      assert(count($memberArray) == 1);
-      $memberObjects[] = $memberArray[0];
+      $memberObjects = [];
+      foreach($membershipArray as $membership) {
+        $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $membership['member_id'] . "'";
+        $memberArray = assocArraySelectQuery($memberSelectQuery, $dbLink, "Failed to select member in getPresentWaiverlessMembers");
+        assert(count($memberArray) == 1);
+        $memberObjects[] = $memberArray[0];
+      }
+
+      for ( $i = 0; $i < count($memberObjects); $i++ ) {
+        $memberObjects[$i]['balance'] = calculateOutstandingDues($memberObjects[$i]['id']);
+      }
+      return $memberObjects;
     }
-
-    for ( $i = 0; $i < count($memberObjects); $i++ ) {
-      $memberObjects[$i]['balance'] = calculateOutstandingDues($memberObjects[$i]['id']);
-    }
-
-    $data = $memberObjects;
+    $data = getCompetitionTeamList($CURRENT_TERM, $link);
     break;
 
   case "getTransactions":
@@ -562,77 +573,97 @@ switch ( $_POST['type'] ) {
     break;
 
   case "getSummaryData":
+    function getSummaryData($summary_kind, $day, $dbLink) {
+      global $CURRENT_TERM;
+      global $CURRENT_START_DATE;
+      global $CURRENT_END_DATE;
+
+      // defaults to "term"
+      if ($summary_kind == "day") {
+        $dateCondition = " DATE(`date_time`) = DATE(" . $day . ")";
+      } else if ($summary_kind == "week") {
+        $dateCondition = " WEEKOFYEAR(`date_time`)=WEEKOFYEAR(" . $day . ")";
+      } else {
+        $dateCondition = " DATE(`date_time`) BETWEEN '" . $CURRENT_START_DATE . "' AND '" . $CURRENT_END_DATE . "'";
+      }
+
+      // collect checkins
+      $query = "SELECT * FROM `checkin` WHERE" . $dateCondition . " ORDER BY `date_time`";
+      $checkins = assocArraySelectQuery($query, $dbLink, "Failed to select checkins in getSummaryData");
+      // associate membership with checkin
+      for ($i = 0; $i < count($checkins); $i++) {
+        $query = "SELECT * FROM `membership` WHERE `member_id`='" . $checkins[$i]['member_id'] . "' AND `term`='" . $CURRENT_TERM . "'";
+        $membershipArray = assocArraySelectQuery($query, $dbLink, "Failed to select membership for checkin in getSummaryData");
+        assert(count($membershipArray) < 2);
+        $checkins[$i]['membership'] = count($membershipArray) > 0 ? $membershipArray[0]['kind'] : 'None';
+        $checkins[$i]['membership_id'] = count($membershipArray) > 0 ? $membershipArray[0]['id'] : 0;
+      }
+
+      // collect new memberships, does not include updated memberships
+      $query = "SELECT * FROM `membership` WHERE" . $dateCondition;
+      $newMemberShips = assocArraySelectQuery($query, $dbLink, "Failed to select memberships in getSummaryData");
+
+      // collect income
+      $query = "SELECT * FROM `debit_credit` WHERE (`method`='Cash' OR `method`='Check') AND `amount`>0 AND" . $dateCondition;
+      $credits = assocArraySelectQuery($query, $dbLink, "Failed to select credits in getSummaryData");
+
+      return [
+          'checkins' => $checkins,
+          'newMemberships' => $newMemberShips,
+          'credits' => $credits,
+      ];
+    }
     $summary_kind = $_POST['summary_kind'];
-
     $day = $_POST['day'] ? "'" . $_POST['day'] . "'" : "NOW()";
-    // defaults to "term"
-    if ( $summary_kind == "day" ) {
-      $dateCondition = " DATE(`date_time`) = DATE(" . $day . ")";
-    } else if ( $summary_kind == "week" ) {
-      $dateCondition = " WEEKOFYEAR(`date_time`)=WEEKOFYEAR(" . $day . ")";
-    } else {
-      $dateCondition = " DATE(`date_time`) BETWEEN '" . $CURRENT_START_DATE . "' AND '" . $CURRENT_END_DATE . "'";
-    }
+    $result = getSummaryData($summary_kind, $day, $link);
 
-    // collect checkins
-    $query = "SELECT * FROM `checkin` WHERE" . $dateCondition . " ORDER BY `date_time`";
-    $checkins = assocArraySelectQuery($query, $link, "Failed to select checkins in getSummaryData");
-    // associate membership with checkin
-    for ($i = 0; $i < count($checkins); $i++) {
-      $query = "SELECT * FROM `membership` WHERE `member_id`='" . $checkins[$i]['member_id'] . "' AND `term`='" . $CURRENT_TERM . "'";
-      $membershipArray = assocArraySelectQuery($query, $link, "Failed to select membership for checkin in getSummaryData");
-      assert(count($membershipArray) < 2);
-      $checkins[$i]['membership'] = count($membershipArray) > 0 ? $membershipArray[0]['kind'] : 'None';
-      $checkins[$i]['membership_id'] = count($membershipArray) > 0 ? $membershipArray[0]['id'] : 0;
-    }
-    $data['checkins'] = $checkins;
-
-    // collect new memberships, does not include updated memberships
-    $query = "SELECT * FROM `membership` WHERE" . $dateCondition;
-    $data['newMemberships'] = assocArraySelectQuery($query, $link, "Failed to select memberships in getSummaryData");
-
-    // collect income
-    $query = "SELECT * FROM `debit_credit` WHERE (`method`='Cash' OR `method`='Check') AND `amount`>0 AND" . $dateCondition;
-    $data['credits'] = assocArraySelectQuery($query, $link, "Failed to select credits in getSummaryData");
+    $data['checkins'] = $result['checkins'];
+    $data['newMemberships'] = $result['newMemberShips'];
+    $data['credits'] = $result['credits'];
     break;
 
   case "getComplexMembers":
-    $query = "SELECT * FROM `member`";
-    $members = assocArraySelectQuery($query, $link, "Failed to select from member in getComplexMembers");
+    function getComplexMembers($thisTerm, $dbLink) {
+      global $CURRENT_TERM;
+      global $CURRENT_START_DATE;
+      global $CURRENT_END_DATE;
 
-    $thisTerm = $_POST['thisTerm'] ? true : false;
-    $termConstraint = $thisTerm ? " AND `term`='" . $CURRENT_TERM . "'" : "";
-    $dateConstraint = $thisTerm ? " AND DATE(`date_time`) BETWEEN '" . $CURRENT_START_DATE . "' AND '" . $CURRENT_END_DATE . "'" : "";
+      $termConstraint = $thisTerm ? " AND `term`='" . $CURRENT_TERM . "'" : "";
+      $dateConstraint = $thisTerm ? " AND DATE(`date_time`) BETWEEN '" . $CURRENT_START_DATE . "' AND '" . $CURRENT_END_DATE . "'" : "";
 
-    $memberDict = [];
-    foreach($members as $member) {
-      $mid = $member['id'];
+      $query = "SELECT * FROM `member`";
+      $members = assocArraySelectQuery($query, $dbLink, "Failed to select from member in getComplexMembers");
+      $memberDict = [];
+      foreach($members as $member) {
+        $mid = $member['id'];
 
-      $query = "SELECT * FROM `membership` WHERE `member_id`='" . $mid . "'" . $termConstraint;
-      $member['membership'] = assocArraySelectQuery($query, $link, "Failed to select membership in getComplexMembers");
+        $query = "SELECT * FROM `membership` WHERE `member_id`='" . $mid . "'" . $termConstraint;
+        $member['membership'] = assocArraySelectQuery($query, $dbLink, "Failed to select membership in getComplexMembers");
 
-      $query = "SELECT * FROM `fee_status` WHERE `member_id`='" . $mid . "'" . $termConstraint;
-      $member['fee_status'] = assocArraySelectQuery($query, $link, "Failed to select fee_status in getComplexMembers");
+        $query = "SELECT * FROM `fee_status` WHERE `member_id`='" . $mid . "'" . $termConstraint;
+        $member['fee_status'] = assocArraySelectQuery($query, $dbLink, "Failed to select fee_status in getComplexMembers");
 
-      $query = "SELECT * FROM `waiver_status` WHERE `member_id`='" . $mid . "'" . $termConstraint;
-      $member['waiver_status'] = assocArraySelectQuery($query, $link, "Failed to select waiver_status in getComplexMembers");
+        $query = "SELECT * FROM `waiver_status` WHERE `member_id`='" . $mid . "'" . $termConstraint;
+        $member['waiver_status'] = assocArraySelectQuery($query, $dbLink, "Failed to select waiver_status in getComplexMembers");
 
-      $query = "SELECT * FROM `referral` WHERE `referrer_id`='" . $mid . "'" . $termConstraint;
-      $member['referral'] = assocArraySelectQuery($query, $link, "Failed to select referral in getComplexMembers");
+        $query = "SELECT * FROM `referral` WHERE `referrer_id`='" . $mid . "'" . $termConstraint;
+        $member['referral'] = assocArraySelectQuery($query, $dbLink, "Failed to select referral in getComplexMembers");
 
-      $query = "SELECT * FROM `reward` WHERE `member_id`='" . $mid . "'" . $termConstraint;
-      $member['reward'] = assocArraySelectQuery($query, $link, "Failed to select reward in getComplexMembers");
+        $query = "SELECT * FROM `reward` WHERE `member_id`='" . $mid . "'" . $termConstraint;
+        $member['reward'] = assocArraySelectQuery($query, $dbLink, "Failed to select reward in getComplexMembers");
 
-      $query = "SELECT * FROM `checkin` WHERE `member_id`='" . $mid . "'" . $dateConstraint;
-      $member['checkin'] = assocArraySelectQuery($query, $link, "Failed to select checkin in getComplexMembers");
+        $query = "SELECT * FROM `checkin` WHERE `member_id`='" . $mid . "'" . $dateConstraint;
+        $member['checkin'] = assocArraySelectQuery($query, $dbLink, "Failed to select checkin in getComplexMembers");
 
-      $query = "SELECT * FROM `debit_credit` WHERE `member_id`='" . $mid . "'" . $dateConstraint;
-      $member['debit_credit'] = assocArraySelectQuery($query, $link, "Failed to select debit_credit in getComplexMembers");
+        $query = "SELECT * FROM `debit_credit` WHERE `member_id`='" . $mid . "'" . $dateConstraint;
+        $member['debit_credit'] = assocArraySelectQuery($query, $dbLink, "Failed to select debit_credit in getComplexMembers");
 
-      $memberDict[$mid] = $member;
+        $memberDict[$mid] = $member;
+      }
+      return $memberDict;
     }
-
-    $data['members'] = array_values($memberDict);
+    $thisTerm = $_POST['thisTerm'] ? true : false;
+    $data['members'] = array_values(getComplexMembers($thisTerm, $link));
     break;
 }
 
