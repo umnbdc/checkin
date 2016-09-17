@@ -489,7 +489,7 @@ function updateCompetitionLateFees($safe_member_id, $term) {
 $data = $_POST;
 
 include('auth.php');
-include('mailchimp.php');
+include('resources/mailchimp.php');
 
 switch ( $_POST['type'] ) {
   case "environment":
