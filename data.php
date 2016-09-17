@@ -325,89 +325,94 @@ switch ( $_POST['type'] ) {
     break;
 
   case "updateMembershipAndFeeStatus":
-    // TODO: encapsulate this in a function
+    function updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $term, $dbLink) {
+      $newData = [];
+
+      if ($authRole == 'Volunteer' && $membership == 'Competition') {
+        $newData['succeeded'] = false;
+        $newData['reason'] = 'Volunteers cannot assign competition team membership';
+        return $newData;
+      } else {
+        $oldFeeStatus = '';
+        $oldMembership = '';
+
+        // we don't want to generate the referral before in case something fails
+        // but we need to check for previous membership before memberships are inserted into the DB
+        // also only generate referral for paid memberships
+        // Note:
+        // Also if the new combination is invalid, it will error out before DB changes are made
+        $generateReferralAtEnd = !hasHadMembership($id) && calculateDues($membership, $feeStatus, $term) > 0;
+
+        // update/insert fee status
+        $feeStatusSelectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
+        $feeStatusResult = assocArraySelectQuery($feeStatusSelectQuery, $dbLink, "Failed to select fee status");
+        if ($feeStatusResult) {
+          $fee_status_id = $feeStatusResult[0]['id'];
+          $oldFeeStatus = $feeStatusResult[0]['kind'];
+          $feeStatusUpdateQuery = "UPDATE `fee_status` SET `kind`='" . $feeStatus . "' WHERE `id`='" . $fee_status_id . "'";
+          safeQuery($feeStatusUpdateQuery, $dbLink, "Failed to update new fee status");
+        } else {
+          $feeStatusInsertQuery = sprintf("INSERT INTO `fee_status`(`member_id`, `term`, `kind`) VALUES (%s,%s,%s)",
+              "'" . $id . "'",
+              "'" . $term . "'",
+              "'" . $feeStatus . "'");
+          safeQuery($feeStatusInsertQuery, $dbLink, "Failed to insert new fee status");
+        }
+
+        // update/insert membership
+        $membershipSelectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
+        $membershipResult = assocArraySelectQuery($membershipSelectQuery, $dbLink, "Failed to select membership");
+        if ($membershipResult) {
+          $membership_id = $membershipResult[0]['id'];
+          $oldMembership = $membershipResult[0]['kind'];
+          $membershipUpdateQuery = "UPDATE `membership` SET `kind`='" . $membership . "' WHERE `id`='" . $membership_id . "'";
+          safeQuery($membershipUpdateQuery, $dbLink, "Failed to update new membership");
+        } else {
+          $membershipInsertQuery = sprintf("INSERT INTO `membership`(`member_id`, `term`, `kind`) VALUES (%s,%s,%s)",
+              "'" . $id . "'",
+              "'" . $term . "'",
+              "'" . $membership . "'");
+          safeQuery($membershipInsertQuery, $dbLink, "Failed to insert new membership");
+        }
+
+        // update dues?
+        if ($oldFeeStatus != $feeStatus || $oldMembership != $membership) {
+          // was there an old feeStatus-membership debit
+          if ($oldFeeStatus && $oldMembership) {
+            // Note, could be done less precisely using LIKE keyword to wildcard membership and feeStatus
+            $oldDueKind = createMembershipDueKind($oldMembership, $oldFeeStatus, $term);
+            $duesDeleteQuery = "DELETE FROM `debit_credit` WHERE `member_id`='" . $id . "' AND `kind`='" . $oldDueKind . "'";
+            safeQuery($duesDeleteQuery, $dbLink, "Failed to delete old membership debit");
+            $newData['duesDeleteQuery'] = $duesDeleteQuery;
+          }
+          $newDueKind = createMembershipDueKind($membership, $feeStatus, $term);
+          $amount = -1 * calculateDues($membership, $feeStatus, $term);
+          $duesInsertQuery = sprintf("INSERT INTO `debit_credit`(`member_id`, `amount`, `kind`, `date_time`) VALUES (%s,%s,%s,CURRENT_TIMESTAMP)",
+              "'" . $id . "'",
+              "'" . $amount . "'",
+              "'" . $newDueKind . "'");
+          safeQuery($duesInsertQuery, $dbLink, "Failed to insert new membership debit");
+        }
+
+        $newData['oldFeeStatus'] = $oldFeeStatus;
+        $newData['oldMembership'] = $oldMembership;
+        $newData['newFeeStatus'] = $feeStatus;
+        $newData['newMembership'] = $membership;
+
+        if ($generateReferralAtEnd) {
+          generateReferral($id);
+        }
+        $newData['succeeded'] = true;
+        return $newData;
+      }
+    }
     $id = mysql_escape_string($_POST['id']);
     $feeStatus = mysql_escape_string($_POST['feeStatus']);
     $membership = mysql_escape_string($_POST['membership']);
     $term = mysql_escape_string($_POST['term']);
+    $authRole = $_POST['auth_role'];
 
-    $data = [];
-
-    if (isVolunteer() && $membership == 'Competition') {
-      $data['succeeded'] = false;
-      $data['reason'] = 'Volunteers cannot assign competition team membership';
-    } else {
-      $oldFeeStatus = '';
-      $oldMembership = '';
-
-      // we don't want to generate the referral before in case something fails
-      // but we need to check for previous membership before memberships are inserted into the DB
-      // also only generate referral for paid memberships
-      // Note:
-      // Also if the new combination is invalid, it will error out before DB changes are made
-      $generateReferralAtEnd = !hasHadMembership($id) && calculateDues($membership, $feeStatus, $term) > 0;
-
-      // update/insert fee status
-      $feeStatusSelectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
-      $feeStatusResult = assocArraySelectQuery($feeStatusSelectQuery, $link, "Failed to select fee status");
-      if ( $feeStatusResult ) {
-        $fee_status_id = $feeStatusResult[0]['id'];
-        $oldFeeStatus = $feeStatusResult[0]['kind'];
-        $feeStatusUpdateQuery = "UPDATE `fee_status` SET `kind`='" . $feeStatus . "' WHERE `id`='" . $fee_status_id . "'";
-        safeQuery($feeStatusUpdateQuery, $link, "Failed to update new fee status");
-      } else {
-        $feeStatusInsertQuery = sprintf("INSERT INTO `fee_status`(`member_id`, `term`, `kind`) VALUES (%s,%s,%s)",
-            "'" . $id . "'",
-            "'" . $term . "'",
-            "'" . $feeStatus . "'");
-        safeQuery($feeStatusInsertQuery, $link, "Failed to insert new fee status");
-      }
-
-      // update/insert membership
-      $membershipSelectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
-      $membershipResult = assocArraySelectQuery($membershipSelectQuery, $link, "Failed to select membership");
-      if ( $membershipResult ) {
-        $membership_id = $membershipResult[0]['id'];
-        $oldMembership = $membershipResult[0]['kind'];
-        $membershipUpdateQuery = "UPDATE `membership` SET `kind`='" . $membership . "' WHERE `id`='" . $membership_id . "'";
-        safeQuery($membershipUpdateQuery, $link, "Failed to update new membership");
-      } else {
-        $membershipInsertQuery = sprintf("INSERT INTO `membership`(`member_id`, `term`, `kind`) VALUES (%s,%s,%s)",
-            "'" . $id . "'",
-            "'" . $term . "'",
-            "'" . $membership . "'");
-        safeQuery($membershipInsertQuery, $link, "Failed to insert new membership");
-      }
-
-      // update dues?
-      if ( $oldFeeStatus != $feeStatus || $oldMembership != $membership ) {
-        // was there an old feeStatus-membership debit
-        if ( $oldFeeStatus && $oldMembership ) {
-          // Note, could be done less precisely using LIKE keyword to wildcard membership and feeStatus
-          $oldDueKind = createMembershipDueKind($oldMembership, $oldFeeStatus, $term);
-          $duesDeleteQuery = "DELETE FROM `debit_credit` WHERE `member_id`='" . $id . "' AND `kind`='" . $oldDueKind . "'";
-          safeQuery($duesDeleteQuery, $link, "Failed to delete old membership debit");
-          $data['duesDeleteQuery'] = $duesDeleteQuery;
-        }
-        $newDueKind = createMembershipDueKind($membership, $feeStatus, $term);
-        $amount = -1 * calculateDues($membership, $feeStatus, $term);
-        $duesInsertQuery = sprintf("INSERT INTO `debit_credit`(`member_id`, `amount`, `kind`, `date_time`) VALUES (%s,%s,%s,CURRENT_TIMESTAMP)",
-            "'" . $id . "'",
-            "'" . $amount . "'",
-            "'" . $newDueKind . "'");
-        safeQuery($duesInsertQuery, $link, "Failed to insert new membership debit");
-      }
-
-      $data['oldFeeStatus'] = $oldFeeStatus;
-      $data['oldMembership'] = $oldMembership;
-      $data['newFeeStatus'] = $feeStatus;
-      $data['newMembership'] = $membership;
-
-      if ( $generateReferralAtEnd ) {
-        generateReferral($id);
-      }
-      $data['succeeded'] = true;
-    }
+    $data = updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $term, $link);
     break;
 
   case "payment":
