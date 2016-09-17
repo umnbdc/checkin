@@ -16,12 +16,13 @@ This readme is a brief overview of the code for the check-in system
     Where most of the server-side code lives. 
     Contains constants to setup the environment for the current semester, functions for dues, functions for check in etc., and the handling logic for post requests)
 
-* `modals/`:
-    Contains the templates for the modals 
-* `js/`:
-    JS files, for client-side handling
-* `containers/`:
-    Templates for displaying data etc. on the site
+* `resources`:
+    * `modals/`:
+        Contains the templates for the modals 
+    * `js/`:
+        JS files, for client-side handling
+    * `containers/`:
+        Templates for displaying data etc. on the site
     
 * `css/main.css`:
     The CSS for the site
