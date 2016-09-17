@@ -2,203 +2,33 @@
 
 date_default_timezone_set('America/Chicago');
 
-/* BEGIN ENVIRONMENT SETUP */
+require_once "resources/config.php";
 
-$CURRENT_TERM = "Fall2016";
-$CURRENT_START_DATE = "2016-09-01";
-$CURRENT_END_DATE = "2016-12-31";
-$CHECKINS_PER_WEEK = array(
-  "Single" => 1,
-  "Standard" => 2,
-  "Social" => 2,
-  "Competition" => INF,
-  "Full" => INF,
-  "Summer" => INF,
-);
-$NUMBER_OF_FREE_CHECKINS = 2;
-
-$BEGINNER_LESSON_TIME = "8:00pm";
-$INTERMEDIATE_LESSON_TIME = "7:15pm";
-$CHECK_IN_PERIOD = 30; // minutes
-
-/* END ENVIRONMENT SETUP */
-/* BEGIN SEMESTER SCHEDULES */
-
-/*
- * Due dates for comp team fees, based on maximum owed at certain dates
- * (These must be input manually before the start of the semester)
- */
-$COMP_DUE_DATE_TABLE = array(
-  // term -> fee_status -> date -> min_outstanding_at_date (i.e. cumulative)
-  "Spring2015" => array(
-    "StudentServicesFees" => array(
-      "2015-02-12" => -9000,
-      "2015-03-06" => -4500,
-      "2015-04-07" => 0
-    ),
-    "URCMembership" => array(
-      "2015-02-12" => -9000,
-      "2015-03-06" => -4500,
-      "2015-04-07" => 0
-    ),
-    "Affiliate" => array(
-      "2015-02-12" => 0
-    )
-  ),
-  "Fall2015" => array(
-    "StudentServicesFees" => array(
-      "2015-09-25" => -9000,
-      "2015-10-16" => -4500,
-      "2015-11-06" => 0
-    ),
-    "Affiliate" => array(
-      "2015-09-25" => 0
-    )
-  ),
-  "Spring2016" => array(
-    "StudentServicesFees" => array(
-      "2016-02-05" => -10000,
-      "2016-02-19" => -5000,
-      "2016-03-04" => 0
-    ),
-    "Affiliate" => array(
-      "2015-02-05" => 0
-    )
-  ),
-  "Fall2016" => array(
-    "StudentServicesFees" => array(
-      "2015-09-30" => -10000,
-      "2016-10-14" => -5000,
-      "2016-11-28" => 0,
-    ),
-    "Affiliate" => array(
-      "2016-09-22" => 0
-    )
-  )
-);
-$LATE_FEE_AMOUNT = 200;
-
-/*
- * Schedule of Competition team practices
- * (These must be input manually before the start of the semester)
- */
-$COMP_PRACTICES_TABLE = array(
-  "Spring2015" => array(
-    "2015-02-03", "2015-02-05", "2015-02-06", // Feb
-    "2015-02-10", "2015-02-12", "2015-02-13",
-    "2015-02-17", "2015-02-19", "2015-02-20",
-    "2015-02-24", "2015-02-26", "2015-02-27",
-    "2015-03-03", "2015-03-05", "2015-03-06", // March
-    "2015-03-10", "2015-03-12", "2015-03-13",
-    // Spring Break
-    "2015-03-24", "2015-03-26", "2015-03-27",
-    "2015-03-31",
-                  "2015-04-02", "2015-04-03", // April
-    "2015-04-07", "2015-04-09", "2015-04-10",
-    "2015-04-14", "2015-04-16", "2015-04-17",
-    "2015-04-21", "2015-04-23", "2015-04-24"
-  ),
-  "Fall2015" => array(
-    "2015-09-22", "2015-09-24", "2015-09-25",
-    "2015-09-29", "2015-10-01", "2015-10-02",
-    "2015-10-06", "2015-10-08", "2015-10-09",
-    "2015-10-13", "2015-10-15", "2015-10-16",
-    "2015-10-20", "2015-10-22", "2015-10-23",
-    "2015-10-27", "2015-10-29", "2015-10-30",
-    "2015-11-03", "2015-11-05", "2015-11-06",
-    "2015-11-10", "2015-11-12", "2015-11-13",
-    "2015-11-17", "2015-11-19", "2015-11-20",
-    "2015-11-24", // Thanksgiving
-    "2015-12-01", "2015-12-03", "2015-12-04",
-    "2015-12-08", "2015-12-10", "2015-12-11",
-    "2015-12-15", "2015-12-17", "2015-12-18",
-  ),
-  "Spring2016" => array(
-    "2016-01-26", "2016-01-28", "2016-01-29", // Jan
-    "2016-02-02", "2016-02-04", "2016-02-05", // Feb
-    "2016-02-09", "2016-02-11", "2016-02-12",
-    "2016-02-16", "2016-02-18", "2016-02-19",
-    "2016-02-23", "2016-02-25", "2016-02-26",
-    "2016-03-01", "2016-03-03", "2016-03-04", // March
-    "2016-03-08", "2016-03-10", "2016-03-11",
-    // Spring Break
-    "2016-03-22", "2016-03-24", "2016-03-25",
-    "2016-03-29", "2016-03-31",
-                                "2016-04-01", // April
-    "2016-04-05", "2016-04-07", // MichComp
-    "2016-04-12", "2016-04-14", "2016-04-15",
-    "2016-04-19", "2016-04-21", "2016-04-22",
-    "2016-04-26", "2016-04-28", "2016-04-29",
-  ),
-  "Fall2016" => array(
-    "2015-09-20", "2015-09-22", "2015-09-23", // Sept
-    "2015-09-27", "2015-09-29", "2015-09-30",
-    "2015-10-04", "2015-10-06", "2015-10-07", // Oct
-    "2015-10-11", "2015-10-13", "2015-10-14",
-    "2015-10-18", "2015-10-20", "2015-10-21",
-    "2015-10-25", "2015-10-27", "2015-10-28",
-    "2015-11-01", "2015-11-03", "2015-11-04", // Nov
-    "2015-11-08", "2015-11-10", "2015-11-11",
-    "2015-11-15", "2015-11-17", "2015-11-18",
-    "2015-11-22", // Thanksgiving
-    "2015-11-29", "2015-12-01", "2015-12-02", // Dec
-    "2015-12-06", "2015-12-08", "2015-12-09",
-  ),
-);
 
 // Safeguard against forgetting to change the current term start and end
 if ( strtotime($CURRENT_START_DATE) > strtotime('today') || strtotime($CURRENT_END_DATE) < strtotime('today') ) {
   die("Current term (range) is out of date.");
 }
 
-/* END SEMESTER SCHEDULES */
-/* BEGIN DUES, FEES, CHECK INS */
 
-// Prices for apparel
-$PURCHASE_TABLE = array(
-  "Jacket" => 4600,
-  "Shoes_Men" => 3000,
-  "Shoes_Women" => 2500
-);
+/* BEGIN DUES, FEES, CHECK INS */
 
 // return positive integer, number of cents
 function calculateDues($membership, $feeStatus, $term) {
-  $feeTable = [];
-  
-  $feeTable['StudentServicesFees'] = [];
-  $feeTable['StudentServicesFees']['Standard'] = 5000;
-  $feeTable['StudentServicesFees']['Single'] = 2500;
-  $feeTable['StudentServicesFees']['Social'] = 1500;
-  
-  $feeTable['URCMembership'] = [];
-  $feeTable['URCMembership']['Standard'] = 6000;
-  $feeTable['URCMembership']['Single'] = 3000;
-  $feeTable['URCMembership']['Social'] = 1800;
-  $feeTable['URCMembership']['Competition'] = 20000;
-  
-  $feeTable['Affiliate'] = [];
-  
-  $feeTable['StudentServicesFees']['Full'] = 4000;
-  $feeTable['Affiliate']['Full'] = 6900;
-  
-  $feeTable['StudentServicesFees']['Competition'] = 22000;
-  $feeTable['Affiliate']['Competition'] = 6000;
-  
-  // Summer membership/feeStatus should only be available in during summer terms
-  if ( strpos($term, "Summer") === 0 ) {
-    $feeTable['Summer'] = [];
-    $feeTable['Summer']['Summer'] = 0;
-  }
-  
-  if (array_key_exists($feeStatus, $feeTable) && array_key_exists($membership, $feeTable[$feeStatus])) {
-    return $feeTable[$feeStatus][$membership];
+  global $FEE_TABLE;
+
+//    // Summer membership/feeStatus should only be available in during summer terms
+//    if ( strpos($term, "Summer") === 0 ) {
+//        $FEE_TABLE['Summer'] = [];
+//        $FEE_TABLE['Summer']['Summer'] = 0;
+//    }
+
+  if (array_key_exists($feeStatus, $FEE_TABLE) && array_key_exists($membership, $FEE_TABLE[$feeStatus])) {
+    return $FEE_TABLE[$feeStatus][$membership];
   } else {
     die("membership-feeStatus-term combination is invalid");
   }
 }
-
-// Discount for new competition team members
-$NEW_COMP_MEMBER_DISCOUNT = 3000;
 
 function createMembershipDueKind($membership, $feeStatus, $term) {
   return "Membership (" . $membership . ", " . $feeStatus . ", " . $term . ")";
