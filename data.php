@@ -63,16 +63,14 @@ function hasHadMembership($safeId) {
   return $membershipArray != [];
 }
 
-function insertPayment($member_id, $amount, $method, $kind) {
+function insertPayment($member_id, $amount, $method, $kind, $dbLink) {
   // assumes that the parameters are safe
-  global $link;
-    
   $insertQuery = sprintf("INSERT INTO `debit_credit`(`member_id`, `amount`, `method`, `kind`, `date_time`) VALUES (%s,%s,%s,%s,CURRENT_TIMESTAMP)",
       "'" . $member_id . "'",
       "'" . $amount . "'",
       "'" . $method . "'",
       "'" . $kind . "'");
-  safeQuery($insertQuery, $link, "Failed to insert new payment");
+  safeQuery($insertQuery, $dbLink, "Failed to insert new payment");
 }
 
 function getMembershipAndFeeStatus($safe_member_id, $term) {
@@ -152,60 +150,81 @@ function updateCompetitionLateFees($safe_member_id, $term) {
 /* END DUES, FEES, CHECK INS */
 /* BEGIN POST REQUEST HANDLING */
 
+function setSucceededAndReason($data, $result) {
+  $data['succeeded'] = $result['succeeded'];
+  if (array_key_exists('reason', $result)) {
+    $data['reason'] = $result['reason'];
+  }
+  return $data;
+}
+
+
 $data = $_POST;
 
 switch ( $_POST['type'] ) {
   case "environment":
-    $data = [];
-    $data['CURRENT_TERM'] = $CURRENT_TERM;
+    $data = ['CURRENT_TERM' => $CURRENT_TERM];
     break;
 
   case "newMember":
-    $member = $_POST['member'];
-    $escapedEmail = mysql_escape_string($member['email']);
+    function newMember($member, $dbLink) {
+      $escapedEmail = mysql_escape_string($member['email']);
+      $toReturn = array("succeeded" => false, "reason" => "", "member" => null);
 
-    $data = array("succeeded" => false, "reason" => "", member => null);
-
-    // prevent duplicate emails
-    $selectQuery = sprintf("SELECT * FROM `member` WHERE `email`='%s'", $escapedEmail);
-    $members = assocArraySelectQuery($selectQuery, $link, "Failed to check for a member with the same email in newMember");
-    if ( count($members) != 0 ) {
-      assert(count($members) == 1);
-      $data['reason'] = "A member with the given email already exists.";
-      $data['member'] = $members[0];
-    } else {
-      $insertQuery = sprintf("INSERT INTO `member`(`first_name`, `last_name`, `nick_name`, `email`, `join_date`, `referred_by`) VALUES (%s,%s,%s,%s,CURRENT_TIMESTAMP,%s)",
-          "'" . mysql_escape_string($member['firstName']) . "'",
-          "'" . mysql_escape_string($member['lastName']) . "'",
-          $member['nickname'] ? "'" . mysql_escape_string($member['nickname']) . "'" : 'NULL',
-          "'" . $escapedEmail . "'",
-          $member['referredBy'] ? mysql_escape_string($member['referredBy']) : 'NULL');
-      safeQuery($insertQuery, $link, "Failed to insert new member in newMember");
-
+      // prevent duplicate emails
       $selectQuery = sprintf("SELECT * FROM `member` WHERE `email`='%s'", $escapedEmail);
-      $members = assocArraySelectQuery($selectQuery, $link, "Failed to fetch the new member in newMember");
-      assert(count($members) == 1);
-      $data['succeeded'] = true;
-      $data['member'] = $members[0];
+      $members = assocArraySelectQuery($selectQuery, $dbLink, "Failed to check for a member with the same email in newMember");
+      if (count($members) != 0) {
+        assert(count($members) == 1);
+        $toReturn['reason'] = "A member with the given email already exists.";
+        $toReturn['member'] = $members[0];
+      } else {
+        $insertQuery = sprintf("INSERT INTO `member`(`first_name`, `last_name`, `nick_name`, `email`, `join_date`, `referred_by`) VALUES (%s,%s,%s,%s,CURRENT_TIMESTAMP,%s)",
+            "'" . mysql_escape_string($member['firstName']) . "'",
+            "'" . mysql_escape_string($member['lastName']) . "'",
+            $member['nickname'] ? "'" . mysql_escape_string($member['nickname']) . "'" : 'NULL',
+            "'" . $escapedEmail . "'",
+            $member['referredBy'] ? mysql_escape_string($member['referredBy']) : 'NULL');
+        safeQuery($insertQuery, $dbLink, "Failed to insert new member in newMember");
+
+        $selectQuery = sprintf("SELECT * FROM `member` WHERE `email`='%s'", $escapedEmail);
+        $members = assocArraySelectQuery($selectQuery, $dbLink, "Failed to fetch the new member in newMember");
+        assert(count($members) == 1);
+        $toReturn['succeeded'] = true;
+        $toReturn['member'] = $members[0];
+      }
+      return $toReturn;
     }
+    $member = $_POST['member'];
+    $data = newMember($member, $link);
     break;
 
   case "updateMember":
+    function updateMember($firstName, $nickName, $lastName, $email, $proficiency, $id, $link) {
+      $toReturn = [];
+      if (isVolunteer()) {
+        $toReturn['succeeded'] = false;
+        $toReturn['reason'] = "Volunteers cannot change update member information.";
+      } else {
+        $updateQuery = "UPDATE `member` SET `first_name`='" . $firstName . "',`nick_name`='" . $nickName . "',`last_name`='" . $lastName . "',`email`='" . $email . "',`proficiency`='" . $proficiency . "' WHERE `id`='" . $id . "'";
+        $toReturn['updateQuery'] = $updateQuery;
+        safeQuery($updateQuery, $link, "Failed to update member info");
+        $toReturn['succeeded'] = true;
+      }
+      return $toReturn;
+    }
     $id = mysql_escape_string($_POST['id']);
     $firstName = mysql_escape_string($_POST['firstName']);
     $lastName = mysql_escape_string($_POST['lastName']);
     $nickName = mysql_escape_string($_POST['nickName']);
     $email = mysql_escape_string($_POST['email']);
     $proficiency = mysql_escape_string($_POST['proficiency']);
+    $authRole = $_POST['auth_role'];
 
-    if (isVolunteer()) {
-      $data['succeeded'] = false;
-      $data['reason'] = "Volunteers cannot change update member information.";
-    } else {
-      $updateQuery = "UPDATE `member` SET `first_name`='" . $firstName . "',`nick_name`='" . $nickName . "',`last_name`='" . $lastName . "',`email`='" . $email . "',`proficiency`='" . $proficiency . "' WHERE `id`='" . $id . "'";
-      $data['updateQuery'] = $updateQuery;
-      safeQuery($updateQuery, $link, "Failed to update member info");
-      $data['succeeded'] = true;
+    $result = updateMember($firstName, $nickName, $lastName, $email, $proficiency, $id, $link);
+    $data = setSucceededAndReason($data, $result);
+    if (array_key_exists('updateQuery', $result)) {
+      $data['updateQuery'] = $result['updateQuery'];
     }
     break;
 
@@ -306,6 +325,7 @@ switch ( $_POST['type'] ) {
     break;
 
   case "updateMembershipAndFeeStatus":
+    // TODO: encapsulate this in a function
     $id = mysql_escape_string($_POST['id']);
     $feeStatus = mysql_escape_string($_POST['feeStatus']);
     $membership = mysql_escape_string($_POST['membership']);
@@ -391,25 +411,32 @@ switch ( $_POST['type'] ) {
     break;
 
   case "payment":
+    function doPayment($member_id, $kind, $method, $amount, $authRole, $dbLink) {
+      $toReturn = [];
+      $authorized = $authRole == "President" || $authRole == "Treasurer" || $authRole == "Admin";
+      if ( $authRole == 'Volunteer' ) {
+        $toReturn['succeeded'] = false;
+        $toReturn['reason'] = "Volunteers cannot process payments.";
+      } else if ( $method == "Cash" || $method == "Check" || ($authorized && $method == "Forgiveness") ) {
+        if ($method == "Forgiveness") {
+          $method = $method . " (" . $authRole . ")";
+        }
+        insertPayment($member_id, $amount, $method, $kind, $dbLink);
+        $toReturn['succeeded'] = true;
+      } else {
+        $toReturn['succeeded'] = false;
+        $toReturn['reason'] = "Payment method not accepted";
+      }
+      return $toReturn;
+    }
     $member_id = mysql_escape_string($_POST['member_id']);
     $kind = mysql_escape_string($_POST['kind']);
     $method = mysql_escape_string($_POST['method']);
     $amount = mysql_escape_string($_POST['amount']); // should be in cents
+    $authRole = $_POST['auth_role'];
 
-    $authorized = $_POST['auth_role'] == "President" || $_POST['auth_role'] == "Treasurer" || $_POST['auth_role'] == "Admin";
-    if ( isVolunteer() ) {
-      $data['succeeded'] = false;
-      $data['reason'] = "Volunteers cannot process payments.";
-    } else if ( $method == "Cash" || $method == "Check" || ($authorized && $method == "Forgiveness") ) {
-      if ($method == "Forgiveness") {
-        $method = $method . " (" . $_POST['auth_role'] . ")";
-      }
-      insertPayment($member_id, $amount, $method, $kind);
-      $data['succeeded'] = true;
-    } else {
-      $data['succeeded'] = false;
-      $data['reason'] = "Payment method not accepted";
-    }
+    $result = doPayment($member_id, $kind, $method, $amount, $authRole, $link);
+    $data = setSucceededAndReason($data, $result);
     break;
 
   case "debit":
@@ -417,99 +444,137 @@ switch ( $_POST['type'] ) {
     $kind = mysql_escape_string($_POST['kind']);
     $amount = mysql_escape_string($_POST['amount']); // should be in cents
 
-    insertPayment($member_id, $amount, $method, $kind);
+    insertPayment($member_id, $amount, $method, $kind, $link);
     $data['succeeded'] = true;
     break;
 
   case "purchase":
+    function doPurchase($member_id, $kind, $method, $authRole, $dbLink) {
+      global $PURCHASE_TABLE;
+      $toReturn = [];
+      if ( $authRole == 'Volunteer' ) {
+        $toReturn['succeeded'] = false;
+        $toReturn['reason'] = "Volunteers cannot process purchases.";
+      } else if ( array_key_exists($kind, $PURCHASE_TABLE) ) {
+        $amount = $PURCHASE_TABLE[$kind];
+        insertPayment($member_id, $amount, $method, $kind, $dbLink); // credit
+        insertPayment($member_id, -1*$amount, "", $kind, $dbLink); // debit
+        $toReturn['succeeded'] = true;
+      } else {
+        $toReturn['succeeded'] = false;
+        $toReturn['reason'] = 'Cost of item "' . $kind . '" could not be found.';
+      }
+      return $toReturn;
+    }
     $member_id = mysql_escape_string($_POST['member_id']);
     $kind = mysql_escape_string($_POST['kind']);
     $method = mysql_escape_string($_POST['method']);
-
-    if ( isVolunteer() ) {
-      $data['succeeded'] = false;
-      $data['reason'] = "Volunteers cannot process purchases.";
-    } else if ( array_key_exists($kind, $PURCHASE_TABLE) ) {
-      $amount = $PURCHASE_TABLE[$kind];
-      insertPayment($member_id, $amount, $method, $kind); // credit
-      insertPayment($member_id, -1*$amount, "", $kind); // debit
-      $data['succeeded'] = true;
-    } else {
-      $data['succeeded'] = false;
-      $data['reason'] = 'Cost of item "' . $kind . '" could not be found.';
-    }
+    $authRole = $_POST['auth_role'];
+    $result = doPurchase($member_id, $kind, $method, $authRole, $link);
+    $data = setSucceededAndReason($data, $result);
     break;
 
   case "addNewCompMemberDiscount":
-    $member_id = mysql_escape_string($_POST['member_id']);
-    $method = "NewCompMember (" . $_POST['auth_role'] . ")";
-    $kind = "Membership (NewCompMember)";
-    $amount = $NEW_COMP_MEMBER_DISCOUNT;
+    function addNewCompMemberDiscount($memberId, $authRole, $dbLink) {
+      global $NEW_COMP_MEMBER_DISCOUNT;
 
-    if (
-        $_POST['auth_role'] == "President" ||
-        $_POST['auth_role'] == "Fundraising" ||
-        $_POST['auth_role'] == "Treasurer" ||
-        $_POST['auth_role'] == "Admin"
-    ) {
-      insertPayment($member_id, $amount, $method, $kind);
-      $data['succeeded'] = true;
-    } else {
-      $data['succeeded'] = false;
-      $data['reason'] = "Only the president, fundraising officer, treasurer, or admin can add the new team member discount.";
+      $method = "NewCompMember (" . $authRole . ")";
+      $kind = "Membership (NewCompMember)";
+      $amount = $NEW_COMP_MEMBER_DISCOUNT;
+      $toReturn = [];
+
+      if (
+          $authRole == "President" ||
+          $authRole == "Fundraising" ||
+          $authRole == "Treasurer" ||
+          $authRole == "Admin"
+      ) {
+        insertPayment($memberId, $amount, $method, $kind, $dbLink);
+        $toReturn['succeeded'] = true;
+      } else {
+        $toReturn['succeeded'] = false;
+        $toReturn['reason'] = "Only the president, fundraising officer, treasurer, or admin can add the new team member discount.";
+      }
+      return $toReturn;
     }
+    $member_id = mysql_escape_string($_POST['member_id']);
+    $authRole = $_POST['auth_role'];
+    $result = addNewCompMemberDiscount($member_id, $authRole, $link);
+    $data = setSucceededAndReason($data, $result);
     break;
 
   case "updateWaiver":
+    function updateWaiver($member_id, $completed, $term, $authRole, $dbLink) {
+      $toReturn = [];
+      assert($completed == 0 || $completed == 1);
+      if ( $authRole == "SafetyAndFacilities" || $authRole == "Admin" ) {
+        $deleteQuery = "DELETE FROM `waiver_status` WHERE `member_id`='" . $member_id . "' AND `term`='" . $term . "'";
+        safeQuery($deleteQuery, $dbLink, "Failed to delete waiver status in updateWaiver");
+        $insertQuery = "INSERT INTO `waiver_status`(`member_id`, `term`, `completed`) VALUES ('" . $member_id . "','" . $term . "','" . $completed . "')";
+        safeQuery($insertQuery, $dbLink, "Failed to insert new waiver status in updateWaiver");
+        $toReturn['succeeded'] = true;
+      } else {
+        $toReturn['succeeded'] = false;
+        $toReturn['reason'] = "Only the safety and facilities officer can modify waiver information.";
+      }
+      return $toReturn;
+    }
     $member_id = mysql_escape_string($_POST['member_id']);
     $completed = mysql_escape_string($_POST['completed']);
     $term = mysql_escape_string($_POST['term']);
-    assert($completed == 0 || $completed == 1);
+    $authRole = $_POST['auth_role'];
 
-    if ( $_POST['auth_role'] == "SafetyAndFacilities" || $_POST['auth_role'] == "Admin" ) {
-      $deleteQuery = "DELETE FROM `waiver_status` WHERE `member_id`='" . $member_id . "' AND `term`='" . $term . "'";
-      safeQuery($deleteQuery, $link, "Failed to delete waiver status in updateWaiver");
-      $insertQuery = "INSERT INTO `waiver_status`(`member_id`, `term`, `completed`) VALUES ('" . $member_id . "','" . $term . "','" . $completed . "')";
-      safeQuery($insertQuery, $link, "Failed to insert new waiver status in updateWaiver");
-      $data['succeeded'] = true;
-    } else {
-      $data['succeeded'] = false;
-      $data['reason'] = "Only the safety and facilities officer can modify waiver information.";
-    }
+    $result = updateWaiver($member_id, $completed, $term, $authRole, $link);
+    $data = setSucceededAndReason($data, $result);
     break;
 
   case "getWaiverlessMembers":
+    function getWaiverlessMembers($authRole, $when, $link) {
+      global $CURRENT_TERM;
+      global $CURRENT_START_DATE;
+      global $CURRENT_END_DATE;
 
-    if ( $_POST['auth_role'] == "SafetyAndFacilities" || $_POST['auth_role'] == "Admin" ) {
-      if ( $_POST['when'] == 'today' ) {
-        $checkinSelectQuery = "SELECT DISTINCT `member_id` FROM `checkin` WHERE DATE(`date_time`) = DATE(NOW())";
-      } else {
-        $checkinSelectQuery = "SELECT DISTINCT `member_id` FROM `checkin` WHERE DATE(`date_time`) BETWEEN DATE('" . $CURRENT_START_DATE . "') AND DATE('" . $CURRENT_END_DATE . "')";
-      }
-      $checkins = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select checkins in getWaiverlessMembers");
-
-      $memberIds = [];
-      foreach ( $checkins as $c ) {
-        $waiverSelectQuery = "SELECT * FROM `waiver_status` WHERE `member_id`='" . $c['member_id'] . "' AND `term`='" . $CURRENT_TERM . "'";
-        $waiverStatusArray = assocArraySelectQuery($waiverSelectQuery, $link, "Failed to select waiver_status in getPresentWaiverlessMembers");
-        if ( $waiverStatusArray == [] || $waiverStatusArray[0]['completed'] != 1 ) {
-          $memberIds[] = $c['member_id'];
+      $toReturn = [];
+      if ($authRole == "SafetyAndFacilities" || $authRole == "Admin") {
+        if ($when == 'today') {
+          $checkinSelectQuery = "SELECT DISTINCT `member_id` FROM `checkin` WHERE DATE(`date_time`) = DATE(NOW())";
+        } else {
+          $checkinSelectQuery = "SELECT DISTINCT `member_id` FROM `checkin` WHERE DATE(`date_time`) BETWEEN DATE('" . $CURRENT_START_DATE . "') AND DATE('" . $CURRENT_END_DATE . "')";
         }
-      }
+        $checkins = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select checkins in getWaiverlessMembers");
 
-      $memberObjects = [];
-      foreach( $memberIds as $id ) {
-        $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $id . "'";
-        $memberArray = assocArraySelectQuery($memberSelectQuery, $link, "Failed to select member in getPresentWaiverlessMembers");
-        assert(count($memberArray) == 1);
-        $memberObjects[] = $memberArray[0];
-      }
+        $memberIds = [];
+        foreach ($checkins as $c) {
+          $waiverSelectQuery = "SELECT * FROM `waiver_status` WHERE `member_id`='" . $c['member_id'] . "' AND `term`='" . $CURRENT_TERM . "'";
+          $waiverStatusArray = assocArraySelectQuery($waiverSelectQuery, $link, "Failed to select waiver_status in getPresentWaiverlessMembers");
+          if ($waiverStatusArray == [] || $waiverStatusArray[0]['completed'] != 1) {
+            $memberIds[] = $c['member_id'];
+          }
+        }
 
-      $data['members'] = $memberObjects;
-      $data['succeeded'] = true;
-    } else {
-      $data['succeeded'] = false;
-      $data['reason'] = "Only the safety and facilities officer can modify waiver information.";
+        $memberObjects = [];
+        foreach ($memberIds as $id) {
+          $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $id . "'";
+          $memberArray = assocArraySelectQuery($memberSelectQuery, $link, "Failed to select member in getPresentWaiverlessMembers");
+          assert(count($memberArray) == 1);
+          $memberObjects[] = $memberArray[0];
+        }
+
+        $toReturn['members'] = $memberObjects;
+        $toReturn['succeeded'] = true;
+      } else {
+        $toReturn['succeeded'] = false;
+        $toReturn['reason'] = "Only the safety and facilities officer can modify waiver information.";
+      }
+      return $toReturn;
+    }
+    $authRole = $_POST['auth_role'];
+    $when = $_POST['when'];
+
+    $result = getWaiverlessMembers($authRole, $when, $link);
+    $data = setSucceededAndReason($data, $result);
+    if (array_key_exists('members', $result)) {
+      $data['members'] = $result['reason'];
     }
     break;
 
@@ -544,32 +609,33 @@ switch ( $_POST['type'] ) {
     break;
 
   case "getTransactions":
-    $methodConditions = "";
-    if ( array_key_exists('methods', $_POST) ) {
-      $methods = $_POST['methods'];
-      foreach($methods as $m) {
-        $methodConditions = $methodConditions . " OR `method`='" . mysql_escape_string($m) . "'";
+    function getTransactions($methods, $startDate, $endDate, $dbLink) {
+      $methodConditions = "";
+      if ( $methods !== null ) {
+        foreach($methods as $m) {
+          $methodConditions = $methodConditions . " OR `method`='" . mysql_escape_string($m) . "'";
+        }
+        if ( count($methods) > 0 ) {
+          $methodConditions = " AND (0" . $methodConditions . ")";
+        }
       }
-      if ( count($methods) > 0 ) {
-        $methodConditions = " AND (0" . $methodConditions . ")";
-      }
-    }
 
+      $query = "SELECT * FROM `debit_credit` WHERE `date_time` BETWEEN '" . $startDate . "' AND '" . $endDate . "'" . $methodConditions . " ORDER BY `date_time`";
+      $transactions = assocArraySelectQuery($query, $dbLink, "Failed to select from debit_credit in getTransactions");
+
+      for ( $i = 0; $i < count($transactions); $i++ ) {
+        $query = "SELECT * FROM `member` WHERE `id`='" . $transactions[$i]['member_id'] . "'";
+        $memberArray = assocArraySelectQuery($query, $dbLink, "Failed to select member in getTransactions");
+        assert(count($memberArray)==1);
+        $member = $memberArray[0];
+        $transactions[$i]['member_name'] = $member['first_name'] . " " . $member['last_name'];
+      }
+      return $transactions;
+    }
+    $methods = array_key_exists('methods', $_POST) ? $_POST['methods'] : null;
     $startDate = array_key_exists('startDate', $_POST) ?  $_POST['startDate'] : $CURRENT_START_DATE;
     $endDate = array_key_exists('endDate', $_POST) ?  $_POST['endDate'] : $CURRENT_END_DATE;
-
-    $query = "SELECT * FROM `debit_credit` WHERE `date_time` BETWEEN '" . $startDate . "' AND '" . $endDate . "'" . $methodConditions . " ORDER BY `date_time`";
-    $transactions = assocArraySelectQuery($query, $link, "Failed to select from debit_credit in getTransactions");
-
-    for ( $i = 0; $i < count($transactions); $i++ ) {
-      $query = "SELECT * FROM `member` WHERE `id`='" . $transactions[$i]['member_id'] . "'";
-      $memberArray = assocArraySelectQuery($query, $link, "Failed to select member in getTransactions");
-      assert(count($memberArray)==1);
-      $member = $memberArray[0];
-      $transactions[$i]['member_name'] = $member['first_name'] . " " . $member['last_name'];
-    }
-
-    $data = array("transactions" => $transactions);
+    $data = array("transactions" => getTransactions($methods, $startDate, $endDate, $link));
     break;
 
   case "getSummaryData":
