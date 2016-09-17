@@ -2,7 +2,12 @@
 
 date_default_timezone_set('America/Chicago');
 
+// Import some configurations
 require_once "resources/config.php";
+require_once "resources/db.php";
+
+require_once 'auth.php';
+require_once 'resources/mailchimp.php';
 
 
 // Safeguard against forgetting to change the current term start and end
@@ -34,26 +39,6 @@ function createMembershipDueKind($membership, $feeStatus, $term) {
   return "Membership (" . $membership . ", " . $feeStatus . ", " . $term . ")";
 }
 
-function resultToAssocArray($result) {
-  $rows = array();
-  while($r = mysqli_fetch_assoc($result)) {
-      $rows[] = $r;
-  }
-  return $rows;
-}
-
-function safeQuery($query, $link, $errorMessage) {
-  $result = $link->query($query);
-  if ( !$result ) {
-    die($errorMessage);
-  }
-  return $result;
-}
-
-function assocArraySelectQuery($query, $link, $errorMessage) {
-  return resultToAssocArray(safeQuery($query, $link, $errorMessage));
-}
-
 function generateOrdinalString($number) {
   // http://stackoverflow.com/questions/3109978/php-display-number-with-ordinal-suffix
   $ends = array('th','st','nd','rd','th','th','th','th','th','th');
@@ -62,16 +47,6 @@ function generateOrdinalString($number) {
   else
      $abbreviation = $number. $ends[$number % 10];
   return $abbreviation;
-}
-
-// Create connection
-$servername = "localhost";
-$username = "adminPmvkzYa";
-$password = "qRK-zD3sIbU9";
-$dbname = "php";
-$link = new mysqli($servername, $username, $password, $dbname);
-if ($link->connect_error) {
-    die("Connection failed: " . $link->connect_error);
 }
 
 // returns balance
@@ -87,8 +62,6 @@ function calculateOutstandingDues($safe_member_id) {
   }
   return $balance;
 }
-
-
 
 function checkedInToday($safeId, $link) {
   $selectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND DATE(`date_time`) = DATE(NOW())";
@@ -317,9 +290,6 @@ function updateCompetitionLateFees($safe_member_id, $term) {
 /* BEGIN POST REQUEST HANDLING */
 
 $data = $_POST;
-
-include('auth.php');
-include('resources/mailchimp.php');
 
 switch ( $_POST['type'] ) {
   case "environment":
