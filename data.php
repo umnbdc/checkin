@@ -791,7 +791,7 @@ switch ( $_POST['type'] ) {
       $data['succeeded'] = true;
     } else {
       $data['succeeded'] = false;
-      $data['reason'] = "Cost of item "" . $kind . "" could not be found.";
+      $data['reason'] = 'Cost of item "' . $kind . '" could not be found.';
     }
     break;
 
