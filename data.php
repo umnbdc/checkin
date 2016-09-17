@@ -6,12 +6,16 @@ date_default_timezone_set('America/Chicago');
 require_once "resources/config.php";
 require_once "resources/db.php";
 
+// Handle authorization for accessing this endpoint (if authorization fails, the request will fail)
 require_once 'auth.php';
+
+// Require the rest of the code
 require_once 'resources/mailchimp.php';
 require_once 'resources/referrals.php';
 require_once 'resources/checkin.php';
 require_once 'resources/memberInfo.php';
 require_once 'resources/fees.php';
+require_once 'resources/compteam.php';
 
 
 // Safeguard against forgetting to change the current term start and end
@@ -19,61 +23,6 @@ if ( strtotime($CURRENT_START_DATE) > strtotime('today') || strtotime($CURRENT_E
   die("Current term (range) is out of date.");
 }
 
-
-/* BEGIN DUES, FEES, CHECK INS */
-
-
-function updateCompetitionLateFees($safe_member_id, $term) {
-  global $link;
-  global $COMP_DUE_DATE_TABLE;
-  global $COMP_PRACTICES_TABLE;
-  global $LATE_FEE_AMOUNT;
-
-  $membership = getMembership($safe_member_id, $term, $link);
-  $fee_status = getFeeStatus($safe_member_id, $term, $link);
-  if ( $membership != 'Competition' ) {
-    return;
-  }
-  
-  $balance = calculateOutstandingDues($safe_member_id, $link);
-  
-  if ( $balance < 0 ) {
-    // get amount due by this date
-    $dueTable = $COMP_DUE_DATE_TABLE[$term][$fee_status];
-    // get earliest past due date where balance is less than minimum
-    $earliestPastDueDate = '';
-    foreach( array_keys($dueTable) as $date ) {
-      $minOutstandingAtDate = $dueTable[$date];
-      if ( strtotime($date) < strtotime('today') && $balance < $minOutstandingAtDate ) {
-        $earliestPastDueDate = $date;
-        break;
-      }
-    }
-    if ( $earliestPastDueDate != '' ) {
-      // count the practices from after (excluding) $earliestPastDueDate until now (including today)
-      $practicesLate = 0;
-      foreach( $COMP_PRACTICES_TABLE[$term] as $practice ) {
-        if ( strtotime($practice) > strtotime('today') ) {
-          break;
-        } else if ( strtotime($practice) > strtotime($earliestPastDueDate) ) {
-          $practicesLate += 1;
-        }
-      }
-      // update late fee debit
-      $kindPartial = "Membership (Late fee, since " . $earliestPastDueDate;
-      $debitDeleteQuery = "DELETE FROM `debit_credit` WHERE `member_id`='" . $safe_member_id . "' AND `kind` LIKE '" . $kindPartial . "%'";
-      safeQuery($debitDeleteQuery, $link, "Failed to delete old late fee debit in updateCompetitionLateFees");
-      
-      $kind = $kindPartial . ", " . $practicesLate . " practices late)";
-      $amount = -1 * $LATE_FEE_AMOUNT * $practicesLate;
-      $debitInsertQuery = "INSERT INTO `debit_credit`(`member_id`, `amount`, `kind`) VALUES ('" . $safe_member_id . "','" . $amount . "','" . $kind . "')";
-      safeQuery($debitInsertQuery, $link, "Failed to insert new late fee debit in updateCompetitionLateFees");
-    }
-  }
-}
-
-/* END DUES, FEES, CHECK INS */
-/* BEGIN POST REQUEST HANDLING */
 
 function setSucceededAndReason($data, $result) {
   $data['succeeded'] = $result['succeeded'];
@@ -152,7 +101,6 @@ switch ( $_POST['type'] ) {
     $membership = mysql_escape_string($_POST['membership']);
     $term = mysql_escape_string($_POST['term']);
     $authRole = $_POST['auth_role'];
-
     $data = updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $term, $link);
     break;
 
@@ -171,7 +119,6 @@ switch ( $_POST['type'] ) {
     $member_id = mysql_escape_string($_POST['member_id']);
     $kind = mysql_escape_string($_POST['kind']);
     $amount = mysql_escape_string($_POST['amount']); // should be in cents
-
     insertPayment($member_id, $amount, $method, $kind, $link);
     $data['succeeded'] = true;
     break;
@@ -181,35 +128,15 @@ switch ( $_POST['type'] ) {
     $kind = mysql_escape_string($_POST['kind']);
     $method = mysql_escape_string($_POST['method']);
     $authRole = $_POST['auth_role'];
+
     $result = doPurchase($member_id, $kind, $method, $authRole, $link);
     $data = setSucceededAndReason($data, $result);
     break;
 
   case "addNewCompMemberDiscount":
-    function addNewCompMemberDiscount($memberId, $authRole, $dbLink) {
-      global $NEW_COMP_MEMBER_DISCOUNT;
-
-      $method = "NewCompMember (" . $authRole . ")";
-      $kind = "Membership (NewCompMember)";
-      $amount = $NEW_COMP_MEMBER_DISCOUNT;
-      $toReturn = [];
-
-      if (
-          $authRole == "President" ||
-          $authRole == "Fundraising" ||
-          $authRole == "Treasurer" ||
-          $authRole == "Admin"
-      ) {
-        insertPayment($memberId, $amount, $method, $kind, $dbLink);
-        $toReturn['succeeded'] = true;
-      } else {
-        $toReturn['succeeded'] = false;
-        $toReturn['reason'] = "Only the president, fundraising officer, treasurer, or admin can add the new team member discount.";
-      }
-      return $toReturn;
-    }
     $member_id = mysql_escape_string($_POST['member_id']);
     $authRole = $_POST['auth_role'];
+
     $result = addNewCompMemberDiscount($member_id, $authRole, $link);
     $data = setSucceededAndReason($data, $result);
     break;
@@ -299,23 +226,6 @@ switch ( $_POST['type'] ) {
     break;
 
   case "getCompetitionTeamList":
-    function getCompetitionTeamList($term, $dbLink) {
-      $membershipSelectQuery = "SELECT * FROM `membership` WHERE `kind`='Competition' AND `term`='" . $term . "'";
-      $membershipArray = assocArraySelectQuery($membershipSelectQuery, $dbLink, "Failed to select memberships in getCompetitionTeamList");
-
-      $memberObjects = [];
-      foreach($membershipArray as $membership) {
-        $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $membership['member_id'] . "'";
-        $memberArray = assocArraySelectQuery($memberSelectQuery, $dbLink, "Failed to select member in getPresentWaiverlessMembers");
-        assert(count($memberArray) == 1);
-        $memberObjects[] = $memberArray[0];
-      }
-
-      for ( $i = 0; $i < count($memberObjects); $i++ ) {
-        $memberObjects[$i]['balance'] = calculateOutstandingDues($memberObjects[$i]['id'], $dbLink);
-      }
-      return $memberObjects;
-    }
     $data = getCompetitionTeamList($CURRENT_TERM, $link);
     break;
 
