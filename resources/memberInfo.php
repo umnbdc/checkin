@@ -2,6 +2,7 @@
 
 require_once "config.php";
 require_once "db.php";
+require_once "compteam.php";
 
 
 function newMember($member, $dbLink) {
@@ -34,9 +35,9 @@ function newMember($member, $dbLink) {
 }
 
 
-function updateMember($firstName, $nickName, $lastName, $email, $proficiency, $id, $link) {
+function updateMember($firstName, $nickName, $lastName, $email, $proficiency, $id, $authRole, $link) {
     $toReturn = [];
-    if (isVolunteer()) {
+    if ( $authRole == "Volunteer" ) {
         $toReturn['succeeded'] = false;
         $toReturn['reason'] = "Volunteers cannot change update member information.";
     } else {
@@ -74,7 +75,7 @@ function getMemberInfo($id, $dbLink) {
     global $CURRENT_TERM;
     $data = [];
 
-    updateCompetitionLateFees($id, $CURRENT_TERM); // function will check if applicable
+    updateCompetitionLateFees($id, $CURRENT_TERM, $dbLink); // function will check if applicable
 
     $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $id . "'";
     $data['member'] = assocArraySelectQuery($memberSelectQuery, $dbLink, "Failed to getMemberInfo member")[0]; // assume only one member with id

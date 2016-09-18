@@ -1,5 +1,7 @@
 <?php
 
+date_default_timezone_set('America/Chicago');
+
 // Current Term
 $CURRENT_TERM = "Fall2016";
 $CURRENT_START_DATE = "2016-09-01";

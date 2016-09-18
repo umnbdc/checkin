@@ -3,6 +3,7 @@
 require_once 'config.php';
 require_once 'db.php';
 require_once 'memberInfo.php';
+require_once 'referrals.php';
 
 // return positive integer, number of cents
 function calculateDues($membership, $feeStatus, $term) {
