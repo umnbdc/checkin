@@ -3,6 +3,7 @@
 //// $data = $_POST;
 
 require "resources/lib/password.php";
+require "resources/db.php";
 
 /* BEGIN HELPER FUNCTIONS */
 
