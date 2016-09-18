@@ -21,7 +21,7 @@
           <tbody>
           </tbody>
         </table>
-        <form id="transactionCSVForm" action="lib/csv.php" method="POST">
+        <form id="transactionCSVForm" action="/resources/lib/csv.php" method="POST">
           <textarea id="transactionCSVFormObjectsField" name="objects" style="display: none"></textarea>
           <textarea id="transactionCSVFormKeysField" name="keys" style="display: none"></textarea>
         </form>
