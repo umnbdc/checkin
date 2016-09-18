@@ -153,6 +153,7 @@ $data = $_POST;
 require_once 'auth.php';
 require_once 'resources/mailchimp.php';
 require_once 'resources/referrals.php';
+require_once 'resources/checkins.php';
 
 switch ( $_POST['type'] ) {
   case "environment":
