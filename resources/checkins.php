@@ -22,7 +22,7 @@ function memberAllowedToCheckIn($safeId, $link) {
 
     $membershipSelectQuery = "SELECT `kind` FROM `membership` WHERE `member_id`='" . $safeId . "' AND `term`='" . $CURRENT_TERM . "'";
     $membershipArray = assocArraySelectQuery($membershipSelectQuery, $link, "Failed to select membership in memberAllowedToCheckIn");
-    assert(count($membershipArray) < 2, "Multiple memberships: (member_id, term) = (". $safeId . ", " . $CURRENT_TERM . ")");
+    assert(count($membershipArray) < 2, "Multiple memberships: (member_id, term) = (" . $safeId . ", " . $CURRENT_TERM . ")");
 
     $toReturn = array( "permitted" => false, "reason" => "" );
     $toReturn['date'] = date("F j, Y: h:iA e");
@@ -50,35 +50,43 @@ function memberAllowedToCheckIn($safeId, $link) {
         }
     } else if ( $dayOfWeek !== '0' ) {
         // No membership, so limit by number free checkins per semester
-        // (but don't fail for this if it is a Sunday, because Sundays don't count towards the number of free lessons)
-        $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND DATE(`date_time`) BETWEEN '" . $CURRENT_START_DATE . "' AND '" . $CURRENT_END_DATE . "'";
+        // Sundays don't count towards the limit
+        $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId .
+            "' AND DATE(`date_time`) BETWEEN '" . $CURRENT_START_DATE . "' AND '" . $CURRENT_END_DATE . "'" .
+            " AND DAYOFWEEK( DATE(`date_time`) ) != 1";
         $checkinsThisTerm = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select checkins for this term in memberAllowedToCheckIn");
         $toReturn['permitted'] = count($checkinsThisTerm) < $NUMBER_OF_FREE_CHECKINS;
         $toReturn['reason'] = $NUMBER_OF_FREE_CHECKINS . " free check-ins";
     }
 
     if ($toReturn['permitted'] && $toReturn['reason'] != "Competition Team") {
-        $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $safeId . "'";
-        $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to get member in memberAllowedToCheckIn")[0];
-        
         if ($dayOfWeek === '2' || $dayOfWeek === '4') {
             // On Tuesdays and Thursdays, beginners can only check in within a certain time before the beginner lesson starts
+            $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $safeId . "'";
+            $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to get member in memberAllowedToCheckIn")[0];
             if ($member['proficiency'] == 'Beginner' && (time() + $CHECK_IN_PERIOD * 60) < strtotime($BEGINNER_LESSON_TIME)) {
                 $toReturn['permitted'] = false;
                 $toReturn['reason'] = "Beginner members may not check in earlier than " . $CHECK_IN_PERIOD . " minutes before the beginner lesson.";
             }
-        } else if ($dayOfWeek === '0') {
-            // Only advanced members can check in on Sundays
-            if ($member['proficiency'] !== 'Advanced') {
-                $toReturn['permitted'] = false;
-                $toReturn['reason'] = "Only Advanced members may check in on Sundays";
-            }
-        } else {
+        } else if ($dayOfWeek !== '0') {
             // There are no lessons on other days
             $toReturn['permitted'] = false;
             $toReturn['reason'] = "PHP thinks it is " . date("D, F j, Y: h:iA e") . " right now. Checkin is only allowed on Tuesdays, Thursdays and Sundays, except for comp team members.";
         }
     }
+
+    if ( $dayOfWeek === '0' ) {
+        $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $safeId . "'";
+        $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to get member in memberAllowedToCheckIn")[0];
+        if ( $member['proficiency'] === "Advanced" || $membershipArray[0]['kind'] === 'Competition' ) {
+            $toReturn['permitted'] = true;
+            $toReturn['reason'] = "Advanced or team member in an advanced lesson";
+        } else {
+            $toReturn['permitted'] = false;
+            $toReturn['reason'] = "This member is not Advanced proficiency. If you would like to change this, go to the edit member modal.";
+        }
+    }
+
     return $toReturn;
 }
 
