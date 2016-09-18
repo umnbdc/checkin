@@ -34,7 +34,7 @@ function memberAllowedToCheckIn($safeId, $link) {
             $toReturn['permitted'] = true;
             $toReturn['reason'] = "Competition Team";
         } else {
-            if ( calculateOutstandingDues($safeId, $link) < 0 ) {
+            if ( calculateOutstandingDues($safeId) < 0 ) {
                 // Not allowed if they have a membership but they haven't paid
                 $toReturn['permitted'] = false;
                 $toReturn['reason'] = "Outstanding dues";
@@ -80,7 +80,6 @@ function memberAllowedToCheckIn($safeId, $link) {
     }
     return $toReturn;
 }
-
 
 function checkinMember($id, $override, $data, $dbLink) {
     $allowedResponse = memberAllowedToCheckIn($id, $dbLink);
