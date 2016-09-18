@@ -6,6 +6,8 @@ date_default_timezone_set('America/Chicago');
 require_once "resources/config.php";
 require_once "resources/db.php";
 
+require_once 'resources/mailchimp.php';
+
 
 // Safeguard against forgetting to change the current term start and end
 if ( strtotime($CURRENT_START_DATE) > strtotime('today') || strtotime($CURRENT_END_DATE) < strtotime('today') ) {
@@ -36,6 +38,16 @@ function createMembershipDueKind($membership, $feeStatus, $term) {
   return "Membership (" . $membership . ", " . $feeStatus . ", " . $term . ")";
 }
 
+function generateOrdinalString($number) {
+  // http://stackoverflow.com/questions/3109978/php-display-number-with-ordinal-suffix
+  $ends = array('th','st','nd','rd','th','th','th','th','th','th');
+  if (($number %100) >= 11 && ($number%100) <= 13)
+     $abbreviation = $number. 'th';
+  else
+     $abbreviation = $number. $ends[$number % 10];
+  return $abbreviation;
+}
+
 // returns balance
 function calculateOutstandingDues($safe_member_id) {
   global $link;
@@ -50,6 +62,82 @@ function calculateOutstandingDues($safe_member_id) {
   return $balance;
 }
 
+function checkedInToday($safeId, $link) {
+  $selectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND DATE(`date_time`) = DATE(NOW())";
+  $checkins = assocArraySelectQuery($selectQuery, $link, "Failed to select from checkin");
+  return $checkins != [];
+}
+
+function memberAllowedToCheckIn($safeId, $link) {
+  global $CURRENT_TERM;
+  global $CURRENT_START_DATE;
+  global $CURRENT_END_DATE;
+  global $CHECKINS_PER_WEEK;
+  global $NUMBER_OF_FREE_CHECKINS;
+  global $CHECK_IN_PERIOD;
+  global $BEGINNER_LESSON_TIME;
+
+  $membershipSelectQuery = "SELECT `kind` FROM `membership` WHERE `member_id`='" . $safeId . "' AND `term`='" . $CURRENT_TERM . "'";
+  $membershipArray = assocArraySelectQuery($membershipSelectQuery, $link, "Failed to select membership in memberAllowedToCheckIn");
+  assert(count($membershipArray) < 2, "Multiple memberships: (member_id, term) = (". $safeId . ", " . $CURRENT_TERM . ")");
+  
+  $toReturn = array( "permitted" => false, "reason" => "" );
+  $toReturn['date'] = date("F j, Y: h:iA e");
+
+  if ( count($membershipArray) == 1 ) {
+    $kind = $membershipArray[0]['kind'];
+    if ( $kind == 'Competition' ) {
+      // Comp Team is always allowed
+      $toReturn['permitted'] = true;
+      $toReturn['reason'] = "Competition Team";
+    } else {
+      if ( calculateOutstandingDues($safeId) < 0 ) {
+        // Not allowed if they have a membership but they haven't paid
+        $toReturn['permitted'] = false;
+        $toReturn['reason'] = "Outstanding dues";
+      } else {
+        // Allow if they haven't hit the limit of their checkins per week
+        // note: week of year starts monday which is OK for us
+        $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND WEEKOFYEAR(`date_time`)=WEEKOFYEAR(NOW())";
+        $checkinsThisWeek = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select checkins for this week in memberAllowedToCheckIn");
+        $toReturn['permitted'] = count($checkinsThisWeek) < $CHECKINS_PER_WEEK[$kind];
+        $toReturn['reason'] = $kind . " Membership allowed " . $CHECKINS_PER_WEEK[$kind] . " check-ins per week";
+      }
+    }
+  } else {
+    // No membership, so limit by number free checkins per semester
+    $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND DATE(`date_time`) BETWEEN '" . $CURRENT_START_DATE . "' AND '" . $CURRENT_END_DATE . "'";
+    $checkinsThisTerm = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select checkins for this term in memberAllowedToCheckIn");
+    $toReturn['permitted'] = count($checkinsThisTerm) < $NUMBER_OF_FREE_CHECKINS;
+    $toReturn['reason'] = $NUMBER_OF_FREE_CHECKINS . " free check-ins";
+  }
+
+  if ($toReturn['permitted'] && $toReturn['reason'] != "Competition Team") {
+    $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $safeId . "'";
+    $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to get member in memberAllowedToCheckIn")[0];
+
+    $dayOfWeek = date("w");
+    if ($dayOfWeek === '2' || $dayOfWeek === '4') {
+      // On Tuesdays and Thursdays, beginners can only check in within a certain time before the beginner lesson starts
+      if ($member['proficiency'] == 'Beginner' && (time() + $CHECK_IN_PERIOD * 60) < strtotime($BEGINNER_LESSON_TIME)) {
+        $toReturn['permitted'] = false;
+        $toReturn['reason'] = "Beginner members may not check in earlier than " . $CHECK_IN_PERIOD . " minutes before the beginner lesson.";
+      }
+    } else if ($dayOfWeek === '0') {
+      // Only advanced members can check in on Sundays
+      if ($member['proficiency'] !== 'Advanced') {
+        $toReturn['permitted'] = false;
+        $toReturn['reason'] = "Only Advanced members may check in on Sundays";
+      }
+    } else {
+      // There are no lessons on other days
+      $toReturn['permitted'] = false;
+      $toReturn['reason'] = "PHP thinks it is " . date("D, F j, Y: h:iA e") . " right now. Checkin is only allowed on Tuesdays, Thursdays and Sundays, except for comp team members.";
+    }
+  }
+  return $toReturn;
+}
+
 function hasHadMembership($safeId) {
   global $link;
   
@@ -58,6 +146,58 @@ function hasHadMembership($safeId) {
   return $membershipArray != [];
 }
 
+// assumes that the member identified by $referrerMemberId
+// has just made a referral for which no reward has been generated
+function generateRewardPostReferral($referrerMemberId) {
+  global $link;
+  global $CURRENT_TERM;
+  
+  // "Bring a Friend" Program
+  $referralSelectQuery = "SELECT * FROM `referral` WHERE `referrer_id`='" . $referrerMemberId . "' AND `term`='" . $CURRENT_TERM . "'";
+  $referrals = assocArraySelectQuery($referralSelectQuery, $link, "Failed to select referrals in generateRewardPostReferral");
+  $refCount = count($referrals);
+  $description = generateOrdinalString($refCount) . " referral";
+  if ( $refCount < 3 ) {
+    // generate $25 reward
+    $rewardKind = "Bring a Friend (" . $description . ", $25 membership credit)";
+    $rewardInsertQuery = "INSERT INTO `reward`(`member_id`, `kind`, `term`, `claim_date_time`, `claimed`) VALUES ('" . $referrerMemberId . "','" . $rewardKind . "','" . $CURRENT_TERM . "',CURRENT_TIMESTAMP,1)";
+    safeQuery($rewardInsertQuery, $link, "Failed to insert reward (Bring a friend, $25) in generateRewardPostReferral");
+    $creditKind = "Membership (Bring a Friend, " . $description . ", " . $CURRENT_TERM . ")";
+    $creditMethod = "Reward (Bring a Friend, " . $description . ", " . $CURRENT_TERM . ")";
+    $creditInsertQuery = "INSERT INTO `debit_credit`(`member_id`, `amount`, `kind`, `method`) VALUES ('" . $referrerMemberId . "',2500,'" . $creditKind . "','" . $creditMethod . "')";
+    safeQuery($creditInsertQuery, $link, "Failed to insert reward credit (Bring a friend, $25) in generateRewardPostReferral");
+  } else {
+    // generate free shoe reward
+    $rewardKind = "Bring a Friend (" . $description . ", Free pair of shoes)";
+    $rewardInsertQuery = "INSERT INTO `reward`(`member_id`, `kind`, `term`, `claimed`) VALUES ('" . $referrerMemberId . "','" . $rewardKind . "','" . $CURRENT_TERM . "',0)";
+    safeQuery($rewardInsertQuery, $link, "Failed to insert reward (Bring a friend, shoes) in generateRewardPostReferral");
+  }
+}
+
+function generateReferral($safeId) {
+  global $link;
+  global $CURRENT_TERM;
+  
+  $selectQuery = "SELECT * FROM `member` WHERE `id`='" . $safeId . "'";
+  $memberArray = assocArraySelectQuery($selectQuery, $link, "Failed to select member in generateReferral");
+  assert(count($memberArray) == 1);
+  $referredMember = $memberArray[0];
+  
+  if ( $referredMember['referred_by'] ) {
+    $referredMemberId = $referredMember['id'];
+    $referrerMemberId = $referredMember['referred_by'];
+    
+    // double check that the referred hasn't already been referred
+    $referralSelectQuery = "SELECT * FROM `referral` WHERE `referred_id`='" . $referredMemberId . "'";
+    $referralArray = assocArraySelectQuery($referralSelectQuery, $link, "Failed to select referral in generateReferral");
+    if ( count($referralArray) == 0 ) {
+      $referralInsertQuery = "INSERT INTO `referral`(`referrer_id`, `referred_id`, `term`) VALUES ('" . $referrerMemberId . "','" . $referredMemberId . "','" . $CURRENT_TERM . "')";
+      safeQuery($referralInsertQuery, $link, "Failed to insert new referral");
+      
+      generateRewardPostReferral($referrerMemberId);
+    }
+  }
+}
 
 function insertPayment($member_id, $amount, $method, $kind) {
   // assumes that the parameters are safe
@@ -149,10 +289,7 @@ function updateCompetitionLateFees($safe_member_id, $term) {
 /* BEGIN POST REQUEST HANDLING */
 
 $data = $_POST;
-
 require_once 'auth.php';
-require_once 'resources/mailchimp.php';
-require_once 'resources/referrals.php';
 
 switch ( $_POST['type'] ) {
   case "environment":
@@ -288,7 +425,34 @@ switch ( $_POST['type'] ) {
   case "checkInMember":
     $id = mysql_escape_string($_POST['id']);
     $override = array_key_exists('override', $_POST) && $_POST['override'] == "true";
-    $data = checkinMember($id, $override, $data, $link);
+
+    $allowedResponse = memberAllowedToCheckIn($id, $link);
+    $data['KYLE_DATE'] = $allowedResponse['date'];
+    if ( $override || $allowedResponse['permitted'] ) {
+      $data['permitted'] = true;
+      if ( !checkedInToday($id, $link) ) {
+        $insertQuery = "INSERT INTO `checkin`(`member_id`, `date_time`) VALUES ('" . $id . "',CURRENT_TIMESTAMP)";
+        safeQuery($insertQuery, $link, "Failed to insert new checkin");
+        $data['wasAlreadyCheckedIn'] = false;
+
+        // Get the member info
+        $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $member_id . "'";
+        $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to getMemberInfo member")[0]; // assume only one member with id
+        $memberDataForMailchimp = [
+            'email' => $member['email'],
+            'first_name' => $member['first_name'],
+            'last_name' => $member['last_name'],
+        ];
+
+        // Subscribe the user if they are not already subscribed
+        $data['mailchimpOutput'] = subscribeToMailchimp($memberDataForMailchimp);
+      } else {
+        $data['wasAlreadyCheckedIn'] = true;
+      }
+    } else {
+      $data['permitted'] = false;
+      $data['permission_reason'] = $allowedResponse['reason'];
+    }
     break;
 
   case "checkedIn?":
