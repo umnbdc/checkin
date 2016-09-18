@@ -188,7 +188,7 @@ switch ( $_POST['type'] ) {
     $result = getSummaryData($summary_kind, $day, $link);
 
     $data['checkins'] = $result['checkins'];
-    $data['newMemberships'] = $result['newMemberShips'];
+    $data['newMemberships'] = $result['newMemberships'];
     $data['credits'] = $result['credits'];
     break;
 
