@@ -26,6 +26,7 @@ function memberAllowedToCheckIn($safeId, $link) {
 
     $toReturn = array( "permitted" => false, "reason" => "" );
     $toReturn['date'] = date("F j, Y: h:iA e");
+    $dayOfWeek = date("w");
 
     if ( count($membershipArray) == 1 ) {
         $kind = $membershipArray[0]['kind'];
@@ -47,8 +48,9 @@ function memberAllowedToCheckIn($safeId, $link) {
                 $toReturn['reason'] = $kind . " Membership allowed " . $CHECKINS_PER_WEEK[$kind] . " check-ins per week";
             }
         }
-    } else {
+    } else if ( $dayOfWeek !== '0' ) {
         // No membership, so limit by number free checkins per semester
+        // (but don't fail for this if it is a Sunday, because Sundays don't count towards the number of free lessons)
         $checkinSelectQuery = "SELECT * FROM `checkin` WHERE `member_id`='" . $safeId . "' AND DATE(`date_time`) BETWEEN '" . $CURRENT_START_DATE . "' AND '" . $CURRENT_END_DATE . "'";
         $checkinsThisTerm = assocArraySelectQuery($checkinSelectQuery, $link, "Failed to select checkins for this term in memberAllowedToCheckIn");
         $toReturn['permitted'] = count($checkinsThisTerm) < $NUMBER_OF_FREE_CHECKINS;
@@ -58,8 +60,7 @@ function memberAllowedToCheckIn($safeId, $link) {
     if ($toReturn['permitted'] && $toReturn['reason'] != "Competition Team") {
         $memberSelectQuery = "SELECT * FROM `member` WHERE `id`='" . $safeId . "'";
         $member = assocArraySelectQuery($memberSelectQuery, $link, "Failed to get member in memberAllowedToCheckIn")[0];
-
-        $dayOfWeek = date("w");
+        
         if ($dayOfWeek === '2' || $dayOfWeek === '4') {
             // On Tuesdays and Thursdays, beginners can only check in within a certain time before the beginner lesson starts
             if ($member['proficiency'] == 'Beginner' && (time() + $CHECK_IN_PERIOD * 60) < strtotime($BEGINNER_LESSON_TIME)) {
