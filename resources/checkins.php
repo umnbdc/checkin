@@ -11,7 +11,6 @@ function checkedInToday($safeId, $link) {
     return $checkins != [];
 }
 
-
 function memberAllowedToCheckIn($safeId, $link) {
     global $CURRENT_TERM;
     global $CURRENT_START_DATE;
@@ -35,7 +34,7 @@ function memberAllowedToCheckIn($safeId, $link) {
             $toReturn['permitted'] = true;
             $toReturn['reason'] = "Competition Team";
         } else {
-            if ( calculateOutstandingDues($safeId) < 0 ) {
+            if ( calculateOutstandingDues($safeId, $link) < 0 ) {
                 // Not allowed if they have a membership but they haven't paid
                 $toReturn['permitted'] = false;
                 $toReturn['reason'] = "Outstanding dues";
