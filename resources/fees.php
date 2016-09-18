@@ -1,17 +1,14 @@
 <?php
 
 require_once 'config.php';
+require_once 'db.php';
+require_once 'memberInfo.php';
+require_once 'referrals.php';
 
 
 // return positive integer, number of cents
-function calculateDues($membership, $feeStatus, $term) {
+function calculateDues($membership, $feeStatus) {
     global $FEE_TABLE;
-
-//    // Summer membership/feeStatus should only be available in during summer terms
-//    if ( strpos($term, "Summer") === 0 ) {
-//        $FEE_TABLE['Summer'] = [];
-//        $FEE_TABLE['Summer']['Summer'] = 0;
-//    }
 
     if (array_key_exists($feeStatus, $FEE_TABLE) && array_key_exists($membership, $FEE_TABLE[$feeStatus])) {
         return $FEE_TABLE[$feeStatus][$membership];
@@ -114,7 +111,7 @@ function updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $
         // also only generate referral for paid memberships
         // Note:
         // Also if the new combination is invalid, it will error out before DB changes are made
-        $generateReferralAtEnd = !hasHadMembership($id, $dbLink) && calculateDues($membership, $feeStatus, $term) > 0;
+        $generateReferralAtEnd = !hasHadMembership($id, $dbLink) && calculateDues($membership, $feeStatus) > 0;
 
         // update/insert fee status
         $feeStatusSelectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
@@ -159,7 +156,7 @@ function updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $
                 $newData['duesDeleteQuery'] = $duesDeleteQuery;
             }
             $newDueKind = createMembershipDueKind($membership, $feeStatus, $term);
-            $amount = -1 * calculateDues($membership, $feeStatus, $term);
+            $amount = -1 * calculateDues($membership, $feeStatus);
             $duesInsertQuery = sprintf("INSERT INTO `debit_credit`(`member_id`, `amount`, `kind`, `date_time`) VALUES (%s,%s,%s,CURRENT_TIMESTAMP)",
                 "'" . $id . "'",
                 "'" . $amount . "'",

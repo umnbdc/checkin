@@ -1,6 +1,8 @@
 <?php
 
 require_once "config.php";
+require_once "memberInfo.php";
+require_once "fees.php";
 
 
 function updateCompetitionLateFees($safe_member_id, $term, $dbLink) {
