@@ -89,9 +89,9 @@
     </div><!-- /.container -->
 
     <!-- include Containers -->
-    <?php include "resources/containers/memberContainer.php"; ?>
-    <?php include "resources/containers/memberListContainer.php"; ?>
-    <?php include "resources/containers/summaryContainer.php"; ?>
+    <?php include "containers/memberContainer.php"; ?>
+    <?php include "containers/memberListContainer.php"; ?>
+    <?php include "containers/summaryContainer.php"; ?>
 
     <footer class="footer">
       <div class="container">
@@ -100,20 +100,20 @@
     </footer>
 
     <!-- include Modals -->
-    <?php include "resources/modals/newMemberModal.php"; ?>
-    <?php include "resources/modals/editMemberModal.php"; ?>
-    <?php include "resources/modals/payModal.php"; ?>
-    <?php include "resources/modals/purchaseModal.php"; ?>
-    <?php include "resources/modals/waiverModal.php"; ?>
-    <?php include "resources/modals/waiverListModal.php"; ?>
-    <?php include "resources/modals/membershipModal.php"; ?>
-    <?php include "resources/modals/checkinErrorModal.php"; ?>
-    <?php include "resources/modals/loginModal.php"; ?>
-    <?php include "resources/modals/createUserModal.php"; ?>
-    <?php include "resources/modals/competitionTeamModal.php"; ?>
-    <?php include "resources/modals/transactionsModal.php"; ?>
-    <?php include "resources/modals/widgetsModal.php"; ?>
-    <?php include "resources/modals/newCompMemberDiscountModal.php"; ?>
+    <?php include "modals/newMemberModal.php"; ?>
+    <?php include "modals/editMemberModal.php"; ?>
+    <?php include "modals/payModal.php"; ?>
+    <?php include "modals/purchaseModal.php"; ?>
+    <?php include "modals/waiverModal.php"; ?>
+    <?php include "modals/waiverListModal.php"; ?>
+    <?php include "modals/membershipModal.php"; ?>
+    <?php include "modals/checkinErrorModal.php"; ?>
+    <?php include "modals/loginModal.php"; ?>
+    <?php include "modals/createUserModal.php"; ?>
+    <?php include "modals/competitionTeamModal.php"; ?>
+    <?php include "modals/transactionsModal.php"; ?>
+    <?php include "modals/widgetsModal.php"; ?>
+    <?php include "modals/newCompMemberDiscountModal.php"; ?>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->

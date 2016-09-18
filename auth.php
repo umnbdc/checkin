@@ -2,7 +2,7 @@
 // from data.php:
 //// $data = $_POST;
 
-require "resources/lib/password.php";
+require "lib/password.php";
 
 /* BEGIN HELPER FUNCTIONS */
 
