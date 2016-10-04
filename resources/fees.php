@@ -9,6 +9,12 @@ require_once 'referrals.php';
 function calculateDues($membership, $feeStatus, $term) {
     global $FEE_TABLE;
 
+//    // Summer membership/feeStatus should only be available in during summer terms
+//    if ( strpos($term, "Summer") === 0 ) {
+//        $FEE_TABLE['Summer'] = [];
+//        $FEE_TABLE['Summer']['Summer'] = 0;
+//    }
+
     if (array_key_exists($feeStatus, $FEE_TABLE) && array_key_exists($membership, $FEE_TABLE[$feeStatus])) {
         return $FEE_TABLE[$feeStatus][$membership];
     } else {
@@ -116,13 +122,11 @@ function updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $
         $feeStatusSelectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
         $feeStatusResult = assocArraySelectQuery($feeStatusSelectQuery, $dbLink, "Failed to select fee status");
         if ($feeStatusResult) {
-            // Fee status found for this term, just update
             $fee_status_id = $feeStatusResult[0]['id'];
             $oldFeeStatus = $feeStatusResult[0]['kind'];
             $feeStatusUpdateQuery = "UPDATE `fee_status` SET `kind`='" . $feeStatus . "' WHERE `id`='" . $fee_status_id . "'";
             safeQuery($feeStatusUpdateQuery, $dbLink, "Failed to update new fee status");
         } else {
-            // No fee status found for this term
             $feeStatusInsertQuery = sprintf("INSERT INTO `fee_status`(`member_id`, `term`, `kind`) VALUES (%s,%s,%s)",
                 "'" . $id . "'",
                 "'" . $term . "'",
@@ -134,13 +138,11 @@ function updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $
         $membershipSelectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
         $membershipResult = assocArraySelectQuery($membershipSelectQuery, $dbLink, "Failed to select membership");
         if ($membershipResult) {
-            // Change the membership type
             $membership_id = $membershipResult[0]['id'];
             $oldMembership = $membershipResult[0]['kind'];
             $membershipUpdateQuery = "UPDATE `membership` SET `kind`='" . $membership . "' WHERE `id`='" . $membership_id . "'";
             safeQuery($membershipUpdateQuery, $dbLink, "Failed to update new membership");
         } else {
-            // Add a new membership
             $membershipInsertQuery = sprintf("INSERT INTO `membership`(`member_id`, `term`, `kind`) VALUES (%s,%s,%s)",
                 "'" . $id . "'",
                 "'" . $term . "'",
@@ -165,12 +167,6 @@ function updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $
                 "'" . $amount . "'",
                 "'" . $newDueKind . "'");
             safeQuery($duesInsertQuery, $dbLink, "Failed to insert new membership debit");
-
-            // Add credit for referrals if this member hasn't been credited this semester
-            $rewardedThisSemester = checkIfPaidForReferralThisTerm($id, $dbLink);
-            if (!$rewardedThisSemester) {
-                addRewardForAnyReferrals($id, $amount, $dbLink);
-            }
         }
 
         $newData['oldFeeStatus'] = $oldFeeStatus;
