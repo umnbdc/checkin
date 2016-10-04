@@ -7,6 +7,8 @@ $CURRENT_TERM = "Fall2016";
 $CURRENT_START_DATE = "2016-09-01";
 $CURRENT_END_DATE = "2016-12-31";
 
+$PREVIOUS_TERM = "Spring2016";
+
 // Checkins
 $CHECKINS_PER_WEEK = array(
     "Single" => 1,
@@ -239,3 +241,12 @@ $PURCHASE_TABLE = array(
     "Shoes_Men" => 3000,
     "Shoes_Women" => 2500
 );
+
+
+/*
+ * New (as of October 2016) rewards system is in effect
+ * This system involves a $10 discount for the next semester's dues per new referred membership (4+ new ppl => free)
+ */
+$IS_REWARD_SYSTEM_ON = true;
+$REWARD_AMOUNT_PER_NEW_MEMBER = 1000;
+$MAX_REFERRAL_REWARD = 4000;

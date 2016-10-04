@@ -15,34 +15,6 @@ function generateOrdinalString($number) {
 }
 
 
-// assumes that the member identified by $referrerMemberId
-// has just made a referral for which no reward has been generated
-function generateRewardPostReferral($referrerMemberId) {
-    global $link;
-    global $CURRENT_TERM;
-
-    // "Bring a Friend" Program
-    $referralSelectQuery = "SELECT * FROM `referral` WHERE `referrer_id`='" . $referrerMemberId . "' AND `term`='" . $CURRENT_TERM . "'";
-    $referrals = assocArraySelectQuery($referralSelectQuery, $link, "Failed to select referrals in generateRewardPostReferral");
-    $refCount = count($referrals);
-    $description = generateOrdinalString($refCount) . " referral";
-    if ( $refCount < 3 ) {
-        // generate $25 reward
-        $rewardKind = "Bring a Friend (" . $description . ", $25 membership credit)";
-        $rewardInsertQuery = "INSERT INTO `reward`(`member_id`, `kind`, `term`, `claim_date_time`, `claimed`) VALUES ('" . $referrerMemberId . "','" . $rewardKind . "','" . $CURRENT_TERM . "',CURRENT_TIMESTAMP,1)";
-        safeQuery($rewardInsertQuery, $link, "Failed to insert reward (Bring a friend, $25) in generateRewardPostReferral");
-        $creditKind = "Membership (Bring a Friend, " . $description . ", " . $CURRENT_TERM . ")";
-        $creditMethod = "Reward (Bring a Friend, " . $description . ", " . $CURRENT_TERM . ")";
-        $creditInsertQuery = "INSERT INTO `debit_credit`(`member_id`, `amount`, `kind`, `method`) VALUES ('" . $referrerMemberId . "',2500,'" . $creditKind . "','" . $creditMethod . "')";
-        safeQuery($creditInsertQuery, $link, "Failed to insert reward credit (Bring a friend, $25) in generateRewardPostReferral");
-    } else {
-        // generate free shoe reward
-        $rewardKind = "Bring a Friend (" . $description . ", Free pair of shoes)";
-        $rewardInsertQuery = "INSERT INTO `reward`(`member_id`, `kind`, `term`, `claimed`) VALUES ('" . $referrerMemberId . "','" . $rewardKind . "','" . $CURRENT_TERM . "',0)";
-        safeQuery($rewardInsertQuery, $link, "Failed to insert reward (Bring a friend, shoes) in generateRewardPostReferral");
-    }
-}
-
 function generateReferral($safeId) {
     global $link;
     global $CURRENT_TERM;
@@ -62,8 +34,54 @@ function generateReferral($safeId) {
         if ( count($referralArray) == 0 ) {
             $referralInsertQuery = "INSERT INTO `referral`(`referrer_id`, `referred_id`, `term`) VALUES ('" . $referrerMemberId . "','" . $referredMemberId . "','" . $CURRENT_TERM . "')";
             safeQuery($referralInsertQuery, $link, "Failed to insert new referral");
-
-            generateRewardPostReferral($referrerMemberId);
         }
     }
+}
+
+
+function getLastSemesterReferrals($safeId) {
+    global $PREVIOUS_TERM;
+    global $link;
+
+    $selectQuery = "SELECT * FROM `referral` WHERE `referrer_id`='" . $safeId . "' AND `term` LIKE '" . $PREVIOUS_TERM . "'";
+    $referredArray = assocArraySelectQuery($selectQuery, $link, "Failed to get info from referrals table");
+    return $referredArray;
+}
+
+
+/**
+ * @param $referrerId
+ * @param $dbLink
+ * @return bool true if the member has already been credited this semester for referrals
+ */
+function checkIfPaidForReferralThisTerm($referrerId, $dbLink) {
+    global $CURRENT_TERM;
+    $creditSelectQuery = "SELECT * FROM `debit_credit` WHERE `member_id`='" . $referrerId . "' AND `kind` LIKE 'Membership (Referrer,%" . $CURRENT_TERM . "%'";
+    $creditResults = assocArraySelectQuery($creditSelectQuery, $dbLink, "Failed to get info from referrals table");
+    return count($creditResults) > 0;
+}
+
+
+function addRewardForAnyReferrals($referrerId, $duesAmount, $dbLink) {
+    global $IS_REWARD_SYSTEM_ON;
+    global $REWARD_AMOUNT_PER_NEW_MEMBER;
+    global $MAX_REFERRAL_REWARD;
+    global $CURRENT_TERM;
+    if ( !$IS_REWARD_SYSTEM_ON ) {
+        return;
+    }
+
+    // Determine the amount to credit
+    $lastSemesterReferrals = getLastSemesterReferrals($referrerId);
+    $rewardAmount = $REWARD_AMOUNT_PER_NEW_MEMBER * count($lastSemesterReferrals);
+    $rewardAmount = min($duesAmount, $rewardAmount, $MAX_REFERRAL_REWARD);
+    $creditKind = "Membership (Referrer, " . $CURRENT_TERM . ")";
+    $creditMethod = "Reward (Referrer, " . $CURRENT_TERM . ")";
+
+    $creditInsertQuery = sprintf("INSERT INTO `debit_credit` (`member_id`, `amount`, `kind`, `method`) VALUES ('%s',%s,'%s','%s')",
+        $referrerId,
+        $rewardAmount,
+        $creditKind,
+        $creditMethod);
+    safeQuery($creditInsertQuery, $dbLink, "Failed to insert reward credit (Bring a friend, $25) in generateRewardPostReferral");
 }
