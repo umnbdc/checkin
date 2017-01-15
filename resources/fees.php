@@ -118,9 +118,11 @@ function updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $
         // Also if the new combination is invalid, it will error out before DB changes are made
         $generateReferralAtEnd = !hasHadMembership($id, $dbLink) && calculateDues($membership, $feeStatus, $term) > 0;
 
-        // update/insert fee status
+        // Determine current fee status for this semester
         $feeStatusSelectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
         $feeStatusResult = assocArraySelectQuery($feeStatusSelectQuery, $dbLink, "Failed to select fee status");
+
+        // Update or insert new fee status
         if ($feeStatusResult) {
             $fee_status_id = $feeStatusResult[0]['id'];
             $oldFeeStatus = $feeStatusResult[0]['kind'];
@@ -134,9 +136,11 @@ function updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $
             safeQuery($feeStatusInsertQuery, $dbLink, "Failed to insert new fee status");
         }
 
-        // update/insert membership
+        // Get the member's membership for the semester, if any
         $membershipSelectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
         $membershipResult = assocArraySelectQuery($membershipSelectQuery, $dbLink, "Failed to select membership");
+
+        // Update/insert membership
         if ($membershipResult) {
             $membership_id = $membershipResult[0]['id'];
             $oldMembership = $membershipResult[0]['kind'];
@@ -150,9 +154,9 @@ function updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $
             safeQuery($membershipInsertQuery, $dbLink, "Failed to insert new membership");
         }
 
-        // update dues?
+        // Update dues if necessary
         if ($oldFeeStatus != $feeStatus || $oldMembership != $membership) {
-            // was there an old feeStatus-membership debit
+            // Check for (and delete) old feeStatus-membership debit
             if ($oldFeeStatus && $oldMembership) {
                 // Note, could be done less precisely using LIKE keyword to wildcard membership and feeStatus
                 $oldDueKind = createMembershipDueKind($oldMembership, $oldFeeStatus, $term);
@@ -160,6 +164,8 @@ function updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $
                 safeQuery($duesDeleteQuery, $dbLink, "Failed to delete old membership debit");
                 $newData['duesDeleteQuery'] = $duesDeleteQuery;
             }
+
+            // Add new dues debit
             $newDueKind = createMembershipDueKind($membership, $feeStatus, $term);
             $amount = -1 * calculateDues($membership, $feeStatus, $term);
             $duesInsertQuery = sprintf("INSERT INTO `debit_credit`(`member_id`, `amount`, `kind`, `date_time`) VALUES (%s,%s,%s,CURRENT_TIMESTAMP)",

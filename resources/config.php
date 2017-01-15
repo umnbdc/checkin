@@ -3,9 +3,9 @@
 date_default_timezone_set('America/Chicago');
 
 // Current Term
-$CURRENT_TERM = "Fall2016";
-$CURRENT_START_DATE = "2016-09-01";
-$CURRENT_END_DATE = "2016-12-31";
+$CURRENT_TERM = "Spring2017";
+$CURRENT_START_DATE = "2017-01-17";
+$CURRENT_END_DATE = "2017-05-01";
 
 // Checkins
 $CHECKINS_PER_WEEK = array(
@@ -90,6 +90,23 @@ $COMP_PRACTICES_TABLE = array(
         "2015-11-29", "2015-12-01", "2015-12-02", // Dec
         "2015-12-06", "2015-12-08", "2015-12-09",
     ),
+    "Spring2017" => array(
+        "2017-01-24", "2017-01-26", "2017-01-27", // Jan
+        "2017-01-31", "2017-02-02", "2017-02-03", // Feb
+        "2017-02-07", "2017-02-09", "2017-02-10",
+        "2017-02-14", "2017-02-16", "2017-02-17",
+        "2017-02-21", "2017-02-23", "2017-02-24",
+        "2017-02-28",
+        "2017-03-02", "2017-03-03", // March
+        "2017-03-07", "2017-03-09", "2017-03-10",
+        // Spring Break
+        "2017-03-21", "2017-03-23", "2017-03-24",
+        "2017-03-28", "2017-03-30", "2017-03-31",
+        "2017-04-04", "2017-04-06", // April, Competition
+        "2017-04-11", "2017-04-13", "2017-04-14",
+        "2017-04-18", "2017-04-20", "2017-04-21",
+        "2017-04-25", "2017-04-27", "2017-04-28",
+    ),
 );
 
 
@@ -131,7 +148,7 @@ $COMP_DUE_DATE_TABLE = array(
             "2016-03-04" => 0
         ),
         "Affiliate" => array(
-            "2015-02-05" => 0
+            "2016-02-05" => 0
         )
     ),
     "Fall2016" => array(
@@ -143,61 +160,17 @@ $COMP_DUE_DATE_TABLE = array(
         "Affiliate" => array(
             "2016-09-22" => 0
         )
-    )
-);
-
-
-/*
- * Due dates for comp team fees, based on maximum owed at certain dates
- * (These must be input manually before the start of the semester)
- */
-$COMP_DUE_DATE_TABLE = array(
-    // term -> fee_status -> date -> min_outstanding_at_date (i.e. cumulative)
-    "Spring2015" => array(
+    ),
+    "Spring2017" => array( // TODO: update these dates with correct info
         "StudentServicesFees" => array(
-            "2015-02-12" => -9000,
-            "2015-03-06" => -4500,
-            "2015-04-07" => 0
-        ),
-        "URCMembership" => array(
-            "2015-02-12" => -9000,
-            "2015-03-06" => -4500,
-            "2015-04-07" => 0
+            "2017-02-05" => -10000,
+            "2017-02-19" => -5000,
+            "2017-03-04" => 0
         ),
         "Affiliate" => array(
-            "2015-02-12" => 0
+            "2017-02-05" => 0
         )
     ),
-    "Fall2015" => array(
-        "StudentServicesFees" => array(
-            "2015-09-25" => -9000,
-            "2015-10-16" => -4500,
-            "2015-11-06" => 0
-        ),
-        "Affiliate" => array(
-            "2015-09-25" => 0
-        )
-    ),
-    "Spring2016" => array(
-        "StudentServicesFees" => array(
-            "2016-02-05" => -10000,
-            "2016-02-19" => -5000,
-            "2016-03-04" => 0
-        ),
-        "Affiliate" => array(
-            "2015-02-05" => 0
-        )
-    ),
-    "Fall2016" => array(
-        "StudentServicesFees" => array(
-            "2016-09-30" => -10000,
-            "2016-10-14" => -5000,
-            "2016-11-28" => 0,
-        ),
-        "Affiliate" => array(
-            "2016-09-22" => 0
-        )
-    )
 );
 
 // The late fee charged for comp team members, each practice that the fees are overdue
