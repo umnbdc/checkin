@@ -4,7 +4,7 @@ date_default_timezone_set('America/Chicago');
 
 // Current Term
 $CURRENT_TERM = "Spring2017";
-$CURRENT_START_DATE = "2017-01-17";
+$CURRENT_START_DATE = "2017-01-14";
 $CURRENT_END_DATE = "2017-05-01";
 
 // Checkins
@@ -163,9 +163,9 @@ $COMP_DUE_DATE_TABLE = array(
     ),
     "Spring2017" => array( // TODO: update these dates with correct info
         "StudentServicesFees" => array(
-            "2017-02-05" => -10000,
-            "2017-02-19" => -5000,
-            "2017-03-04" => 0
+            "2017-02-03" => -10000,
+            "2017-03-03" => -5000,
+            "2017-04-06" => 0
         ),
         "Affiliate" => array(
             "2017-02-05" => 0
