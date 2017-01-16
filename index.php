@@ -128,26 +128,35 @@
       }
       
       if ( $.cookie('auth_token') && $.cookie('auth_username') && $.cookie('auth_role') ) {
+        // The user is still authorized (in a cookie) so show what we're supposed to show
         $("#loggedInAs").html($.cookie('auth_username'));
+
+        // Determine what term it is
         setEnvironment(false);
       
+        // Wrap conditional expressions in PHP, but make them execute JS functions
         <?php if ( $_GET['member_id'] ) { ?>
+          // If looking at a member, get info about the member and show it
           showMember(<?php echo $_GET['member_id']; ?>);
         <?php } else if ( $_GET['search'] ) { ?>        
+          // If searching for a member, perform the member search and show the results
           $("#memberSearch").val("<?php echo $_GET['search']; ?>");
           runSearch();
         <?php } else if ( $_GET['summary'] ) { ?>
+          // If looking at the summary page, show that information
           showSummaryContainer();
         <?php } else { ?>
+          // Show the home page if we have nothing better to do
           showHome();
           $("#memberSearch").focus();
         <?php } ?>
       } else {
+        // The user is not currently logged in, so prompt for the login
         $("#loginModal").modal('show');
         $("#inputLoginUsername").focus()
       }
 
-      // Handle the state (what page you're viewing)
+      // Setup a handler for the back and forward buttons
       function onpopstate(e) {
         if ( e.state.page == "home" ) {
           showHome();

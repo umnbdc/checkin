@@ -9,7 +9,8 @@ This readme is a brief overview of the code for the check-in system
 ## Code Structure
 
 * `index.php`:
-    Imports the files we use, contains the shell of the interface, and sets up some of the basic JS handling for the interface
+    Imports the files we use, contains the shell of the interface (determines when to prompt for login, sets up some of 
+    the basic JS handling for the interface, and chooses what page to show then calls the relevant JS file)
 * `auth.php`:
     Handler functions for the user login system
 * `data.php`:
@@ -31,11 +32,19 @@ This readme is a brief overview of the code for the check-in system
     The CSS for the site
     
 
-In general: If you're looking for the *layout of the interface* you see in your browser, check index.php and resources/containers/ 
-(or resources/modals/ for the modals). If you're looking for *how that interface is controlled or changes*, check index.php and 
-the js/ directory/. Specifically, the user login of volunteers is in js/auth.js and resources/modals/loginModal.php. If you're 
-looking for the *backend* or *anything that touches the database*, check data.php (which routes commands to the proper functions), 
-resources/*.php for those functions, or auth.php if you're looking for the level that accesses the database.
+If you're looking for ...
+
+* the *layout of the modals* -> resources/modals/
+* the *callback* functions on the *modals* -> Unfortunately this isn't all in one place. Callbacks are *mostly* setup in 
+member.js. Some modals require more setup, which is generally in index.php. If that fails, try searching the whole 
+project for the ids on buttons.
+* the *layout of the interface* (besides the modals) -> index.php is the top-level control of what gets shown; the files
+in resources/containers/ are the templates for things like the member view interface, search interface, and summary.
+* *how that interface is controlled or changes* -> Check index.php and the js/ directory/. Specifically, the user login 
+for volunteers is in js/auth.js and resources/modals/loginModal.php. Otherwise, js/member.js is kind of a jumble.
+* something related to *login* -> check js/auth.js, resources/modals/loginModal.php and auth.php
+* the *backend* or *most things that touch the database* -> Check data.php, which routes commands to the proper 
+functions. The actual functions are in resources/*.php.
 
 
 ## Setting up for a new semester

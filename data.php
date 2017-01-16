@@ -1,13 +1,38 @@
 <?php
+
+/**
+ * This file is spent handling the POST requests sent by the client.
+ * The general structure is:
+ *  1) Create a connection to the MySQL database (in db.php)
+ *  2) Verify that the logged-in user on the client is authorized (in auth.php)
+ *  3) Import other code that might be used
+ *  4) Prevent the system from being used before the Web Coordinator has prepared it for the semester
+ *  5) Determine what type of request is being made, and handle it
+ *  6) Close off the database link, and send the response back to the client
+ */
 $data = $_POST;
 
 
-// Import some configurations
-require_once "resources/config.php";
+/** STEP 1
+ * Connect to the MySQL database (if db.php is imported more than once, things will break)
+ * Also imports some helper functions for accessing the database
+ */
 require_once "resources/db.php";
 
-// NOTE: auth must be after db, but can't require db explicitly
+
+/** STEP 2
+ * Verify that the logged-in user on the client is authorized (in auth.php)
+ * Also imports some helper functions for determining what the user can and cannot do
+ * NOTE: because db.php must only be called once, (auth.php cannot "require 'db.php';") auth.php MUST be imported after db.php
+ */
 require_once 'auth.php';
+
+
+/** STEP 3
+ * Import code that might be used (I organized code into files so data.php file isn't miles long. data.php used to have everything...)
+ */
+// Import some configurations
+require_once "resources/config.php";
 
 // Import the rest of the code
 require_once 'resources/mailchimp.php';
@@ -19,13 +44,7 @@ require_once 'resources/compteam.php';
 require_once 'resources/summaryInfo.php';
 require_once 'resources/waivers.php';
 
-
-// Safeguard against forgetting to change the current term start and end
-if ( strtotime($CURRENT_START_DATE) > strtotime('today') || strtotime($CURRENT_END_DATE) < strtotime('today') ) {
-  die("Current term (range) is out of date.");
-}
-
-
+// These lines of code kept happening in a lot of places, so I put it in a function so I could avoid repeating myself
 function setSucceededAndReason($data, $result) {
   $data['succeeded'] = $result['succeeded'];
   if (array_key_exists('reason', $result)) {
@@ -35,8 +54,21 @@ function setSucceededAndReason($data, $result) {
 }
 
 
+/** STEP 4
+ * Prevent the system from being used before the Web Coordinator has prepared it for the semester
+ * Safeguard against forgetting to change the current term start and end (locks you out of login)
+ */
+if ( strtotime($CURRENT_START_DATE) > strtotime('today') || strtotime($CURRENT_END_DATE) < strtotime('today') ) {
+  die("Current term (range) is out of date.");
+}
+
+
+/** STEP 5
+ * Determine what type of request is being made, and handle it
+ */
 switch ( $_POST['type'] ) {
   case "environment":
+    // Tell the client what term it is
     $data = ['CURRENT_TERM' => $CURRENT_TERM];
     break;
 
@@ -198,8 +230,14 @@ switch ( $_POST['type'] ) {
     break;
 }
 
+
+/** STEP 6
+ * Close off the database link and send the response back to the client
+ */
+// Close the link to the database
 $link->close();
 
+// Send back the response and exit
 header('Content-Type: application/json');
 exit(json_encode($data));
 ?>

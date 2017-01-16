@@ -1,4 +1,12 @@
 <?php
+
+/**
+ * This file is related to authorizing users on the client (they must be authorized in order to make requests)
+ *
+ * When this file is required, it checks the information in $_POST to authorize the user
+ *
+ * This file also sets up some helper functions for determining what the user can and cannot access
+ */
 // from data.php:
 //// $data = $_POST;
 

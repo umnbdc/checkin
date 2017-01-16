@@ -1,3 +1,7 @@
+/**
+ * TODO: this file is SUUUPER long and could use some reorganization
+ */
+
 var apiURL = "data.php";
 
 var CURRENT_TERM = "";
