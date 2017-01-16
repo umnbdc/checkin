@@ -4,6 +4,9 @@ require_once "config.php";
 require_once "db.php";
 
 
+$REFERRAL_REWARD_KIND = "Referral (2017-on program)";
+
+
 function generateOrdinalString($number) {
     // http://stackoverflow.com/questions/3109978/php-display-number-with-ordinal-suffix
     $ends = array('th','st','nd','rd','th','th','th','th','th','th');
@@ -20,29 +23,18 @@ function generateOrdinalString($number) {
 function generateRewardPostReferral($referrerMemberId) {
     global $link;
     global $CURRENT_TERM;
+    global $REFERRAL_REWARD_KIND;
 
-    // "Bring a Friend" Program
-    $referralSelectQuery = "SELECT * FROM `referral` WHERE `referrer_id`='" . $referrerMemberId . "' AND `term`='" . $CURRENT_TERM . "'";
-    $referrals = assocArraySelectQuery($referralSelectQuery, $link, "Failed to select referrals in generateRewardPostReferral");
-    $refCount = count($referrals);
-    $description = generateOrdinalString($refCount) . " referral";
-    if ( $refCount < 3 ) {
-        // generate $25 reward
-        $rewardKind = "Bring a Friend (" . $description . ", $25 membership credit)";
-        $rewardInsertQuery = "INSERT INTO `reward`(`member_id`, `kind`, `term`, `claim_date_time`, `claimed`) VALUES ('" . $referrerMemberId . "','" . $rewardKind . "','" . $CURRENT_TERM . "',CURRENT_TIMESTAMP,1)";
-        safeQuery($rewardInsertQuery, $link, "Failed to insert reward (Bring a friend, $25) in generateRewardPostReferral");
-        $creditKind = "Membership (Bring a Friend, " . $description . ", " . $CURRENT_TERM . ")";
-        $creditMethod = "Reward (Bring a Friend, " . $description . ", " . $CURRENT_TERM . ")";
-        $creditInsertQuery = "INSERT INTO `debit_credit`(`member_id`, `amount`, `kind`, `method`) VALUES ('" . $referrerMemberId . "',2500,'" . $creditKind . "','" . $creditMethod . "')";
-        safeQuery($creditInsertQuery, $link, "Failed to insert reward credit (Bring a friend, $25) in generateRewardPostReferral");
-    } else {
-        // generate free shoe reward
-        $rewardKind = "Bring a Friend (" . $description . ", Free pair of shoes)";
-        $rewardInsertQuery = "INSERT INTO `reward`(`member_id`, `kind`, `term`, `claimed`) VALUES ('" . $referrerMemberId . "','" . $rewardKind . "','" . $CURRENT_TERM . "',0)";
-        safeQuery($rewardInsertQuery, $link, "Failed to insert reward (Bring a friend, shoes) in generateRewardPostReferral");
-    }
+    // Put a reward entry in the reward table
+    $rewardInsertQuery = "INSERT INTO `reward`(`member_id`, `kind`, `term`, `claimed`) VALUES ('" . $referrerMemberId . "','" . $REFERRAL_REWARD_KIND . "','" . $CURRENT_TERM . "',0)";
+    safeQuery($rewardInsertQuery, $link, "Failed to insert reward in generateRewardPostReferral (query: '" . $rewardInsertQuery . "')");
 }
 
+
+/**
+ * Reward whoever referred this member, since this is their first membership and it's giving us money
+ * @param $safeId int the id of the new referred member
+ */
 function generateReferral($safeId) {
     global $link;
     global $CURRENT_TERM;
@@ -66,4 +58,44 @@ function generateReferral($safeId) {
             generateRewardPostReferral($referrerMemberId);
         }
     }
+}
+
+function claimReferralRewards($referrerId, $semesterDues) {
+    global $link;
+    global $CURRENT_TERM;
+    global $REFERRAL_REWARD_KIND;
+
+    // Find all referral rewards available (not yet claimed) to this user
+    // The reason I do it this way is because we want to apply the reward to a future semester
+    // - If we didn't check the term (semester) of the rewards there are scenarios where a member is referred and buys
+    //   a membership earlier in the semester than the person that referred them, and then the referrer would be rewarded
+    //   this semester
+    // - If we only checked for the previous semester, maybe someone referred a friend and then went abroad next semester.
+    //   We still want to incentive-ize them to refer people (this is just a choice I made and is what this code does)
+    $unclaimedReferralQuery = "SELECT * FROM `reward` WHERE `member_id` = " . $referrerId .
+        " AND NOT `term` LIKE '" . $CURRENT_TERM . // Don't allow reward to apply to the same semester as when the referred person joined
+        "' AND `kind` LIKE '%" . $REFERRAL_REWARD_KIND . "%'".
+        " AND `claimed` = 0";
+    $referralRewardsArray = assocArraySelectQuery($unclaimedReferralQuery, $link, "Failed to select member in generateReferral");
+
+    $numUnclaimedRewards = count($referralRewardsArray);
+    $numClaimableRewards = min(4, $numUnclaimedRewards); // We allow a maximum of 4 rewards from referrals per semester
+    if ( $numUnclaimedRewards > 0 ) {
+        // Mark all unclaimed rewards as claimed (even if they exceeded the max of 4)
+        // To do this, modify each affected row, selecting by the row's id in the table
+        foreach ( $referralRewardsArray as $rewardsEntry ) {
+            $rewardUpdateQuery = "UPDATE `reward` SET `claim_date_time`=CURRENT_TIMESTAMP AND `claimed`=" . 1 .
+                " WHERE `id`=" . $rewardsEntry['id'];
+            safeQuery($rewardUpdateQuery, $link, "Failed to add credit for referral reward");
+        }
+
+        // Apply credits in the database
+        $amount = min($semesterDues, 1000 * $numClaimableRewards); // Cap rewards at a free membership
+        $creditKind = "Membership (Referral Reward)";
+        $creditMethod = "Reward (Referral x " . min( 4, $numUnclaimedRewards ) . ")";
+        $creditQuery = "INSERT INTO `debit_credit`(`member_id`, `amount`, `kind`, `method`) VALUES ('" .
+            $referrerId . "'," . $amount . ",'" . $creditKind . "','" . $creditMethod . "')";
+        safeQuery($creditQuery, $link, "Failed to insert referral credits");
+    }
+    return $numClaimableRewards;
 }

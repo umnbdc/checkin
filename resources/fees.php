@@ -111,12 +111,16 @@ function updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $
         $oldFeeStatus = '';
         $oldMembership = '';
 
+        // STEP 1: Determine if this is the member's first membership (if so and the membership is paid, reward referrer later)
+
         // we don't want to generate the referral before in case something fails
         // but we need to check for previous membership before memberships are inserted into the DB
         // also only generate referral for paid memberships
         // Note:
         // Also if the new combination is invalid, it will error out before DB changes are made
         $generateReferralAtEnd = !hasHadMembership($id, $dbLink) && calculateDues($membership, $feeStatus, $term) > 0;
+
+        // STEP 2: modify the `fee_status` table if necessary
 
         // Determine current fee status for this semester
         $feeStatusSelectQuery = "SELECT * FROM `fee_status` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
@@ -136,6 +140,8 @@ function updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $
             safeQuery($feeStatusInsertQuery, $dbLink, "Failed to insert new fee status");
         }
 
+        // STEP 3: modify the `membership` table if necessary
+
         // Get the member's membership for the semester, if any
         $membershipSelectQuery = "SELECT * FROM `membership` WHERE `member_id`='" . $id . "' AND `term`='" . $term . "'";
         $membershipResult = assocArraySelectQuery($membershipSelectQuery, $dbLink, "Failed to select membership");
@@ -153,6 +159,8 @@ function updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $
                 "'" . $membership . "'");
             safeQuery($membershipInsertQuery, $dbLink, "Failed to insert new membership");
         }
+
+        // STEP 4: modify the `debit_credit` table if necessary
 
         // Update dues if necessary
         if ($oldFeeStatus != $feeStatus || $oldMembership != $membership) {
@@ -173,16 +181,20 @@ function updateMembershipAndFeeStatus($authRole, $membership, $id, $feeStatus, $
                 "'" . $amount . "'",
                 "'" . $newDueKind . "'");
             safeQuery($duesInsertQuery, $dbLink, "Failed to insert new membership debit");
+
+            // Possibly reward this member for previous referrals (using the system started in Fall2016-Spring2017)
+            claimReferralRewards($id, $amount * -1);
+        }
+
+        // STEP 5: If this member has never had a membership, reward whoever referred them
+        if ($generateReferralAtEnd) {
+            generateReferral($id);
         }
 
         $newData['oldFeeStatus'] = $oldFeeStatus;
         $newData['oldMembership'] = $oldMembership;
         $newData['newFeeStatus'] = $feeStatus;
         $newData['newMembership'] = $membership;
-
-        if ($generateReferralAtEnd) {
-            generateReferral($id);
-        }
         $newData['succeeded'] = true;
         return $newData;
     }
