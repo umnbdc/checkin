@@ -3,24 +3,31 @@
 /**
  * This file is spent handling the POST requests sent by the client.
  * The general structure is:
- *  1) Create a connection to the MySQL database (in db.php)
- *  2) Verify that the logged-in user on the client is authorized (in auth.php)
- *  3) Import other code that might be used
- *  4) Prevent the system from being used before the Web Coordinator has prepared it for the semester
- *  5) Determine what type of request is being made, and handle it
- *  6) Close off the database link, and send the response back to the client
+ *  1) Import configurations
+ *  2) Create a connection to the MySQL database (in db.php)
+ *  3) Verify that the logged-in user on the client is authorized (in auth.php)
+ *  4) Import other code that might be used
+ *  5) Prevent the system from being used before the Web Coordinator has prepared it for the semester
+ *  6) Determine what type of request is being made, and handle it
+ *  7) Close off the database link, and send the response back to the client
  */
 $data = $_POST;
 
 
 /** STEP 1
+ * Import some configurations
+ */
+require_once "resources/config.php";
+
+
+/** STEP 2
  * Connect to the MySQL database (if db.php is imported more than once, things will break)
  * Also imports some helper functions for accessing the database
  */
 require_once "resources/db.php";
 
 
-/** STEP 2
+/** STEP 3
  * Verify that the logged-in user on the client is authorized (in auth.php)
  * Also imports some helper functions for determining what the user can and cannot do
  * NOTE: because db.php must only be called once, (auth.php cannot "require 'db.php';") auth.php MUST be imported after db.php
@@ -28,13 +35,9 @@ require_once "resources/db.php";
 require_once 'auth.php';
 
 
-/** STEP 3
+/** STEP 4
  * Import code that might be used (I organized code into files so data.php file isn't miles long. data.php used to have everything...)
  */
-// Import some configurations
-require_once "resources/config.php";
-
-// Import the rest of the code
 require_once 'resources/mailchimp.php';
 require_once 'resources/referrals.php';
 require_once 'resources/checkins.php';
@@ -54,7 +57,7 @@ function setSucceededAndReason($data, $result) {
 }
 
 
-/** STEP 4
+/** STEP 5
  * Prevent the system from being used before the Web Coordinator has prepared it for the semester
  * Safeguard against forgetting to change the current term start and end (locks you out of login)
  */
@@ -63,7 +66,7 @@ if ( strtotime($CURRENT_START_DATE) > strtotime('today') || strtotime($CURRENT_E
 }
 
 
-/** STEP 5
+/** STEP 6
  * Determine what type of request is being made, and handle it
  */
 switch ( $_POST['type'] ) {
@@ -231,7 +234,7 @@ switch ( $_POST['type'] ) {
 }
 
 
-/** STEP 6
+/** STEP 7
  * Close off the database link and send the response back to the client
  */
 // Close the link to the database

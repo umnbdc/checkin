@@ -84,7 +84,7 @@ function claimReferralRewards($referrerId, $semesterDues) {
         // Mark all unclaimed rewards as claimed (even if they exceeded the max of 4)
         // To do this, modify each affected row, selecting by the row's id in the table
         foreach ( $referralRewardsArray as $rewardsEntry ) {
-            $rewardUpdateQuery = "UPDATE `reward` SET `claim_date_time`=CURRENT_TIMESTAMP AND `claimed`=" . 1 .
+            $rewardUpdateQuery = "UPDATE `reward` SET `claim_date_time` = CURRENT_TIMESTAMP, `claimed` = " . 1 .
                 " WHERE `id`=" . $rewardsEntry['id'];
             safeQuery($rewardUpdateQuery, $link, "Failed to add credit for referral reward");
         }
