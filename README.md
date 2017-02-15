@@ -57,3 +57,9 @@ Before each semester, you currently have to manually input a bunch of dates and 
 * `$CURRENT_TERM`, `$CURRENT_START_DATE`, `$CURRENT_END_DATE`, `$COMP_DUE_DATE_TABLE`, and `$COMP_PRACTICES_TABLE` at least
 * If the payment method etc. has changed since the last semester, you may need to change more code
   
+
+## Cool people who have touched this code:
+Jack O'Leary (2015)
+Patrick Severin (2015)
+Kevin Viratyosin (2015-2016)
+Kyle Condiff (2016-2017)
