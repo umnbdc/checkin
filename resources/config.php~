@@ -5,7 +5,7 @@ date_default_timezone_set('America/Chicago');
 // Current Term
 $CURRENT_TERM = "Spring2017";
 $CURRENT_START_DATE = "2017-01-14";
-$CURRENT_END_DATE = "2017-07-05";
+$CURRENT_END_DATE = "2017-05-05";
 
 // Checkins
 $CHECKINS_PER_WEEK = array(
