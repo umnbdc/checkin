@@ -20,6 +20,7 @@ function newMember($member, $dbLink) {
         $insertQuery = sprintf("INSERT INTO `member`(`first_name`, `last_name`, `nick_name`, `email`, Publicity, `join_date`, `referred_by`) VALUES (%s,%s,%s,%s,%s,CURRENT_TIMESTAMP,%s)",
             "'" . mysql_escape_string($member['firstName']) . "'",
 	    "'" . mysql_escape_string($member['lastName']) . "'",
+	    "'" . mysql_escape_string($member['Publicity']) . "'",
             $member['nickname'] ? "'" . mysql_escape_string($member['nickname']) . "'" : 'NULL',
             "'" . $escapedEmail . "'",
             $member['referredBy'] ? mysql_escape_string($member['referredBy']) : 'NULL');
