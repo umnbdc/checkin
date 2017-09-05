@@ -52,7 +52,7 @@ function addNewMember() {
   var lastName = $('#inputLastName').val();
   var nickname = $('#inputNickname').val();
   var email = $('#inputEmail').val();
-  var Publicity = "SWagg";
+  var Publicity = ;
   var referrerFormData = $("#newMemberReferForm").serializeArray();
   var referredBy = referrerFormData.length > 0 ? referrerFormData[0].value : null;
 

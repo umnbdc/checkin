@@ -26,15 +26,15 @@
 	  <label for="inputPublicity">How did you hear about us?</label>
           <select class="form-control" id="inputPublicity">
 		<option value="" disabled selected>Please Choose...</option>
-		<option value="">Postcard</option>
-		<option value="">Flyer</option>
-		<option value="">Chalking</option>
-		<option value="">Facebook</option>
-		<option value="">Instagram</option>
-		<option value="">RecWell Open House</option>
-		<option value="">ExploreU</option>
-		<option value="">Friend</option>
-		<option value="">Other</option>
+		<option value="Postcard">Postcard</option>
+		<option value="Flyer">Flyer</option>
+		<option value="Chalk">Chalking</option>
+		<option value="FB">Facebook</option>
+		<option value="Insta">Instagram</option>
+		<option value="RecWell">RecWell Open House</option>
+		<option value="ExploreU">ExploreU</option>
+		<option value="Friend">Friend</option>
+		<option value="Other">Other</option>
 	  </select>
 	</div>
         <div class="form-group">
