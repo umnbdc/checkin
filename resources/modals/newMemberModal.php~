@@ -21,7 +21,13 @@
         <div class="form-group">
           <label for="inputEmail">Email</label>
           <input type="email" class="form-control" id="inputEmail" placeholder="Email">
-        </div>
+	</div>
+	<div class="form-group">
+	  <label for="inputPublicity">How did you hear about us?</label>
+          <select class="form-control" id="inputPublicity">
+		<option value="">1</option>
+	  </select>
+	</div>
         <div class="form-group">
           <label for="inputReferredBy">Referred by</label>
           <div class="input-group">
