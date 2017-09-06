@@ -22,7 +22,7 @@ function newMember($member, $dbLink) {
 	    "'" . mysql_escape_string($member['lastName']) . "'",
             $member['nickname'] ? "'" . mysql_escape_string($member['nickname']) . "'" : 'NULL',
 	    "'" . $escapedEmail . "'",
-	    "'" . mysql_escape_string("Dick") . "'",
+	    "'" . mysql_escape_string($member['publicity']) . "'",
             $member['referredBy'] ? mysql_escape_string($member['referredBy']) : 'NULL');
         safeQuery($insertQuery, $dbLink, "Failed to insert new member in newMember");
 
