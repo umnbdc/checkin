@@ -17,12 +17,12 @@ function newMember($member, $dbLink) {
         $toReturn['reason'] = "A member with the given email already exists.";
         $toReturn['member'] = $members[0];
     } else {
-        $insertQuery = sprintf("INSERT INTO `member`(`first_name`, `last_name`, `nick_name`, `email`, 'publicity', `join_date`, `referred_by`) VALUES (%s,%s,%s,%s,%s,CURRENT_TIMESTAMP,%s)",
+        $insertQuery = sprintf("INSERT INTO `member`(`first_name`, `last_name`, `nick_name`, `email`, `publicity`, `join_date`, `referred_by`) VALUES (%s,%s,%s,%s,%s,CURRENT_TIMESTAMP,%s)",
             "'" . mysql_escape_string($member['firstName']) . "'",
 	    "'" . mysql_escape_string($member['lastName']) . "'",
             $member['nickname'] ? "'" . mysql_escape_string($member['nickname']) . "'" : 'NULL',
 	    "'" . $escapedEmail . "'",
-	    "'" . mysql_escape_string($member['publicity']) . "'",
+	    "'" . mysql_escape_string("Dick") . "'",
             $member['referredBy'] ? mysql_escape_string($member['referredBy']) : 'NULL');
         safeQuery($insertQuery, $dbLink, "Failed to insert new member in newMember");
 
