@@ -22,7 +22,10 @@
           <label for="inputEmail">Email</label>
           <input type="email" class="form-control" id="inputEmail" placeholder="Email">
 	</div>
-	<div class="form-group">                                                                                                  <label for="inputPublicity">How did you hear about us?</label>                                                          <select class="form-control" id="inputPublicity">                                                                             <option value="" disabled selected>Please Choose...</option>                                                            <option value="Postcard">Postcard</option>                                                                              <option value="Flyer">Flyer</option>                                                                                    <option value="Chalk">Chalking</option>                                                                                 <option value="FB">Facebook</option>                                                                                    <option value="Insta">Instagram</option>                                                                                <option value="RecWell">RecWell Open House</option>                                                                     <option value="ExploreU">ExploreU</option>                                                                              <option value="Friend">Friend</option>                                                                                  <option value="Other">Other</option>                                                                              </select>                                                                                                             </div>
+	<div class="form-group">
+          <label for="inputPublicity">How did you hear about us?</label>
+          <input type="text" class="form-control" id="inputPublicity" placeholder="RecWell, ExploreU, Chalk, Postcard...">
+        </div>
         <div class="form-group">
           <label for="inputReferredBy">Referred by</label>
           <div class="input-group">
