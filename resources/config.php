@@ -234,7 +234,7 @@ $NEW_COMP_MEMBER_DISCOUNT = 3000;
 
 // Prices for apparel
 $PURCHASE_TABLE = array(
-    "Jacket" => 4600,
+    "Jacket" => 5000,
     "Shoes_Men" => 3000,
     "Shoes_Women" => 2500
 );

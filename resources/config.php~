@@ -16,7 +16,7 @@ $CHECKINS_PER_WEEK = array(
     "Full" => INF,
     "Summer" => INF,
 );
-$NUMBER_OF_FREE_CHECKINS = 4;
+$NUMBER_OF_FREE_CHECKINS = 2;
 
 // Lesson Times
 $BEGINNER_LESSON_TIME = "8:00pm";
